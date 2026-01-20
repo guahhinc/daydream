@@ -1,0 +1,356 @@
+<!-- START OF FILE: Daydream Research Portal (Updated January 21, 2026) -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guahh Daydream</title>
+
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/guahhinc/guahh/main/guahhdaydreamlogo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet">
+
+    <style>
+        /* CSS VARIABLES */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #1d1d1f;
+            --accent-color: #0071e3; /* Daydream Blue */
+            --accent-hover: #0077ed;
+            --gray-text: #86868b;
+            --section-bg: #f5f5f7;
+            --border-color: #d2d2d7;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* NAVIGATION */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 56px;
+            background-color: var(--glass-bg);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            z-index: 9999;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .nav-content {
+            max-width: 980px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #000;
+            font-weight: 600;
+            font-size: 18px;
+            gap: 10px;
+        }
+
+        .nav-logo img {
+            height: 24px;
+            width: auto;
+        }
+
+        .nav-link-back {
+            font-size: 13px;
+            color: var(--gray-text);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-link-back:hover {
+            color: var(--accent-color);
+        }
+
+        /* HERO SECTION */
+        .hero {
+            padding: 160px 20px 100px 20px;
+            text-align: center;
+            /* Blue Gradient from Ventures Section */
+            background: linear-gradient(180deg, #e3f2fd 0%, #ffffff 100%);
+        }
+
+        .hero-logo-large {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 30px;
+            /* Animation removed per request */
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #0071e3 0%, #00c6ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 24px;
+            color: var(--gray-text);
+            max-width: 700px;
+            margin: 0 auto 40px auto;
+            font-weight: 400;
+        }
+
+        /* SECTIONS */
+        .section-container {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 80px 20px;
+        }
+
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .section-desc {
+            font-size: 17px;
+            color: var(--gray-text);
+            margin-bottom: 40px;
+            max-width: 600px;
+        }
+
+        /* GRID LAYOUTS */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        /* STACKED LAYOUT (For Research Images) */
+        .stacked-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        /* CARDS */
+        .demo-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 300px;
+        }
+
+        .demo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            border-color: var(--accent-color);
+        }
+
+        .card-icon {
+            font-size: 40px;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .card-text {
+            color: var(--gray-text);
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .card-link {
+            margin-top: 20px;
+            display: inline-flex;
+            align-items: center;
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .card-link:hover {
+            text-decoration: underline;
+        }
+
+        /* RESEARCH IMAGES */
+        .research-card {
+            background: #f5f5f7;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .research-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .research-caption {
+            padding: 25px;
+        }
+
+        .caption-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #1d1d1f;
+        }
+
+        .caption-text {
+            font-size: 14px;
+            color: var(--gray-text);
+            font-family: monospace; /* Scientific feel */
+        }
+
+        /* FOOTER */
+        footer {
+            background-color: #f5f5f7;
+            padding: 40px 20px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--gray-text);
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 42px; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .demo-card { height: auto; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="nav-content">
+            <a href="index.html" class="nav-logo">
+                <img src="https://raw.githubusercontent.com/guahhinc/guahh/main/guahhdaydreamlogo.png" alt="Logo">
+                Daydream
+            </a>
+            <a href="https://guahh.net" class="nav-link-back">Back to Guahh ></a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <img src="https://raw.githubusercontent.com/guahhinc/guahh/main/guahhdaydreamlogo.png" alt="Guahh Daydream" class="hero-logo-large">
+        <h1>Intelligence, Reimagined.</h1>
+        <p>Exploring the fundamental nature of neural networks and generative algorithms.</p>
+    </section>
+
+    <!-- INTERACTIVE DEMOS -->
+    <section class="section-container">
+        <h2 class="section-title">Live Experiments</h2>
+        <p class="section-desc">Interact with our latest model prototypes running in real-time.</p>
+        
+        <div class="grid-2">
+            <!-- Spiral Generator -->
+            <a href="https://daydream.guahh.net/spiral.html" class="demo-card" style="text-decoration: none; color: inherit;">
+                <div>
+                    <span class="material-symbols-rounded card-icon">cyclone</span>
+                    <h3 class="card-title">Spiral Generator</h3>
+                    <p class="card-text">
+                        A visual demonstration of mathematical precision in generative code. Observe how the neural pathways calculate geometric perfection.
+                    </p>
+                </div>
+                <span class="card-link">Launch Demo <span class="material-symbols-rounded" style="font-size: 18px;">arrow_forward</span></span>
+            </a>
+
+            <!-- TextCore -->
+            <a href="https://daydream.guahh.net/textcore.html" class="demo-card" style="text-decoration: none; color: inherit;">
+                <div>
+                    <span class="material-symbols-rounded card-icon">chat_bubble</span>
+                    <h3 class="card-title">TextCore Synthesis</h3>
+                    <p class="card-text">
+                        Our proprietary Sentence Generator. Test the model's ability to construct coherent linguistic structures from minimal input.
+                    </p>
+                </div>
+                <span class="card-link">Launch Demo <span class="material-symbols-rounded" style="font-size: 18px;">arrow_forward</span></span>
+            </a>
+        </div>
+    </section>
+
+    <!-- RESEARCH VISUALIZATION -->
+    <section class="section-container" style="padding-top: 0;">
+        <h2 class="section-title">Computer Vision Research</h2>
+        <p class="section-desc">Current benchmarks in pattern recognition and image classification.</p>
+
+        <!-- CHANGED: Now using a stacked layout instead of grid-2 -->
+        <div class="stacked-layout">
+            <!-- Digit Recognition -->
+            <div class="research-card">
+                <img src="https://raw.githubusercontent.com/guahhinc/daydream/main/Screenshot%202026-01-20%20234130.png" 
+                     alt="Neural Network Detecting Number" class="research-img">
+                <div class="research-caption">
+                    <div class="caption-title">Digit Classification</div>
+                    <div class="caption-text">Model: Daydreamer-V1 <br>Status: High Confidence</div>
+                </div>
+            </div>
+
+            <!-- Shape Recognition -->
+            <div class="research-card">
+                <!-- Note: Converted blob link to raw link for rendering -->
+                <img src="https://raw.githubusercontent.com/guahhinc/daydream/main/Screenshot%202026-01-20%20235133.png" 
+                     alt="Neural Network Detecting Shapes" class="research-img">
+                <div class="research-caption">
+                    <div class="caption-title">Multi-Shape Analysis</div>
+                    <div class="caption-text">Model: Daydreamer-V1 <br>Status: High Confidence</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>2026 Guahh Daydream Research Division</p>
+    </footer>
+
+</body>
+</html>
