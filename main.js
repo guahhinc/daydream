@@ -4,20 +4,21 @@ const resolution = 10;
 const cols = canvas.width / resolution;
 const rows = canvas.height / resolution;
 
-// XOR Problem Training Data
+// Colorful "XOR" Problem Training Data
+// Mapping corners to specific colors
 const training_data = [
-    { inputs: [0, 0], targets: [0] },
-    { inputs: [0, 1], targets: [1] },
-    { inputs: [1, 0], targets: [1] },
-    { inputs: [1, 1], targets: [0] }
+    { inputs: [0, 0], targets: [1, 0, 0] }, // Red
+    { inputs: [0, 1], targets: [0, 1, 0] }, // Green
+    { inputs: [1, 0], targets: [0, 0, 1] }, // Blue
+    { inputs: [1, 1], targets: [0, 1, 1] }  // Cyan
 ];
 
 let nn;
 
 function resetNetwork() {
     // Gigantic Neural Network
-    // 2 Inputs -> 16 -> 16 -> 16 -> 1 Output (Deep Network)
-    nn = new NeuralNetwork([2, 16, 16, 16, 1]);
+    // 2 Inputs -> 16 -> 16 -> 16 -> 3 Outputs (RGB)
+    nn = new NeuralNetwork([2, 16, 16, 16, 3]);
     nn.learning_rate = 0.05; // Lower LR for stability with deep networks
 }
 
@@ -65,9 +66,12 @@ function draw() {
             let output = nn.feedforward(inputs);
 
             // Draw
-            // Output is between 0 and 1. Map to grayscale.
-            let c = output[0] * 255;
-            ctx.fillStyle = `rgb(${c},${c},${c})`;
+            // Output is [r, g, b] between 0 and 1.
+            let r = output[0] * 255;
+            let g = output[1] * 255;
+            let b = output[2] * 255;
+
+            ctx.fillStyle = `rgb(${r},${g},${b})`;
             ctx.fillRect(i * resolution, j * resolution, resolution, resolution);
         }
     }
