@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Text Generator</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            /* Typewriter feel */
+            background-color: #1a1a1a;
+            color: #00ff00;
+            /* Hacker green */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            background-color: #0d0d0d;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 10px;
+            font-family: inherit;
+            border-radius: 5px;
+            resize: vertical;
+        }
+
+        .monitor {
+            background-color: #000;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            min-height: 150px;
+            font-size: 1.2em;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+            white-space: pre-wrap;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #004400;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: #00ff00;
+            color: #000;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>NEURAL TEXT GENERATOR</h1>
+
+    <div class="container">
+        <div>
+            <label for="trainingText">TRAINING CORPUS (Edit me!):</label>
+            <textarea
+                id="trainingText">Once upon a time there was a tiny robot. The robot loved to eat metal. One day the robot found a shiny gold coin. It looked delicious. The robot ate the coin and felt very happy. Then the robot went to sleep.</textarea>
+        </div>
+
+        <div class="controls">
+            <button onclick="trainNetwork()">RE-TRAIN BRAIN</button>
+            <button onclick="generate()">GENERATE TEXT</button>
+        </div>
+
+        <div>
+            <label>AI OUTPUT:</label>
+            <div id="output" class="monitor">AI is waiting for data...</div>
+        </div>
+    </div>
+
+    <script src="matrix.js"></script>
+    <script src="neural_network.js"></script>
+    <script src="text_processor.js"></script>
+    <script src="main.js"></script>
+</body>
+
+</html>
