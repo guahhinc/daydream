@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <!-- MediaPipe Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.js" crossorigin="anonymous"></script>
 </head>
 <body>
     <div class="app-container">
@@ -30,7 +32,7 @@
         <main>
             <div class="video-section">
                 <div class="video-wrapper">
-                    <video id="webcam" autoplay playsinline></video>
+                    <video id="webcam" autoplay playsinline muted></video>
                     <canvas id="output_canvas"></canvas>
                     <div class="scanner-line"></div>
                     <div class="ui-overlays">
@@ -69,7 +71,7 @@
                             <span id="jawline-val" class="value">0%</span>
                         </div>
                         <div class="stat-item">
-                            <span class="label">EYE SPACING</span>
+                            <span class="label">CANTHAL TILT</span>
                             <div class="progress-bar">
                                 <div id="eye-bar" class="fill" style="width: 0%"></div>
                             </div>
@@ -101,7 +103,6 @@
                 <div class="recent-mogs glass">
                     <h3>RECENT MOGS</h3>
                     <div id="mog-log" class="mog-log">
-                        <!-- Thumbnails will appear here -->
                         <div class="empty-log">NO CAPTURES YET</div>
                     </div>
                 </div>
@@ -115,9 +116,9 @@
 
     <div id="loading-overlay" class="loading-overlay">
         <div class="loader"></div>
-        <p>INITIALIZING NEURAL NETWORKS...</p>
+        <p id="loading-text">INITIALIZING NEURAL NETWORKS...</p>
     </div>
 
-    <script type="module" src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
