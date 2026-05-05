@@ -1,768 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Sheckles" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#060606" />
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23060606'/%3E%3Ctext x='90' y='108' text-anchor='middle' fill='white' font-size='92' font-family='serif'%3E%24%3C/text%3E%3C/svg%3E" />
-  <title>Sheckles Bank</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;700&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --bg: #060606;
-      --panel: #0f0f0f;
-      --panel-2: #151515;
-      --line: #252525;
-      --text: #f2f2f2;
-      --muted: #a1a1a1;
-      --accent: #f5f5f5;
-      --danger: #ff6b6b;
-      --ok: #86efac;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: "Lora", serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    .wrap {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 24px;
-    }
-
-    .title {
-      margin: 4px 0 18px;
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-    }
-
-    .grid {
-      display: grid;
-      gap: 16px;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    }
-
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    .card h2 {
-      margin: 0 0 12px;
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-
-    .balance {
-      font-size: 2.5rem;
-      margin: 8px 0 0;
-      font-weight: 700;
-    }
-
-    .balance small {
-      font-size: 1rem;
-      color: var(--muted);
-      font-weight: 500;
-    }
-
-    label {
-      display: block;
-      margin: 10px 0 6px;
-      color: #d4d4d4;
-      font-size: 0.92rem;
-    }
-
-    input,
-    select {
-      width: 100%;
-      background: var(--panel-2);
-      color: var(--text);
-      border: 1px solid #2f2f2f;
-      border-radius: 6px;
-      padding: 10px 11px;
-      font-size: 16px;
-      font-family: inherit;
-      outline: none;
-    }
-
-    input:focus,
-    select:focus {
-      border-color: #666;
-    }
-
-    .row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      cursor: pointer;
-      border: 1px solid #333;
-      background: #1f1f1f;
-      color: var(--text);
-      border-radius: 6px;
-      padding: 10px 13px;
-      font-size: 16px;
-      font-family: inherit;
-      font-weight: 600;
-    }
-
-    button:hover { filter: brightness(1.1); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .btn-primary {
-      background: #f5f5f5;
-      color: #090909;
-      border-color: #d8d8d8;
-    }
-
-    .status {
-      margin-top: 12px;
-      font-size: 0.9rem;
-      min-height: 22px;
-      color: var(--muted);
-      white-space: pre-wrap;
-    }
-
-    .status.ok { color: var(--ok); }
-    .status.err { color: var(--danger); }
-
-    .history {
-      margin-top: 12px;
-      max-height: 360px;
-      overflow: auto;
-      border-top: 1px solid var(--line);
-    }
-
-    .tx {
-      padding: 10px 4px;
-      border-bottom: 1px solid #1f1f1f;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-    }
-
-    .tx .meta {
-      color: var(--muted);
-      font-size: 0.85rem;
-      margin-top: 3px;
-    }
-
-    .amount.positive { color: var(--ok); }
-    .amount.negative { color: var(--danger); }
-
-    .hidden {
-      display: none;
-    }
-
-    .company-row {
-      border: 1px solid #242424;
-      border-radius: 6px;
-      padding: 10px;
-      margin-top: 10px;
-      background: #111;
-    }
-
-    .loading {
-      position: fixed;
-      inset: 0;
-      background: rgba(6, 6, 6, 0.97);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
-
-    .loading .inner {
-      text-align: center;
-      color: #e9e9e9;
-      font-size: 1.05rem;
-    }
-
-    .loading.hidden {
-      display: none !important;
-    }
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9000;
-      padding: 18px;
-    }
-
-    .modal.hidden {
-      display: none !important;
-    }
-
-    .modal-box {
-      width: min(760px, 100%);
-      max-height: 82vh;
-      overflow: hidden;
-      background: #0c0c0c;
-      border: 1px solid #2a2a2a;
-      border-radius: 8px;
-      padding: 14px;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mogger | Advanced Facial Analysis</title>
+    <meta name="description" content="Discover your facial potential with Mogger's advanced AI tracking. Analyze symmetry, proportions, and get your Mog Score.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div id="loadingScreen" class="loading">
-    <div class="inner">Loading Sheckles Bank...</div>
-  </div>
-  <div class="wrap">
-    <h1 class="title">Sheckles Bank</h1>
-
-    <section id="authPage" class="card">
-      <h2>Sign In / Sign Up</h2>
-      <label for="username">Username</label>
-      <input id="username" />
-      <label for="password">PIN</label>
-      <input id="password" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" placeholder="4-digit PIN" />
-      <div class="row" style="margin-top: 12px;">
-        <button id="btnSignIn" class="btn-primary">Sign In</button>
-        <button id="btnSignUp">Sign Up</button>
-      </div>
-      <div id="authStatus" class="status">Please sign in.</div>
-    </section>
-
-    <div id="bankPage" class="hidden">
-      <div class="grid">
-        <section class="card">
-          <h2>Account</h2>
-          <div style="color:#d4d4d4;">Signed in as <strong id="whoami">@-</strong></div>
-          <div id="balance" class="balance">$0.00 <small>Sheckles</small></div>
-          <div class="row" style="margin-top: 12px;">
-            <button id="btnViewTransactions">View Transactions</button>
-            <button id="btnLogout">Logout</button>
-          </div>
-          <div id="status" class="status"></div>
-        </section>
-
-        <section class="card">
-          <h2>Transfer Sheckles</h2>
-          <label for="toUser">Recipient Username</label>
-          <select id="toUser"></select>
-          <label for="amount">Amount ($)</label>
-          <input id="amount" type="number" step="0.01" min="0.01" placeholder="25.00" />
-          <div class="row" style="margin-top: 12px;">
-            <button id="btnTransfer" class="btn-primary">Send Transfer</button>
-          </div>
-        </section>
-      </div>
-
-      <section class="card" style="margin-top: 16px;">
-        <h2>Investments</h2>
-        <label for="company">Company</label>
-        <select id="company"></select>
-        <label for="shares">Shares</label>
-        <input id="shares" type="number" step="1" min="1" placeholder="1" />
-        <div class="row" style="margin-top: 12px;">
-          <button id="btnBuy" class="btn-primary">Buy Shares</button>
-          <button id="btnSell">Sell Shares</button>
-        </div>
-        <div id="marketSummary" class="status"></div>
-        <div id="portfolio" style="margin-top: 10px;"></div>
-      </section>
-
-    </div>
-  </div>
-
-  <div id="txModal" class="modal hidden">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h2 style="margin:0;">Transaction History</h2>
-        <button id="btnCloseTransactions">Close</button>
-      </div>
-      <div id="history" class="history"></div>
-    </div>
-  </div>
-
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzGJLjgn7jHgFFiV9Fo8heKl-o8bVrcV8KDjJyjXW4JsFAq4iQZA3efuzkuHthGTkSk/exec";
-    const SESSION_KEY = "sheckles_session_v1";
-
-    const APP = {
-      me: "",
-      token: "",
-      balance: 0,
-      symbol: "$",
-      moneyName: "Sheckles"
-    };
-
-    const $ = (id) => document.getElementById(id);
-    const authPageEl = $("authPage");
-    const bankPageEl = $("bankPage");
-    const authStatusEl = $("authStatus");
-    const statusEl = $("status");
-    const whoamiEl = $("whoami");
-    const balanceEl = $("balance");
-    const historyEl = $("history");
-    const toUserEl = $("toUser");
-    const companyEl = $("company");
-    const marketSummaryEl = $("marketSummary");
-    const portfolioEl = $("portfolio");
-    const loadingScreenEl = $("loadingScreen");
-    const txModalEl = $("txModal");
-    let autoRefreshTimer = null;
-    let statusTimer = null;
-    let authStatusTimer = null;
-    let marketStatusTimer = null;
-    let historyPollTick = 0;
-
-    $("btnSignIn").addEventListener("click", signIn);
-    $("btnSignUp").addEventListener("click", signUp);
-    $("btnTransfer").addEventListener("click", transferFunds);
-    $("btnLogout").addEventListener("click", logout);
-    $("btnViewTransactions").addEventListener("click", openTransactions);
-    $("btnCloseTransactions").addEventListener("click", closeTransactions);
-    $("btnBuy").addEventListener("click", buyShares);
-    $("btnSell").addEventListener("click", sellShares);
-    initApp();
-
-    async function initApp() {
-      loadingScreenEl.classList.remove("hidden");
-      const minDelay = waitMs(2000);
-      const boot = bootstrapSession();
-      await Promise.allSettled([minDelay, boot]);
-      loadingScreenEl.classList.add("hidden");
-    }
-
-    function waitMs(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-
-    function setAuthStatus(msg, type = "") {
-      clearTimeout(authStatusTimer);
-      authStatusEl.textContent = msg;
-      authStatusEl.className = "status " + type;
-      if (!msg) return;
-      authStatusTimer = setTimeout(() => {
-        authStatusEl.textContent = "";
-        authStatusEl.className = "status";
-      }, 3000);
-    }
-
-    function setStatus(msg, type = "") {
-      clearTimeout(statusTimer);
-      statusEl.textContent = msg;
-      statusEl.className = "status " + type;
-      if (!msg) return;
-      statusTimer = setTimeout(() => {
-        statusEl.textContent = "";
-        statusEl.className = "status";
-      }, 3000);
-    }
-
-    function setMarketStatus(msg, type = "") {
-      clearTimeout(marketStatusTimer);
-      marketSummaryEl.textContent = msg;
-      marketSummaryEl.className = "status " + type;
-      if (!msg) return;
-      marketStatusTimer = setTimeout(() => {
-        marketSummaryEl.textContent = "";
-        marketSummaryEl.className = "status";
-      }, 3000);
-    }
-
-    function formatMoney(n) {
-      return APP.symbol + Number(n || 0).toFixed(2);
-    }
-
-    function showAuthPage() {
-      stopAutoRefresh();
-      closeTransactions();
-      authPageEl.classList.remove("hidden");
-      bankPageEl.classList.add("hidden");
-    }
-
-    function showBankPage() {
-      authPageEl.classList.add("hidden");
-      bankPageEl.classList.remove("hidden");
-      whoamiEl.textContent = "@" + APP.me;
-      startAutoRefresh();
-    }
-
-    function requireSession() {
-      if (!APP.me || !APP.token) {
-        setStatus("Sign in first.", "err");
-        return false;
-      }
-      return true;
-    }
-
-    async function callApi(action, data = {}) {
-      const payload = { action, ...data };
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
-      let res;
-      try {
-        res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          cache: "no-store",
-          keepalive: true,
-          signal: controller.signal,
-          body: JSON.stringify(payload)
-        });
-      } catch (err) {
-        if (err && err.name === "AbortError") {
-          throw new Error("Server timeout. Try again.");
-        }
-        throw err;
-      } finally {
-        clearTimeout(timeout);
-      }
-      if (!res.ok) throw new Error("Network error: " + res.status);
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.error || "Server request failed.");
-      return json;
-    }
-
-    function saveSession() {
-      localStorage.setItem(SESSION_KEY, JSON.stringify({ me: APP.me, token: APP.token }));
-    }
-
-    function clearSession() {
-      localStorage.removeItem(SESSION_KEY);
-    }
-
-    async function bootstrapSession() {
-      const raw = localStorage.getItem(SESSION_KEY);
-      if (!raw) {
-        showAuthPage();
-        return;
-      }
-      try {
-        const data = JSON.parse(raw);
-        APP.me = String(data.me || "");
-        APP.token = String(data.token || "");
-        if (!APP.me || !APP.token) throw new Error("Missing saved session.");
-        showBankPage();
-        await refreshAllData(true, false);
-        void loadHistory(true);
-      } catch (_err) {
-        clearSession();
-        APP.me = "";
-        APP.token = "";
-        showAuthPage();
-      }
-    }
-
-    function startAutoRefresh() {
-      stopAutoRefresh();
-      autoRefreshTimer = setInterval(async () => {
-        if (!APP.me || !APP.token) return;
-        await refreshAllData(true, false);
-        historyPollTick += 1;
-        if (historyPollTick % 3 === 0) {
-          void loadHistory(true);
-        }
-      }, 4000);
-    }
-
-    function stopAutoRefresh() {
-      if (!autoRefreshTimer) return;
-      clearInterval(autoRefreshTimer);
-      autoRefreshTimer = null;
-    }
-
-    async function openTransactions() {
-      txModalEl.classList.remove("hidden");
-      await loadHistory(true);
-    }
-
-    function closeTransactions() {
-      txModalEl.classList.add("hidden");
-    }
-
-    function authInput() {
-      const username = $("username").value.trim().toLowerCase();
-      const password = $("password").value;
-      return { username, password };
-    }
-
-    async function signUp() {
-      const { username, password } = authInput();
-      if (!username || !password) {
-        setAuthStatus("Username and password are required.", "err");
-        return;
-      }
-      try {
-        setAuthStatus("Creating account...");
-        const out = await callApi("signup", { username, password });
-        APP.me = out.username;
-        APP.token = out.token;
-        APP.balance = out.balance || 0;
-        saveSession();
-        renderBalance();
-        showBankPage();
-        setStatus("Signed up successfully.", "ok");
-        setAuthStatus("Signed up.", "ok");
-        await refreshAllData(true, false);
-        void loadHistory(true);
-      } catch (err) {
-        setAuthStatus(err.message, "err");
-      }
-    }
-
-    async function signIn() {
-      const { username, password } = authInput();
-      if (!username || !password) {
-        setAuthStatus("Username and password are required.", "err");
-        return;
-      }
-      try {
-        setAuthStatus("Signing in...");
-        const out = await callApi("signin", { username, password });
-        APP.me = out.username;
-        APP.token = out.token;
-        APP.balance = out.balance || 0;
-        saveSession();
-        renderBalance();
-        showBankPage();
-        setStatus("Signed in.", "ok");
-        setAuthStatus("Signed in.", "ok");
-        await refreshAllData(true, false);
-        void loadHistory(true);
-      } catch (err) {
-        setAuthStatus(err.message, "err");
-      }
-    }
-
-    function logout() {
-      APP.me = "";
-      APP.token = "";
-      APP.balance = 0;
-      clearSession();
-      historyEl.innerHTML = "";
-      toUserEl.innerHTML = "";
-      companyEl.innerHTML = "";
-      portfolioEl.innerHTML = "";
-      marketSummaryEl.textContent = "";
-      renderBalance();
-      showAuthPage();
-      setAuthStatus("Logged out.", "ok");
-    }
-
-    async function refreshBalance(silent = false) {
-      if (!requireSession()) return;
-      try {
-        if (!silent) setStatus("Refreshing balance...");
-        const out = await callApi("balance", { username: APP.me, token: APP.token });
-        APP.balance = out.balance || 0;
-        renderBalance();
-        if (!silent) setStatus("Balance updated.", "ok");
-      } catch (err) {
-        setStatus(err.message, "err");
-      }
-    }
-
-    async function transferFunds() {
-      if (!requireSession()) return;
-      const to = toUserEl.value.trim().toLowerCase();
-      const amount = Number($("amount").value);
-      if (!to) return setStatus("Recipient username required.", "err");
-      if (!Number.isFinite(amount) || amount <= 0) return setStatus("Amount must be greater than 0.", "err");
-
-      try {
-        setStatus("Sending transfer...");
-        const out = await callApi("transfer", { username: APP.me, token: APP.token, to, amount });
-        APP.balance = out.balance || APP.balance;
-        renderBalance();
-        $("amount").value = "";
-        setStatus("Transfer sent to @" + to + " for " + formatMoney(amount) + ".", "ok");
-        await refreshAllData(true, false);
-        void loadHistory(true);
-      } catch (err) {
-        setStatus(err.message, "err");
-      }
-    }
-
-    async function loadHistory(silent = false) {
-      if (!requireSession()) return;
-      try {
-        if (!silent) setStatus("Loading history...");
-        const out = await callApi("history", { username: APP.me, token: APP.token });
-        renderHistory(out.items || []);
-        if (typeof out.balance !== "undefined") {
-          APP.balance = out.balance || 0;
-          renderBalance();
-        }
-        if (!silent) setStatus("");
-      } catch (err) {
-        setStatus(err.message, "err");
-      }
-    }
-
-    async function refreshRecipients() {
-      if (!requireSession()) return;
-      try {
-        const out = await callApi("listUsers", { username: APP.me, token: APP.token });
-        renderRecipients(out.users || []);
-      } catch (err) {
-        setStatus(err.message, "err");
-      }
-    }
-
-    function renderRecipients(users) {
-      if (!users.length) {
-        toUserEl.innerHTML = '<option value="">No other accounts yet</option>';
-        return;
-      }
-      toUserEl.innerHTML = users.map((user) => `<option value="${user}">@${user}</option>`).join("");
-    }
-
-    function renderBalance() {
-      balanceEl.innerHTML = formatMoney(APP.balance) + " <small>" + APP.moneyName + "</small>";
-    }
-
-    async function refreshAllData(silent = false, includeHistory = false) {
-      if (!requireSession()) return;
-      try {
-        const out = await callApi("snapshot", { username: APP.me, token: APP.token, includeHistory });
-        APP.balance = Number(out.balance || 0);
-        renderBalance();
-        renderRecipients(out.users || []);
-        renderMarket(out.companies || []);
-        if (includeHistory) {
-          renderHistory(out.items || []);
-        }
-        if (!silent) setStatus("Synced.", "ok");
-      } catch (err) {
-        setStatus(err.message, "err");
-      }
-    }
-
-    async function refreshMarket(silent = false) {
-      if (!requireSession()) return;
-      try {
-        const out = await callApi("market", { username: APP.me, token: APP.token });
-        renderMarket(out.companies || []);
-        if (!silent) setStatus("Market updated.", "ok");
-      } catch (err) {
-        setStatus(err.message, "err");
-      }
-    }
-
-    function renderMarket(companies) {
-      if (!companies.length) {
-        companyEl.innerHTML = '<option value="">No companies listed</option>';
-        portfolioEl.innerHTML = "";
-        return;
-      }
-      const current = companyEl.value;
-      companyEl.innerHTML = companies.map((c) => {
-        return `<option value="${c.company}">${c.company} - ${formatMoney(c.price)} (${Math.trunc(Number(c.myShares || 0))} shares)</option>`;
-      }).join("");
-      if (current && companies.some((c) => c.company === current)) companyEl.value = current;
-
-      portfolioEl.innerHTML = companies.map((c) => `
-        <div class="company-row">
-          <div><strong>${c.company}</strong></div>
-          <div class="meta">Price: ${formatMoney(c.price)} | You own: ${Math.trunc(Number(c.myShares || 0))} shares</div>
-        </div>
-      `).join("");
-    }
-
-    async function buyShares() {
-      if (!requireSession()) return;
-      const company = companyEl.value;
-      const quantity = Number($("shares").value);
-      if (!company) return setStatus("Pick a company first.", "err");
-      if (!Number.isInteger(quantity) || quantity <= 0) return setStatus("Shares must be a whole number greater than 0.", "err");
-      try {
-        setStatus("Buying shares...");
-        const out = await callApi("buyShares", { username: APP.me, token: APP.token, company, quantity });
-        APP.balance = out.balance || APP.balance;
-        renderBalance();
-        setMarketStatus(`Bought ${quantity} ${company} shares. New price: ${formatMoney(out.price)}.`, "ok");
-        $("shares").value = "";
-        await refreshAllData(true, false);
-        void loadHistory(true);
-      } catch (err) {
-        setStatus(err.message, "err");
-      }
-    }
-
-    async function sellShares() {
-      if (!requireSession()) return;
-      const company = companyEl.value;
-      const quantity = Number($("shares").value);
-      if (!company) return setStatus("Pick a company first.", "err");
-      if (!Number.isInteger(quantity) || quantity <= 0) return setStatus("Shares must be a whole number greater than 0.", "err");
-      try {
-        setStatus("Selling shares...");
-        const out = await callApi("sellShares", { username: APP.me, token: APP.token, company, quantity });
-        APP.balance = out.balance || APP.balance;
-        renderBalance();
-        setMarketStatus(`Sold ${quantity} ${company} shares. New price: ${formatMoney(out.price)}.`, "ok");
-        $("shares").value = "";
-        await refreshAllData(true, false);
-        void loadHistory(true);
-      } catch (err) {
-        setStatus(err.message, "err");
-      }
-    }
-
-    function formatTimestamp(raw) {
-      const d = new Date(raw);
-      if (Number.isNaN(d.getTime())) return String(raw || "");
-      return d.toLocaleString([], {
-        year: "numeric",
-        month: "short",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    }
-
-    function renderHistory(items) {
-      if (!items.length) {
-        historyEl.innerHTML = '<div style="padding:12px 4px;color:#a1a1a1;">No transactions yet.</div>';
-        return;
-      }
-      historyEl.innerHTML = items.map(tx => {
-        const sign = tx.direction === "in" ? "+" : "-";
-        const cls = tx.direction === "in" ? "positive" : "negative";
-        const type = String(tx.type || "transaction").toUpperCase();
-        return `
-          <div class="tx">
-            <div>
-              <div><strong>${type}</strong> ${tx.otherUser ? "with @" + tx.otherUser : ""}</div>
-              <div class="meta">${formatTimestamp(tx.timestamp)}</div>
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <span class="logo-text">MOGGER</span>
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-label">AI ACTIVE</span>
+                </div>
             </div>
-            <div class="amount ${cls}">${sign}${formatMoney(tx.amount).replace(APP.symbol, "")}</div>
-          </div>
-        `;
-      }).join("");
-    }
-  </script>
+            <nav>
+                <button class="nav-btn active">ANALYZER</button>
+                <button class="nav-btn">DATABASE</button>
+                <button class="nav-btn">UPGRADE</button>
+            </nav>
+        </header>
+
+        <main>
+            <div class="video-section">
+                <div class="video-wrapper">
+                    <video id="webcam" autoplay playsinline></video>
+                    <canvas id="output_canvas"></canvas>
+                    <div class="scanner-line"></div>
+                    <div class="ui-overlays">
+                        <div class="corner top-left"></div>
+                        <div class="corner top-right"></div>
+                        <div class="corner bottom-left"></div>
+                        <div class="corner bottom-right"></div>
+                    </div>
+                </div>
+                <div class="camera-controls">
+                    <button id="camera-toggle" class="control-btn">
+                        <span class="icon">📷</span> START CAMERA
+                    </button>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="stats-panel glass">
+                    <h3>FACIAL ANALYSIS</h3>
+                    <div class="stat-group">
+                        <div class="stat-item">
+                            <span class="label">SYMMETRY</span>
+                            <div class="progress-bar">
+                                <div id="symmetry-bar" class="fill" style="width: 0%"></div>
+                            </div>
+                            <span id="symmetry-val" class="value">0%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">JAWLINE</span>
+                            <div class="progress-bar">
+                                <div id="jawline-bar" class="fill" style="width: 0%"></div>
+                            </div>
+                            <span id="jawline-val" class="value">0%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">EYE SPACING</span>
+                            <div class="progress-bar">
+                                <div id="eye-bar" class="fill" style="width: 0%"></div>
+                            </div>
+                            <span id="eye-val" class="value">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="score-panel glass">
+                    <h3>MOG SCORE</h3>
+                    <div class="score-display">
+                        <span id="mog-score" class="score-number">0.0</span>
+                        <span class="score-max">/ 10</span>
+                    </div>
+                    <div id="score-rank" class="score-rank">CALIBRATING...</div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card glass">
+                        <span class="label">WIDTH</span>
+                        <span id="face-width" class="value">--</span>
+                    </div>
+                    <div class="metric-card glass">
+                        <span class="label">RATIO</span>
+                        <span id="face-ratio" class="value">--</span>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 MOGGER LABS. BUILT FOR PEAK PERFORMANCE.</p>
+        </footer>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loader"></div>
+        <p>INITIALIZING NEURAL NETWORKS...</p>
+    </div>
+
+    <script type="module" src="script.js"></script>
 </body>
 </html>
