@@ -778,86 +778,86 @@
         let globalVideoLines = [];
         let chatHistory = JSON.parse(localStorage.getItem('parade_chat')) || []; 
         let ytPlayers = {}; 
-        let hypeObserver = null; // Intersection Observer for lazy loading video frames
+        let hypeObserver = null; 
 
-        // Upgraded high-protein athlete meals catalog with FAST reliable Unsplash image URLs
+        // Upgraded high-protein athlete meals with neutral names and 100% verified accurate photo URLs
         const defaultMeals = [
             {
-                id: 101, type: "meal", title: "Pro-Boost Chicken & Sweet Potato", calories: 680, protein: "52g",
-                description: "Grilled chicken breast paired with roasted sweet potato cubes and fresh steamed broccoli. Optimized for rapid basketball muscle recovery.",
+                id: 101, type: "meal", title: "Grilled Chicken & Sweet Potato", calories: 680, protein: "52g",
+                description: "Grilled chicken breast paired with roasted sweet potato cubes and fresh steamed broccoli. Optimized for muscle recovery.",
                 ingredients: ["200g Lean chicken breast fillet", "1 Medium sweet potato", "1 Cup broccoli florets", "1 tbsp Extra virgin olive oil"],
                 instructions: ["Roast cubed sweet potatoes for 25 minutes at 400°F.", "Grill chicken for 6-7 minutes per side.", "Steam broccoli until tender."],
                 imageUrl: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 102, type: "meal", title: "Beast-Mode Beef & Rice Bowl", calories: 750, protein: "48g",
+                id: 102, type: "meal", title: "Ground Beef & Jasmine Rice Bowl", calories: 750, protein: "48g",
                 description: "Lean grass-fed ground beef served over warm jasmine rice, mixed with sautéed baby spinach and a light sesame-soy glaze.",
                 ingredients: ["180g Extra-lean ground beef", "1 Cup cooked Jasmine rice", "2 Cups raw baby spinach", "1 tbsp low-sodium soy sauce"],
                 instructions: ["Cook rice.", "Brown the ground beef in a skillet.", "Stir in soy sauce and spinach until wilted.", "Serve over rice."],
-                imageUrl: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=800&q=80"
+                imageUrl: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 103, type: "meal", title: "Slam-Dunk Salmon & Quinoa", calories: 620, protein: "42g",
+                id: 103, type: "meal", title: "Seared Salmon & Quinoa", calories: 620, protein: "42g",
                 description: "Seared Omega-3 rich salmon fillet resting on fluffy tri-color quinoa with tender roasted asparagus.",
                 ingredients: ["150g Fresh salmon fillet", "3/4 Cup cooked quinoa", "8-10 Asparagus spears", "1/2 tbsp Olive oil"],
                 instructions: ["Cook quinoa.", "Roast asparagus in olive oil for 10 mins.", "Pan-sear salmon for 4 minutes each side.", "Plate and serve."],
                 imageUrl: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 104, type: "meal", title: "Fast-Break Turkey & Avocado Wrap", calories: 540, protein: "38g",
+                id: 104, type: "meal", title: "Turkey & Avocado Wrap", calories: 540, protein: "38g",
                 description: "Lean sliced turkey breast with creamy avocado, crisp lettuce, and tomato wrapped in a sprouted whole-wheat tortilla.",
                 ingredients: ["150g Sliced turkey breast", "1/2 Ripe avocado", "1 Sprouted whole-wheat wrap", "1/2 Cup shredded lettuce", "3 Tomato slices"],
                 instructions: ["Lay tortilla flat.", "Layer turkey, avocado, lettuce, and tomatoes.", "Roll up tightly and serve."],
-                imageUrl: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=800&q=80"
+                imageUrl: "https://images.unsplash.com/photo-1628191010210-a5907406c890?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 105, type: "meal", title: "Overtime Protein Oats Bowl", calories: 590, protein: "44g",
+                id: 105, type: "meal", title: "Protein Oatmeal with Banana & Almond Butter", calories: 590, protein: "44g",
                 description: "Warm slow-cooked steel-cut oats mixed with whey protein, topped with fresh blueberries, sliced bananas, and a spoonful of almond butter.",
                 ingredients: ["1/2 Cup rolled oats", "1 Scoop whey protein", "1/4 Cup fresh blueberries", "1/2 Banana, sliced", "1 tbsp Almond butter"],
                 instructions: ["Cook oats in milk or water.", "Stir in protein powder once slightly cooled.", "Top with fruit and almond butter."],
                 imageUrl: "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 106, type: "meal", title: "Guard Greek Yogurt Power-Mix", calories: 480, protein: "40g",
+                id: 106, type: "meal", title: "Greek Yogurt Parfait with Berries & Granola", calories: 480, protein: "40g",
                 description: "Thick unsweetened non-fat Greek yogurt layered with organic granola, raw walnuts, and mixed dark berries.",
                 ingredients: ["250g Non-fat Greek yogurt", "1/4 Cup organic granola", "1/4 Cup mixed berries", "1 tbsp Raw walnuts"],
                 instructions: ["Scoop yogurt into a bowl.", "Layer granola, berries, and walnuts on top."],
-                imageUrl: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=800&q=80"
+                imageUrl: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 107, type: "meal", title: "Pre-Game Peanut Butter Toast", calories: 420, protein: "15g",
+                id: 107, type: "meal", title: "Peanut Butter & Sliced Banana Toast", calories: 420, protein: "15g",
                 description: "Classic quick energy. Whole wheat toast smothered in natural peanut butter and topped with fresh banana slices.",
                 ingredients: ["2 Slices whole wheat bread", "2 tbsp Natural peanut butter", "1 Medium banana, sliced"],
                 instructions: ["Toast the bread.", "Spread peanut butter evenly across both slices.", "Top with banana slices and eat immediately."],
-                imageUrl: "https://images.unsplash.com/photo-1584308972271-20922e4312ce?auto=format&fit=crop&w=800&q=80"
+                imageUrl: "https://images.unsplash.com/photo-1541532713592-79a0317b6b77?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 108, type: "meal", title: "Quick Scrambled Eggs & Spinach", calories: 350, protein: "22g",
+                id: 108, type: "meal", title: "Scrambled Eggs with Spinach & Toast", calories: 350, protein: "22g",
                 description: "A 5-minute essential meal packed with complete protein and iron for quick muscle repair.",
                 ingredients: ["3 Whole large eggs", "1 Handful raw spinach", "1 Slice whole grain toast", "Pinch of salt and pepper"],
                 instructions: ["Whisk eggs in a bowl.", "Spray a pan and heat over medium.", "Toss in spinach until wilted.", "Pour eggs over spinach and scramble until cooked.", "Serve with toast."],
-                imageUrl: "https://images.unsplash.com/photo-1494597564530-871f2b93ac55?auto=format&fit=crop&w=800&q=80"
+                imageUrl: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 109, type: "meal", title: "Tuna & Rice Power Bowl", calories: 450, protein: "35g",
+                id: 109, type: "meal", title: "Simple Tuna & White Rice Bowl", calories: 450, protein: "35g",
                 description: "The classic budget muscle-builder. Fast digesting carbs and high quality protein.",
                 ingredients: ["1 Can tuna in water (drained)", "1 Cup microwave or pre-cooked rice", "1 tbsp Light mayo or Sriracha"],
                 instructions: ["Heat up the rice.", "Mix the drained tuna with mayo or sriracha.", "Combine in a bowl and eat warm."],
                 imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 110, type: "meal", title: "Fast Chicken Quesadilla", calories: 480, protein: "32g",
+                id: 110, type: "meal", title: "Grilled Chicken & Cheese Quesadilla", calories: 480, protein: "32g",
                 description: "Easy high-protein snack using pre-cooked chicken and a whole wheat wrap.",
                 ingredients: ["1 Whole wheat tortilla", "100g Pre-cooked shredded chicken", "1/3 Cup reduced-fat shredded cheese"],
                 instructions: ["Place tortilla in a dry skillet over medium heat.", "Add cheese and chicken to one half.", "Fold over and cook until cheese is melted and tortilla is crispy.", "Cut and serve."],
-                imageUrl: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80"
+                imageUrl: "https://images.unsplash.com/photo-1599974579688-8dbdd335c77f?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 111, type: "meal", title: "Supreme Recovery Shake", calories: 380, protein: "30g",
+                id: 111, type: "meal", title: "High-Protein Banana & Peanut Butter Shake", calories: 380, protein: "30g",
                 description: "Liquid nutrition for when you are on the go. Blends instantly for rapid recovery.",
                 ingredients: ["1 Scoop whey protein isolate", "1 Cup milk or almond milk", "1/2 Banana", "1 tbsp Peanut butter", "Handful of ice"],
                 instructions: ["Add all ingredients to a blender.", "Blend on high until smooth.", "Drink immediately post-workout."],
-                imageUrl: "https://images.unsplash.com/photo-1614966649714-2fc508dd6a14?auto=format&fit=crop&w=800&q=80"
+                imageUrl: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=800&q=80"
             }
         ];
 
@@ -1057,7 +1057,7 @@
                 });
             }
 
-            // 2. Pick 2 random Meals
+            // 2. Pick 3 random Meals
             const stateMeals = state.tasks.filter(t => t.type === 'meal');
             const mealPool = [...defaultMeals, ...stateMeals];
             let shuffledMeals = [...mealPool].sort(() => 0.5 - Math.random());
@@ -1066,7 +1066,7 @@
                 if (!selectedMeals.some(m => m.id === meal.id)) {
                     selectedMeals.push(meal);
                 }
-                if (selectedMeals.length >= 2) break;
+                if (selectedMeals.length >= 3) break;
             }
 
             selectedMeals.forEach(randomMeal => {
