@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
+    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         :root {
             --bg: #030303;
@@ -67,6 +68,7 @@
             background: var(--bg);
             z-index: 10;
             border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
 
         header h1 {
@@ -81,22 +83,33 @@
             font-weight: 800;
         }
 
+        /* Update main and view flex behavior to pin chat correctly and scroll individually */
         main {
             flex: 1;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Hide main overflow, let views scroll */
             position: relative;
-            padding-bottom: 20px;
         }
 
         .view {
             display: none;
+            flex: 1;
+            overflow-y: auto;
             padding: 20px;
-            min-height: 100%;
             animation: fadeIn 0.2s ease-out;
+            -webkit-overflow-scrolling: touch;
         }
 
         .view.active {
             display: block;
+        }
+
+        /* Specialized Flex column for Coach view to pin input at bottom */
+        #view-coach.active {
+            display: flex;
+            flex-direction: column;
+            padding: 20px 20px calc(20px + env(safe-area-inset-bottom)) 20px;
         }
 
         /* Bottom Nav */
@@ -111,6 +124,7 @@
             z-index: 10;
             position: relative;
             box-sizing: border-box;
+            flex-shrink: 0;
         }
 
         .nav-item {
@@ -196,6 +210,18 @@
         button.tab.active {
             color: var(--text);
             border-bottom: 2px solid var(--text);
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 8px;
+            width: auto;
         }
 
         input[type="text"], input[type="number"], textarea {
@@ -316,7 +342,7 @@
             opacity: 1;
         }
 
-        /* Detail Modal with Pointer-Events Safeties preventing layout trapping [1.1] */
+        /* Detail Modal */
         #detail-modal {
             position: fixed;
             top: 0;
@@ -328,15 +354,11 @@
             display: flex;
             flex-direction: column;
             transform: translateX(100%);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
-            visibility: hidden;
-            pointer-events: none; /* Fully disabled when translated off screen to allow underlying clicks */
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         #detail-modal.open {
             transform: translateX(0);
-            visibility: visible;
-            pointer-events: auto; /* Fully enabled on viewport entry */
         }
 
         .modal-header {
@@ -344,12 +366,11 @@
             padding: env(safe-area-inset-top) 20px 0;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             border-bottom: 1px solid var(--border);
             background: var(--bg);
-            gap: 15px;
         }
 
-        /* Back Button */
         .back-btn {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -383,7 +404,7 @@
             padding-bottom: calc(20px + env(safe-area-inset-bottom));
         }
 
-        /* Exercise List inside Workout */
+        /* Exercise & Meal Elements */
         .exercise-item {
             display: flex;
             justify-content: space-between;
@@ -409,7 +430,6 @@
             font-weight: 600;
         }
 
-        /* Meal Detail Image */
         .meal-image {
             width: 100%;
             height: 220px;
@@ -428,10 +448,8 @@
             margin-bottom: 20px;
         }
 
-        /* Misc */
         .tab-group { display: flex; margin-bottom: 20px; gap: 0; }
 
-        /* Dynamic Quote card styles with gradient background support */
         .gradient-quote-card {
             border-radius: var(--radius);
             margin-bottom: 15px;
@@ -466,6 +484,7 @@
             gap: 10px;
             align-items: stretch;
             margin-top: 15px;
+            flex-shrink: 0; /* Prevents input group from shrinking when chat fills up */
         }
 
         .input-group input {
@@ -488,16 +507,13 @@
             border-radius: var(--radius);
             overflow: hidden;
             margin-bottom: 15px;
-            position: relative;
+            pointer-events: none;
         }
 
         /* Hype View & Custom Touch/Scroll Overlay Trapping Fix */
         #view-hype { 
             padding: 0; 
-            overflow-y: scroll; 
             scroll-snap-type: y mandatory; 
-            height: calc(100vh - var(--header-height) - var(--nav-height)); 
-            -webkit-overflow-scrolling: touch;
         }
         
         .video-container { 
@@ -511,7 +527,7 @@
             background: #000; 
         }
 
-        /* Transparent scroll overlay so swiping works flawlessly on mobile without getting swallowed by iframe. Tap toggles sound! */
+        /* Transparent scroll overlay so swiping works flawlessly */
         .video-scroll-overlay {
             position: absolute;
             top: 0;
@@ -522,49 +538,37 @@
             background: transparent;
             pointer-events: auto;
             cursor: pointer;
-            display: flex;
-            align-items: flex-end;
-            justify-content: flex-end;
-            padding: 20px;
         }
 
-        .volume-indicator {
-            background: rgba(0, 0, 0, 0.65);
+        .mute-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 14px;
+            border-radius: 20px;
             color: #fff;
-            padding: 10px;
-            border-radius: 50%;
-            font-size: 20px !important;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: background 0.2s, transform 0.1s;
-        }
-
-        .video-scroll-overlay:active .volume-indicator {
-            transform: scale(0.9);
-            background: rgba(0, 0, 0, 0.9);
+            font-weight: 800;
+            font-size: 0.75rem;
+            pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.2);
+            z-index: 10;
+            letter-spacing: 1px;
+            backdrop-filter: blur(4px);
         }
 
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* Coach Chat Pinned Layout Fixes */
-        #view-coach {
-            display: none;
-            flex-direction: column;
-            height: calc(100vh - var(--header-height) - var(--nav-height));
-            padding: 20px;
-        }
-
-        #view-coach.active {
-            display: flex;
-        }
-
+        /* Coach Chat Bubbles & Layout */
         #chat-messages {
             flex: 1;
-            overflow-y: auto;
-            padding-bottom: 15px;
-            padding-right: 5px;
             display: flex;
             flex-direction: column;
             gap: 12px;
+            overflow-y: auto;
+            padding-bottom: 15px;
+            padding-right: 5px;
+            -webkit-overflow-scrolling: touch;
         }
 
         .chat-bubble {
@@ -591,37 +595,6 @@
             font-weight: 600;
             border-bottom-right-radius: 2px;
         }
-
-        #view-coach .input-group {
-            margin-top: auto; /* Force input to pin perfectly to the absolute bottom of Coach container */
-            padding-top: 15px;
-            border-top: 1px solid var(--border);
-            background: var(--bg);
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        #view-coach .input-group input {
-            margin: 0;
-            flex: 1;
-        }
-
-        #view-coach .input-group button {
-            margin: 0;
-            width: auto;
-            padding: 12px 18px;
-        }
-
-        /* Detail Modal Edit Fields */
-        .edit-label {
-            font-size: 0.8rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-top: 15px;
-            display: block;
-        }
     </style>
 </head>
 <body>
@@ -634,16 +607,15 @@
         </header>
 
         <main id="main-scrollable">
-            <!-- HOME VIEW (Dynamic Long Scroll Feed) -->
+            <!-- HOME VIEW -->
             <div id="view-home" class="view active">
                 <h2>TODAY'S GRIND</h2>
                 <div class="task-list" id="home-tasks" style="margin-top: 15px; margin-bottom: 25px;">
                     <!-- Injected via JS -->
                 </div>
 
-                <!-- Dynamic Scattered Content Feed -->
                 <div id="home-scattered-feed">
-                    <!-- Randomly mixed quotes, tips, meals, and video embeds are injected here dynamically -->
+                    <!-- Randomly mixed content -->
                 </div>
             </div>
 
@@ -704,23 +676,23 @@
 
             <!-- HYPE VIEW -->
             <div id="view-hype" class="view">
-                <!-- Injected via JS -->
+                <!-- Injected via JS with Lazy YT Initialization -->
             </div>
 
-            <!-- COACH CHAT VIEW -->
+            <!-- COACH CHAT VIEW (Flex properly pinned) -->
             <div id="view-coach" class="view">
-                <h2>COACH PARADE</h2>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px;">Ask Coach to design or tweak custom layouts & drills for Today's Grind!</p>
+                <div style="flex-shrink: 0;">
+                    <h2>COACH PARADE</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">Ask Coach to build you a workout, tweak your routine, or give strategic advice.</p>
+                </div>
                 
                 <div id="chat-messages">
-                    <div class="chat-bubble coach">
-                        <span class="chat-message-text">Welcome to the gym, player. No excuses today. What aspect of your basketball game are we taking to the next level? Just tell me what workout, drill session, or meal plan you want, and I'll build it and load it straight into your grind! Let's work.</span>
-                    </div>
+                    <!-- Loaded from localStorage -->
                 </div>
 
                 <div class="input-group">
-                    <input type="text" id="chat-input" placeholder="Ask Coach Parade..." onkeydown="if(event.key === 'Enter') sendChatMessage()">
-                    <button onclick="sendChatMessage()" style="display: flex; align-items: center; justify-content: center;">
+                    <input type="text" id="chat-input" placeholder="e.g. Build me a core workout..." onkeydown="if(event.key === 'Enter') sendChatMessage()">
+                    <button onclick="sendChatMessage()" style="padding: 0 20px; display: flex; align-items: center; justify-content: center;">
                         <span class="material-symbols-outlined" style="font-size: 20px;">send</span>
                     </button>
                 </div>
@@ -766,22 +738,22 @@
             </div>
         </nav>
 
-        <!-- Detail Modal with Click Safety Fixes [1.1] -->
+        <!-- Detail Modal -->
         <div id="detail-modal">
-            <div class="modal-header" style="justify-content: space-between;">
+            <div class="modal-header">
                 <button class="back-btn" onclick="closeDetail()" aria-label="Back">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
                         <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
                 </button>
-                <h2 id="modal-title" class="modal-title" style="flex:1; text-align:center; padding: 0 10px; font-size: 1.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">DETAIL</h2>
-                <button class="back-btn" id="modal-edit-toggle-btn" onclick="toggleEditMode()" aria-label="Edit" style="background: var(--surface);">
-                    <span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+                <h2 id="modal-title" class="modal-title" style="flex:1; text-align:center; font-size: 1.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">DETAIL</h2>
+                <button class="action-btn" onclick="openEditMode()" aria-label="Edit">
+                    <span class="material-symbols-outlined">edit</span>
                 </button>
             </div>
             <div class="modal-body" id="modal-body">
-                <!-- Content injected dynamically -->
+                <!-- Content injected via JS -->
             </div>
         </div>
     </div>
@@ -793,179 +765,99 @@
             apiKey: localStorage.getItem('parade_apikey') || '',
             lastActive: localStorage.getItem('parade_last_active') || new Date().toDateString(),
             tasks: JSON.parse(localStorage.getItem('parade_tasks')) || [
-                { id: 1, type: 'task', title: "Slam-Dunk Hydration (1 Gallon)", completed: false },
-                { id: 2, type: 'workout', title: "Handles & Footwork Warmup", completed: false, exercises: [
-                    { name: "Crossover Dribbles", reps: "2 x 50 reps", done: false },
-                    { name: "Between-the-Legs", reps: "2 x 50 reps", done: false },
-                    { name: "Behind-the-Back", reps: "2 x 50 reps", done: false },
-                    { name: "Slam-Step Defensive Jabs", reps: "3 x 1 minute", done: false }
-                ]},
-                { id: 3, type: 'workout', title: "Vertical Jump Foundation", completed: false, exercises: [
-                    { name: "Explosive Squat Jumps", reps: "3 x 10 reps", done: false },
-                    { name: "Rim-Touch Springs", reps: "3 x 5 reps", done: false },
-                    { name: "Calf Raises", reps: "3 x 15 reps", done: false },
-                    { name: "Isometric Wall Sit", reps: "3 x 30s", done: false }
+                { id: 1, type: 'task', title: "Drink 1 gallon of water", completed: false },
+                { id: 2, type: 'workout', title: "Core Explosion", completed: false, exercises: [
+                    { name: "Crunches", reps: "3 x 20", done: false },
+                    { name: "Planks", reps: "3 x 60s", done: false }
                 ]}
             ]
         };
 
         let currentActiveItem = null;
-        let isEditMode = false;
         let manualType = 'task';
         let globalVideoLines = [];
-        let chatHistory = [];
-        let coachPlansMemory = {}; // Memory lookup map preventing HTML single-quote inline serialization errors [1.2]
+        let chatHistory = JSON.parse(localStorage.getItem('parade_chat')) || []; 
+        let ytPlayers = {}; 
+        let hypeObserver = null; // Intersection Observer for lazy loading video frames
 
-        // Upgraded high-protein athlete meals catalog with both complex & simple options
+        // Upgraded high-protein athlete meals catalog with FAST reliable Unsplash image URLs
         const defaultMeals = [
             {
-                id: 101,
-                type: "meal",
-                title: "Pro-Boost Chicken & Sweet Potato",
-                calories: 680,
-                protein: "52g",
+                id: 101, type: "meal", title: "Pro-Boost Chicken & Sweet Potato", calories: 680, protein: "52g",
                 description: "Grilled chicken breast paired with roasted sweet potato cubes and fresh steamed broccoli. Optimized for rapid basketball muscle recovery.",
-                ingredients: [
-                    "200g Lean chicken breast fillet",
-                    "1 Medium sweet potato, scrubbed and cubed",
-                    "1 Cup broccoli florets",
-                    "1 tbsp Olive oil",
-                    "Spices: garlic powder, paprika, sea salt, pepper"
-                ],
-                instructions: [
-                    "Preheat oven to 400°F (200°C).",
-                    "Toss potatoes with 1/2 tbsp olive oil, paprika, salt, and pepper. Roast on baking sheet for 25 mins.",
-                    "Brush chicken with remaining oil and garlic seasoning. Cook in medium pan for 6-7 mins per side.",
-                    "Steam broccoli for 5 minutes.",
-                    "Slice chicken, plate together with sweet potatoes and broccoli, and serve."
-                ],
-                imagePrompt: "grilled chicken breast with sweet potatoes and broccoli healthy sports meal"
+                ingredients: ["200g Lean chicken breast fillet", "1 Medium sweet potato", "1 Cup broccoli florets", "1 tbsp Extra virgin olive oil"],
+                instructions: ["Roast cubed sweet potatoes for 25 minutes at 400°F.", "Grill chicken for 6-7 minutes per side.", "Steam broccoli until tender."],
+                imageUrl: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 102,
-                type: "meal",
-                title: "Beast-Mode Beef & Rice Bowl",
-                calories: 750,
-                protein: "48g",
-                description: "Lean ground beef over jasmine rice, mixed with sautéed spinach and a light sesame-soy glaze. pre-game complex carbs.",
-                ingredients: [
-                    "180g Lean ground beef",
-                    "1 Cup cooked Jasmine rice",
-                    "2 Cups baby spinach",
-                    "1 Green onion, chopped",
-                    "1 tsp Sesame oil & 1 tbsp soy sauce"
-                ],
-                instructions: [
-                    "Cook Jasmine rice and set aside.",
-                    "Brown ground beef in a skillet over medium-high heat. Drain excess fat.",
-                    "Stir soy sauce and sesame oil into beef, then mix in spinach until wilted.",
-                    "Scoop rice into bowl, top with savory beef and spinach.",
-                    "Garnish with green onions and serve."
-                ],
-                imagePrompt: "beef and rice bowl with spinach healthy sports meal"
+                id: 102, type: "meal", title: "Beast-Mode Beef & Rice Bowl", calories: 750, protein: "48g",
+                description: "Lean grass-fed ground beef served over warm jasmine rice, mixed with sautéed baby spinach and a light sesame-soy glaze.",
+                ingredients: ["180g Extra-lean ground beef", "1 Cup cooked Jasmine rice", "2 Cups raw baby spinach", "1 tbsp low-sodium soy sauce"],
+                instructions: ["Cook rice.", "Brown the ground beef in a skillet.", "Stir in soy sauce and spinach until wilted.", "Serve over rice."],
+                imageUrl: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 103,
-                type: "meal",
-                title: "Slam-Dunk Salmon & Quinoa",
-                calories: 620,
-                protein: "42g",
-                description: "Seared salmon fillet on fluff quinoa with roasted asparagus. Ideal for joint support.",
-                ingredients: [
-                    "150g Fresh salmon fillet",
-                    "3/4 Cup cooked quinoa",
-                    "8-10 Asparagus spears",
-                    "1 tbsp Lemon juice & 1/2 tbsp olive oil"
-                ],
-                instructions: [
-                    "Cook quinoa according to directions and fluff.",
-                    "Preheat oven to 390°F (200°C). Toss asparagus in oil and salt. Roast for 10-12 mins.",
-                    "Season salmon with lemon juice and salt. Pan-sear skin-side down for 4 mins, flip, cook 3 mins.",
-                    "Arrange salmon on a bed of quinoa next to roasted asparagus."
-                ],
-                imagePrompt: "salmon and quinoa with asparagus healthy sports meal"
+                id: 103, type: "meal", title: "Slam-Dunk Salmon & Quinoa", calories: 620, protein: "42g",
+                description: "Seared Omega-3 rich salmon fillet resting on fluffy tri-color quinoa with tender roasted asparagus.",
+                ingredients: ["150g Fresh salmon fillet", "3/4 Cup cooked quinoa", "8-10 Asparagus spears", "1/2 tbsp Olive oil"],
+                instructions: ["Cook quinoa.", "Roast asparagus in olive oil for 10 mins.", "Pan-sear salmon for 4 minutes each side.", "Plate and serve."],
+                imageUrl: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 104,
-                type: "meal",
-                title: "Fast-Break PB & Banana Toast",
-                calories: 390,
-                protein: "14g",
-                description: "Creamy peanut butter on toasted whole wheat bread, topped with banana slices.",
-                ingredients: [
-                    "1 Slice whole wheat bread",
-                    "1.5 tbsp Peanut butter",
-                    "1/2 Ripe banana, sliced",
-                    "Dash of cinnamon"
-                ],
-                instructions: [
-                    "Toast your bread slice.",
-                    "Spread peanut butter evenly across hot toast.",
-                    "Arrange banana slices on top. Garnish with cinnamon."
-                ],
-                imagePrompt: "toast spread with peanut butter and banana slices healthy simple food"
+                id: 104, type: "meal", title: "Fast-Break Turkey & Avocado Wrap", calories: 540, protein: "38g",
+                description: "Lean sliced turkey breast with creamy avocado, crisp lettuce, and tomato wrapped in a sprouted whole-wheat tortilla.",
+                ingredients: ["150g Sliced turkey breast", "1/2 Ripe avocado", "1 Sprouted whole-wheat wrap", "1/2 Cup shredded lettuce", "3 Tomato slices"],
+                instructions: ["Lay tortilla flat.", "Layer turkey, avocado, lettuce, and tomatoes.", "Roll up tightly and serve."],
+                imageUrl: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 105,
-                type: "meal",
-                title: "Triple-Double Scrambled Eggs",
-                calories: 450,
-                protein: "32g",
-                description: "Three soft-scrambled eggs whipped with fresh baby spinach on toast.",
-                ingredients: [
-                    "3 Eggs",
-                    "1 Handful baby spinach",
-                    "1 Slice whole wheat toast",
-                    "Pinch of butter, salt and pepper"
-                ],
-                instructions: [
-                    "Crack eggs into bowl, season, and whisk.",
-                    "Wilt spinach in pan with butter for 1 minute.",
-                    "Pour in eggs, cook and stir gently for 2-3 mins until soft and fluffy.",
-                    "Plate over warm toast."
-                ],
-                imagePrompt: "soft scrambled eggs with spinach on toast healthy food"
+                id: 105, type: "meal", title: "Overtime Protein Oats Bowl", calories: 590, protein: "44g",
+                description: "Warm slow-cooked steel-cut oats mixed with whey protein, topped with fresh blueberries, sliced bananas, and a spoonful of almond butter.",
+                ingredients: ["1/2 Cup rolled oats", "1 Scoop whey protein", "1/4 Cup fresh blueberries", "1/2 Banana, sliced", "1 tbsp Almond butter"],
+                instructions: ["Cook oats in milk or water.", "Stir in protein powder once slightly cooled.", "Top with fruit and almond butter."],
+                imageUrl: "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 106,
-                type: "meal",
-                title: "Pre-Game Tuna Rice Express",
-                calories: 490,
-                protein: "36g",
-                description: "Easy canned tuna flaked over hot instant microwave rice and soy sauce.",
-                ingredients: [
-                    "1 Can (150g) drained tuna",
-                    "1 Bag instant jasmine rice",
-                    "1/2 Cucumber, sliced",
-                    "1 tbsp Soy sauce"
-                ],
-                instructions: [
-                    "Cook instant microwave rice.",
-                    "Flake tuna with a fork.",
-                    "Mix warm rice and tuna, drizzle with soy sauce.",
-                    "Serve with fresh cucumber slices."
-                ],
-                imagePrompt: "tuna with white rice and cucumber healthy simple meal bowl"
+                id: 106, type: "meal", title: "Guard Greek Yogurt Power-Mix", calories: 480, protein: "40g",
+                description: "Thick unsweetened non-fat Greek yogurt layered with organic granola, raw walnuts, and mixed dark berries.",
+                ingredients: ["250g Non-fat Greek yogurt", "1/4 Cup organic granola", "1/4 Cup mixed berries", "1 tbsp Raw walnuts"],
+                instructions: ["Scoop yogurt into a bowl.", "Layer granola, berries, and walnuts on top."],
+                imageUrl: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=800&q=80"
             },
             {
-                id: 107,
-                type: "meal",
-                title: "Post-Practice Chocolate Oat Express",
-                calories: 510,
-                protein: "24g",
-                description: "Quick oats cooked directly in low-fat chocolate milk. Perfect post-practice recovery.",
-                ingredients: [
-                    "1/2 Cup quick oats",
-                    "1 Cup chocolate milk",
-                    "1/2 tbsp Honey",
-                    "Handful sliced almonds"
-                ],
-                instructions: [
-                    "Combine quick oats and chocolate milk in microwave-safe bowl.",
-                    "Microwave on high for 1.5 to 2 minutes.",
-                    "Stir, drizzle honey, top with sliced almonds."
-                ],
-                imagePrompt: "chocolate oatmeal bowl healthy snack"
+                id: 107, type: "meal", title: "Pre-Game Peanut Butter Toast", calories: 420, protein: "15g",
+                description: "Classic quick energy. Whole wheat toast smothered in natural peanut butter and topped with fresh banana slices.",
+                ingredients: ["2 Slices whole wheat bread", "2 tbsp Natural peanut butter", "1 Medium banana, sliced"],
+                instructions: ["Toast the bread.", "Spread peanut butter evenly across both slices.", "Top with banana slices and eat immediately."],
+                imageUrl: "https://images.unsplash.com/photo-1584308972271-20922e4312ce?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 108, type: "meal", title: "Quick Scrambled Eggs & Spinach", calories: 350, protein: "22g",
+                description: "A 5-minute essential meal packed with complete protein and iron for quick muscle repair.",
+                ingredients: ["3 Whole large eggs", "1 Handful raw spinach", "1 Slice whole grain toast", "Pinch of salt and pepper"],
+                instructions: ["Whisk eggs in a bowl.", "Spray a pan and heat over medium.", "Toss in spinach until wilted.", "Pour eggs over spinach and scramble until cooked.", "Serve with toast."],
+                imageUrl: "https://images.unsplash.com/photo-1494597564530-871f2b93ac55?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 109, type: "meal", title: "Tuna & Rice Power Bowl", calories: 450, protein: "35g",
+                description: "The classic budget muscle-builder. Fast digesting carbs and high quality protein.",
+                ingredients: ["1 Can tuna in water (drained)", "1 Cup microwave or pre-cooked rice", "1 tbsp Light mayo or Sriracha"],
+                instructions: ["Heat up the rice.", "Mix the drained tuna with mayo or sriracha.", "Combine in a bowl and eat warm."],
+                imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 110, type: "meal", title: "Fast Chicken Quesadilla", calories: 480, protein: "32g",
+                description: "Easy high-protein snack using pre-cooked chicken and a whole wheat wrap.",
+                ingredients: ["1 Whole wheat tortilla", "100g Pre-cooked shredded chicken", "1/3 Cup reduced-fat shredded cheese"],
+                instructions: ["Place tortilla in a dry skillet over medium heat.", "Add cheese and chicken to one half.", "Fold over and cook until cheese is melted and tortilla is crispy.", "Cut and serve."],
+                imageUrl: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 111, type: "meal", title: "Supreme Recovery Shake", calories: 380, protein: "30g",
+                description: "Liquid nutrition for when you are on the go. Blends instantly for rapid recovery.",
+                ingredients: ["1 Scoop whey protein isolate", "1 Cup milk or almond milk", "1/2 Banana", "1 tbsp Peanut butter", "Handful of ice"],
+                instructions: ["Add all ingredients to a blender.", "Blend on high until smooth.", "Drink immediately post-workout."],
+                imageUrl: "https://images.unsplash.com/photo-1614966649714-2fc508dd6a14?auto=format&fit=crop&w=800&q=80"
             }
         ];
 
@@ -998,25 +890,12 @@
             { title: "DEFENSE: THE ACTIVE HANDS", content: "Never defend with your hands down. Keep one hand mirroring the ball and the other hand blocking the passing lane." }
         ];
 
-        // Diverse colorful dark sports gradients
-        const gradients = [
-            'linear-gradient(135deg, #1c0024 0%, #030303 100%)',
-            'linear-gradient(135deg, #2b0c02 0%, #030303 100%)',
-            'linear-gradient(135deg, #00122e 0%, #030303 100%)',
-            'linear-gradient(135deg, #02200a 0%, #030303 100%)',
-            'linear-gradient(135deg, #1f1f1f 0%, #030303 100%)',
-            'linear-gradient(135deg, #3d0000 0%, #030303 100%)',
-            'linear-gradient(135deg, #1a2a00 0%, #030303 100%)',
-            'linear-gradient(135deg, #002d2d 0%, #030303 100%)',
-            'linear-gradient(135deg, #2b003a 0%, #030303 100%)',
-            'linear-gradient(135deg, #1f1100 0%, #030303 100%)'
-        ];
-
         function init() {
             document.getElementById('api-key-input').value = state.apiKey;
             checkStreak();
             updateStatsUI();
             renderTasks();
+            renderChatHistory();
             loadVideos();
         }
 
@@ -1050,6 +929,7 @@
             localStorage.setItem('parade_apikey', state.apiKey);
             localStorage.setItem('parade_last_active', state.lastActive);
             localStorage.setItem('parade_tasks', JSON.stringify(state.tasks));
+            localStorage.setItem('parade_chat', JSON.stringify(chatHistory));
             updateStatsUI();
         }
 
@@ -1073,7 +953,10 @@
 
             if (viewId === 'home') {
                 renderScatteredFeed(globalVideoLines);
-                document.getElementById('main-scrollable').scrollTop = 0;
+                document.getElementById('view-home').scrollTop = 0;
+            } else if (viewId === 'coach') {
+                const msgBox = document.getElementById('chat-messages');
+                msgBox.scrollTop = msgBox.scrollHeight;
             }
         }
 
@@ -1091,13 +974,12 @@
             document.getElementById('manual-exercises-block').style.display = type === 'workout' ? 'block' : 'none';
         }
 
-        // Render Today's Grind Task Cards
         function renderTasks() {
             const list = document.getElementById('home-tasks');
             list.innerHTML = '';
             
             if(state.tasks.length === 0) {
-                list.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding: 20px;">No grind set for today. Go to the Lab.</p>`;
+                list.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding: 20px;">No grind set for today. Go to the Lab or Ask Coach.</p>`;
                 return;
             }
 
@@ -1135,9 +1017,7 @@
             });
         }
 
-        // Shuffling Algorithm guaranteeing absolutely no adjacent duplicate types in long scroll home feed
         function shuffleNoAdjacent(items) {
-            if (items.length <= 1) return items;
             let attempts = 0;
             while (attempts < 150) {
                 let shuffled = [...items].sort(() => 0.5 - Math.random());
@@ -1148,69 +1028,78 @@
                         break;
                     }
                 }
-                if (valid) {
-                    return shuffled;
-                }
+                if (valid) return shuffled;
                 attempts++;
             }
-            return items.sort(() => 0.5 - Math.random()); // Fallback
+            return items.sort(() => 0.5 - Math.random());
         }
 
-        // Beautiful, Shuffled Home Feed Construction - 3 vids, 3 tips, 2 meals, 2 quotes (No consecutive duplicate cards)
+        // Scattered Feed logic with standard iframes for Home Tab to avoid massive DOM lag
         function renderScatteredFeed(videoLines) {
             const feedContainer = document.getElementById('home-scattered-feed');
             feedContainer.innerHTML = '';
 
             let itemsPool = [];
 
-            // 1. Pick 3 random videos, muted on home page
+            // 1. Pick 3 random videos, use lazy loading iframes
             if (videoLines && videoLines.length > 0) {
                 let shuffledVids = [...videoLines].sort(() => 0.5 - Math.random());
                 shuffledVids.slice(0, 3).forEach(url => {
-                    let embedUrl = extractYouTubeEmbed(url.trim(), true, true); 
+                    let embedUrl = extractYouTubeEmbed(url.trim(), true, true);
                     if (embedUrl) {
                         itemsPool.push({
                             type: 'video',
                             content: `<div class="home-video-wrapper">
-                                <div class="video-scroll-overlay" onclick="toggleMuteVideo(this)">
-                                    <span class="material-symbols-outlined volume-indicator">volume_off</span>
-                                </div>
-                                <iframe src="${embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                <iframe loading="lazy" src="${embedUrl}" style="width:100%; height:100%;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                             </div>`
                         });
                     }
                 });
             }
 
-            // 2. Pick 2 random distinct Meals from defaultMeals
+            // 2. Pick 2 random Meals
             const stateMeals = state.tasks.filter(t => t.type === 'meal');
-            const mealPool = stateMeals.length > 0 ? stateMeals : defaultMeals;
+            const mealPool = [...defaultMeals, ...stateMeals];
             let shuffledMeals = [...mealPool].sort(() => 0.5 - Math.random());
-            shuffledMeals.slice(0, 2).forEach(randomMeal => {
-                const mealImgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent((randomMeal.imagePrompt || randomMeal.title) + ' photorealistic healthy food portrait')}?width=800&height=600&nologo=true`;
+            let selectedMeals = [];
+            for (let meal of shuffledMeals) {
+                if (!selectedMeals.some(m => m.id === meal.id)) {
+                    selectedMeals.push(meal);
+                }
+                if (selectedMeals.length >= 2) break;
+            }
+
+            selectedMeals.forEach(randomMeal => {
+                const imgUrl = randomMeal.imageUrl || "https://images.unsplash.com/photo-1490645935967-10de6ba8903c?auto=format&fit=crop&w=800&q=80";
                 itemsPool.push({
                     type: 'meal',
                     content: `
                         <div class="card" onclick="openDetail(${randomMeal.id})">
                             <span class="tag" style="color: #ff8c00; border-color: #ff8c00; margin-bottom: 12px; display: inline-block;">MEAL PLAN</span>
                             <h3 class="item-title" style="margin-bottom: 10px;">${randomMeal.title}</h3>
-                            <img src="${mealImgUrl}" class="meal-image" style="height: 180px; margin-bottom: 12px;" alt="${randomMeal.title}" loading="lazy">
+                            <img src="${imgUrl}" class="meal-image" style="height: 180px; margin-bottom: 12px;" alt="${randomMeal.title}" loading="lazy">
                             <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.4; margin-bottom: 10px;">${randomMeal.description}</p>
                             <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.85rem;">
-                                <span>CALORIES: <span style="color:var(--text-muted); font-weight:400;">${randomMeal.calories || '650'}</span></span>
-                                <span>PROTEIN: <span style="color:var(--text-muted); font-weight:400;">${randomMeal.protein || '45g'}</span></span>
+                                <span>CALORIES: <span style="color:var(--text-muted); font-weight:400;">${randomMeal.calories || 'N/A'}</span></span>
+                                <span>PROTEIN: <span style="color:var(--text-muted); font-weight:400;">${randomMeal.protein || 'N/A'}</span></span>
                             </div>
                         </div>
                     `
                 });
             });
 
-            // 3. Pick 2 random Quotes with distinct gradient backgrounds
+            // 3. Pick 2 random Quotes
             let shuffledQuotes = [...quotes].sort(() => 0.5 - Math.random());
-            let shuffledGradients = [...gradients].sort(() => 0.5 - Math.random());
+            const gradients = [
+                'linear-gradient(135deg, #1c0024 0%, #030303 100%)', 'linear-gradient(135deg, #2b0c02 0%, #030303 100%)',
+                'linear-gradient(135deg, #00122e 0%, #030303 100%)', 'linear-gradient(135deg, #02200a 0%, #030303 100%)',
+                'linear-gradient(135deg, #1f1f1f 0%, #030303 100%)', 'linear-gradient(135deg, #3a1c00 0%, #030303 100%)',
+                'linear-gradient(135deg, #00292b 0%, #030303 100%)', 'linear-gradient(135deg, #2b0015 0%, #030303 100%)',
+                'linear-gradient(135deg, #1a2a00 0%, #030303 100%)', 'linear-gradient(135deg, #001f3f 0%, #030303 100%)'
+            ];
             
-            shuffledQuotes.slice(0, 2).forEach((quote, idx) => {
-                const randGradient = shuffledGradients[idx % shuffledGradients.length];
+            shuffledQuotes.slice(0, 2).forEach((quote) => {
+                const randGradient = gradients[Math.floor(Math.random() * gradients.length)];
                 itemsPool.push({
                     type: 'quote',
                     content: `
@@ -1237,10 +1126,7 @@
                 });
             });
 
-            // Re-sort items pool to guarantee absolutely NO adjacent duplicate types
             let finalNoAdjacentPool = shuffleNoAdjacent(itemsPool);
-
-            // Render to container
             finalNoAdjacentPool.forEach(item => {
                 const div = document.createElement('div');
                 div.innerHTML = item.content;
@@ -1248,105 +1134,21 @@
             });
         }
 
-        // Tap overlay function to cleanly unmute/mute auto-playing YouTube elements
-        function toggleMuteVideo(overlay) {
-            const iframe = overlay.parentElement.querySelector('iframe');
-            const icon = overlay.querySelector('.volume-indicator');
-            const isMuted = icon.innerText === 'volume_off';
-
-            if (isMuted) {
-                iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
-                icon.innerText = 'volume_up';
-            } else {
-                iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'mute', args: [] }), '*');
-                icon.innerText = 'volume_off';
-            }
-        }
-
-        // Escape helper safeguarding template literal strings from HTML syntax crashes
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
-
-        // Detail Modal Logic - Fully Supports View & Interactive Edit Mode. Employs soft type checking bypasses [1.2]
+        // Detail & Edit Logic
         function openDetail(id) {
-            isEditMode = false;
-            // Lookup in user task state with soft comparison to safely bypass string/numeric typings [1.2]
-            currentActiveItem = state.tasks.find(t => t.id == id);
-            // If not found, lookup standard meals
-            if(!currentActiveItem) {
-                currentActiveItem = defaultMeals.find(t => t.id == id);
-            }
+            currentActiveItem = state.tasks.find(t => t.id === id) || defaultMeals.find(t => t.id === id);
             if(!currentActiveItem) return;
 
-            document.getElementById('modal-edit-toggle-btn').style.display = (currentActiveItem.id < 100) ? 'flex' : 'none';
-            renderModalContent();
-            document.getElementById('detail-modal').classList.add('open');
-        }
-
-        function renderModalContent() {
             document.getElementById('modal-title').innerText = currentActiveItem.title;
             const body = document.getElementById('modal-body');
             body.innerHTML = '';
 
             let html = '';
-
-            if (isEditMode) {
-                // RENDER EDIT MODE FIELDS SAFELY ESCAPED
-                html += `
-                    <div class="card">
-                        <label class="edit-label">Title</label>
-                        <input type="text" id="edit-title" value="${escapeHtml(currentActiveItem.title)}">
-                        
-                        <label class="edit-label">Description</label>
-                        <textarea id="edit-desc">${escapeHtml(currentActiveItem.description || '')}</textarea>
-                `;
-
-                if (currentActiveItem.type === 'workout' || currentActiveItem.type === 'drill') {
-                    const exercisesText = (currentActiveItem.exercises || []).map(e => `${e.name} - ${e.reps}`).join('\n');
-                    html += `
-                        <label class="edit-label">Exercises (Format: Name - Sets x Reps | One Per Line)</label>
-                        <textarea id="edit-exercises" style="min-height: 150px;">${escapeHtml(exercisesText)}</textarea>
-                    `;
-                } else if (currentActiveItem.type === 'meal') {
-                    const ingredientsText = (currentActiveItem.ingredients || []).join('\n');
-                    const instructionsText = (currentActiveItem.instructions || []).join('\n');
-                    html += `
-                        <label class="edit-label">Calories</label>
-                        <input type="text" id="edit-calories" value="${escapeHtml(currentActiveItem.calories || '')}">
-                        
-                        <label class="edit-label">Protein</label>
-                        <input type="text" id="edit-protein" value="${escapeHtml(currentActiveItem.protein || '')}">
-
-                        <label class="edit-label">Ingredients (One Per Line)</label>
-                        <textarea id="edit-ingredients" style="min-height: 120px;">${escapeHtml(ingredientsText)}</textarea>
-
-                        <label class="edit-label">Cooking Instructions (One Per Line)</label>
-                        <textarea id="edit-instructions" style="min-height: 150px;">${escapeHtml(instructionsText)}</textarea>
-                    `;
-                }
-
-                html += `
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button onclick="saveActiveEdit()">Save Changes</button>
-                            <button class="secondary" onclick="toggleEditMode()">Cancel</button>
-                        </div>
-                    </div>
-                `;
-            } else {
-                // RENDER VIEW MODE
-                if (currentActiveItem.type === 'workout' || currentActiveItem.type === 'drill') {
-                    if (currentActiveItem.description) {
-                        html += `<p class="meal-desc">${escapeHtml(currentActiveItem.description)}</p>`;
-                    }
+            if (currentActiveItem.type === 'workout' || currentActiveItem.type === 'drill') {
+                if (currentActiveItem.description) html += `<p class="meal-desc">${currentActiveItem.description}</p>`;
+                if (currentActiveItem.exercises && currentActiveItem.exercises.length > 0) {
                     html += `<div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:0 15px; margin-bottom: 20px;">`;
-                    (currentActiveItem.exercises || []).forEach((ex, idx) => {
+                    currentActiveItem.exercises.forEach((ex, idx) => {
                         html += `
                             <div class="exercise-item" onclick="toggleExercise(${idx})" style="cursor:pointer; border-bottom:${idx===currentActiveItem.exercises.length-1 ? 'none' : '1px solid var(--border)'}">
                                 <div class="checkbox-wrapper" style="pointer-events:none;">
@@ -1354,155 +1156,181 @@
                                         <div style="width:10px; height:5px; border-left:2px solid var(--bg); border-bottom:2px solid var(--bg); transform:rotate(-45deg) translateY(-2px); opacity:${ex.done?1:0}"></div>
                                     </div>
                                     <div class="exercise-info">
-                                        <span class="exercise-name" style="${ex.done?'text-decoration:line-through; color:var(--text-muted)':''}">${escapeHtml(ex.name)}</span>
-                                        <span class="exercise-reps">${escapeHtml(ex.reps)}</span>
+                                        <span class="exercise-name" style="${ex.done?'text-decoration:line-through; color:var(--text-muted)':''}">${ex.name}</span>
+                                        <span class="exercise-reps">${ex.reps}</span>
                                     </div>
                                 </div>
                             </div>
                         `;
                     });
                     html += `</div>`;
-                    
-                    const allDone = currentActiveItem.exercises ? currentActiveItem.exercises.every(e => e.done) : false;
+                    const allDone = currentActiveItem.exercises.every(e => e.done);
                     html += `<button onclick="completeCurrentItem()" ${allDone && currentActiveItem.completed ? 'style="opacity:0.5"' : ''}>
                         ${currentActiveItem.completed ? 'Completed' : 'Mark Full Workout Complete'}
                     </button>`;
+                }
+            } else if (currentActiveItem.type === 'meal') {
+                const imgUrl = currentActiveItem.imageUrl || "https://images.unsplash.com/photo-1490645935967-10de6ba8903c?auto=format&fit=crop&w=800&q=80";
+                html += `<img src="${imgUrl}" class="meal-image" alt="Meal Image" loading="lazy">`;
+                if (currentActiveItem.description) html += `<p class="meal-desc">${currentActiveItem.description}</p>`;
+                
+                html += `<div class="card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom:10px;">MACROS</h3>
+                    <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.95rem;">
+                        <span>CALORIES: <span style="color:var(--text-muted); font-weight:400;">${currentActiveItem.calories || 'N/A'}</span></span>
+                        <span>PROTEIN: <span style="color:var(--text-muted); font-weight:400;">${currentActiveItem.protein || 'N/A'}</span></span>
+                    </div>
+                </div>`;
 
-                } else if (currentActiveItem.type === 'meal') {
-                    if (currentActiveItem.imagePrompt) {
-                        const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(currentActiveItem.imagePrompt + ' photorealistic healthy food portrait')}?width=800&height=600&nologo=true`;
-                        html += `<img src="${imgUrl}" class="meal-image" alt="Meal Image" loading="lazy">`;
-                    }
-                    if (currentActiveItem.description) {
-                        html += `<p class="meal-desc">${escapeHtml(currentActiveItem.description)}</p>`;
-                    }
-                    
+                if (currentActiveItem.ingredients && currentActiveItem.ingredients.length > 0) {
                     html += `<div class="card" style="margin-bottom: 20px;">
-                        <h3 style="margin-bottom:10px;">MACROS</h3>
-                        <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.95rem;">
-                            <span>CALORIES: <span style="color:var(--text-muted); font-weight:400;">${escapeHtml(currentActiveItem.calories) || 'N/A'}</span></span>
-                            <span>PROTEIN: <span style="color:var(--text-muted); font-weight:400;">${escapeHtml(currentActiveItem.protein) || 'N/A'}</span></span>
-                        </div>
+                        <h3 style="margin-bottom:10px;">INGREDIENTS</h3>
+                        <ul style="list-style: disc; margin-left: 20px; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 4px;">
+                            ${currentActiveItem.ingredients.map(ing => `<li style="text-transform: none;">${ing}</li>`).join('')}
+                        </ul>
                     </div>`;
-
-                    if (currentActiveItem.ingredients && currentActiveItem.ingredients.length > 0) {
-                        html += `<div class="card" style="margin-bottom: 20px;">
-                            <h3 style="margin-bottom:10px;">INGREDIENTS</h3>
-                            <ul style="list-style: disc; margin-left: 20px; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 4px;">
-                                ${currentActiveItem.ingredients.map(ing => `<li style="text-transform: none;">${escapeHtml(ing)}</li>`).join('')}
-                            </ul>
-                        </div>`;
-                    }
-
-                    if (currentActiveItem.instructions && currentActiveItem.instructions.length > 0) {
-                        html += `<div class="card" style="margin-bottom: 20px;">
-                            <h3 style="margin-bottom:10px;">INSTRUCTIONS</h3>
-                            <ol style="margin-left: 20px; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
-                                ${currentActiveItem.instructions.map(step => `<li style="text-transform: none;">${escapeHtml(step)}</li>`).join('')}
-                            </ol>
-                        </div>`;
-                    }
-
-                    html += `<button onclick="completeCurrentItem()" ${currentActiveItem.completed ? 'style="opacity:0.5"' : ''}>
-                        ${currentActiveItem.completed ? 'Eaten' : 'Mark Meal Eaten'}
-                    </button>`;
-                } else {
-                    html += `
-                        <div style="padding: 40px 0; text-align:center;">
-                            <h3 style="font-size:1.1rem; color:var(--text-muted);">BASIC TASK</h3>
-                            <p style="margin-top:10px; font-size:1.2rem; font-weight:600;">${escapeHtml(currentActiveItem.title)}</p>
-                        </div>
-                        <button onclick="completeCurrentItem()">
-                            ${currentActiveItem.completed ? 'Completed' : 'Mark Complete'}
-                        </button>
-                    `;
                 }
 
-                if (currentActiveItem.id < 100) {
-                    html += `<button class="danger" style="margin-top:15px;" onclick="deleteCurrentItem()">Delete Item</button>`;
+                if (currentActiveItem.instructions && currentActiveItem.instructions.length > 0) {
+                    html += `<div class="card" style="margin-bottom: 20px;">
+                        <h3 style="margin-bottom:10px;">INSTRUCTIONS</h3>
+                        <ol style="margin-left: 20px; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
+                            ${currentActiveItem.instructions.map(step => `<li style="text-transform: none;">${step}</li>`).join('')}
+                        </ol>
+                    </div>`;
                 }
+                html += `<button onclick="completeCurrentItem()" ${currentActiveItem.completed ? 'style="opacity:0.5"' : ''}>
+                    ${currentActiveItem.completed ? 'Eaten' : 'Mark Meal Eaten'}
+                </button>`;
+            } else {
+                html += `
+                    <div style="padding: 40px 0; text-align:center;">
+                        <h3 style="font-size:1.1rem; color:var(--text-muted);">BASIC TASK</h3>
+                        <p style="margin-top:10px; font-size:1.2rem; font-weight:600;">${currentActiveItem.title}</p>
+                    </div>
+                    <button onclick="completeCurrentItem()">
+                        ${currentActiveItem.completed ? 'Completed' : 'Mark Complete'}
+                    </button>
+                `;
+            }
+
+            if (state.tasks.some(t => t.id === currentActiveItem.id)) {
+                html += `<button class="danger" style="margin-top:15px;" onclick="deleteCurrentItem()">Delete Item</button>`;
+            } else {
+                html += `<button class="secondary" style="margin-top:15px;" onclick="addDefaultToGrind()">Add to My Grind</button>`;
             }
 
             body.innerHTML = html;
-        }
-
-        function toggleEditMode() {
-            isEditMode = !isEditMode;
-            renderModalContent();
-        }
-
-        function saveActiveEdit() {
-            const titleVal = document.getElementById('edit-title').value.trim();
-            const descVal = document.getElementById('edit-desc').value.trim();
-            if (!titleVal) return;
-
-            currentActiveItem.title = titleVal;
-            currentActiveItem.description = descVal;
-
-            if (currentActiveItem.type === 'workout' || currentActiveItem.type === 'drill') {
-                const exercisesText = document.getElementById('edit-exercises').value.trim();
-                const newExercises = [];
-                exercisesText.split('\n').forEach(line => {
-                    if (line.trim()) {
-                        const parts = line.split('-');
-                        newExercises.push({
-                            name: parts[0] ? parts[0].trim() : 'Exercise',
-                            reps: parts[1] ? parts[1].trim() : '3 x 10',
-                            done: false
-                        });
-                    }
-                });
-                currentActiveItem.exercises = newExercises;
-            } else if (currentActiveItem.type === 'meal') {
-                const calVal = document.getElementById('edit-calories').value.trim();
-                const protVal = document.getElementById('edit-protein').value.trim();
-                const ingText = document.getElementById('edit-ingredients').value.trim();
-                const instText = document.getElementById('edit-instructions').value.trim();
-
-                currentActiveItem.calories = calVal;
-                currentActiveItem.protein = protVal;
-                currentActiveItem.ingredients = ingText.split('\n').filter(l => l.trim() !== '');
-                currentActiveItem.instructions = instText.split('\n').filter(l => l.trim() !== '');
-            }
-
-            saveState();
-            isEditMode = false;
-            renderModalContent();
-            renderTasks();
-            alert("Changes saved!");
+            document.getElementById('detail-modal').classList.add('open');
         }
 
         function closeDetail() {
             document.getElementById('detail-modal').classList.remove('open');
             currentActiveItem = null;
-            isEditMode = false;
             renderTasks();
+        }
+
+        function openEditMode() {
+            if (!currentActiveItem) return;
+            const body = document.getElementById('modal-body');
+            document.getElementById('modal-title').innerText = "EDIT ITEM";
+            
+            let html = `<div class="card">
+                <label style="font-size: 0.8rem; color: var(--text-muted); display:block;">TITLE</label>
+                <input type="text" id="edit-title" value="${currentActiveItem.title}">`;
+            
+            if (currentActiveItem.type === 'workout' || currentActiveItem.type === 'drill') {
+                const exText = (currentActiveItem.exercises || []).map(e => `${e.name} - ${e.reps}`).join('\n');
+                html += `<label style="font-size: 0.8rem; color: var(--text-muted); display:block; margin-top:10px;">EXERCISES (NAME - REPS)</label>
+                         <textarea id="edit-exercises">${exText}</textarea>`;
+            } else if (currentActiveItem.type === 'meal') {
+                html += `<label style="font-size: 0.8rem; color: var(--text-muted); display:block; margin-top:10px;">CALORIES</label>
+                         <input type="text" id="edit-cals" value="${currentActiveItem.calories || ''}">
+                         <label style="font-size: 0.8rem; color: var(--text-muted); display:block; margin-top:10px;">PROTEIN</label>
+                         <input type="text" id="edit-prot" value="${currentActiveItem.protein || ''}">
+                         <label style="font-size: 0.8rem; color: var(--text-muted); display:block; margin-top:10px;">INGREDIENTS (One per line)</label>
+                         <textarea id="edit-ing">${(currentActiveItem.ingredients||[]).join('\n')}</textarea>`;
+            }
+            html += `<button onclick="saveEdit()">SAVE CHANGES</button>
+                <button class="secondary" style="margin-top:10px;" onclick="openDetail(${currentActiveItem.id})">CANCEL</button>
+            </div>`;
+            body.innerHTML = html;
+        }
+
+        function saveEdit() {
+            let itemToSave = currentActiveItem;
+            
+            if (!state.tasks.some(t => t.id === currentActiveItem.id)) {
+                itemToSave = JSON.parse(JSON.stringify(currentActiveItem));
+                itemToSave.id = Date.now();
+                state.tasks.push(itemToSave);
+                currentActiveItem = itemToSave; 
+            }
+
+            itemToSave.title = document.getElementById('edit-title').value.trim();
+            
+            if (itemToSave.type === 'workout' || itemToSave.type === 'drill') {
+                const lines = document.getElementById('edit-exercises').value.split('\n');
+                const ex = lines.filter(l=>l.trim()).map((l, i) => {
+                    const parts = l.split('-');
+                    return {
+                        name: parts[0] ? parts[0].trim() : 'Exercise',
+                        reps: parts[1] ? parts[1].trim() : '',
+                        done: itemToSave.exercises && itemToSave.exercises[i] ? itemToSave.exercises[i].done : false
+                    };
+                });
+                itemToSave.exercises = ex;
+            } else if (itemToSave.type === 'meal') {
+                itemToSave.calories = document.getElementById('edit-cals').value.trim();
+                itemToSave.protein = document.getElementById('edit-prot').value.trim();
+                itemToSave.ingredients = document.getElementById('edit-ing').value.split('\n').filter(x=>x.trim());
+            }
+
+            saveState();
+            renderTasks();
+            openDetail(itemToSave.id);
+        }
+
+        function addDefaultToGrind() {
+            if(!currentActiveItem) return;
+            const clone = JSON.parse(JSON.stringify(currentActiveItem));
+            clone.id = Date.now();
+            clone.completed = false;
+            state.tasks.push(clone);
+            saveState();
+            renderTasks();
+            alert("Added to Today's Grind!");
+            closeDetail();
         }
 
         function toggleExercise(idx) {
             if(!currentActiveItem || !currentActiveItem.exercises) return;
             currentActiveItem.exercises[idx].done = !currentActiveItem.exercises[idx].done;
-            
             const allDone = currentActiveItem.exercises.every(e => e.done);
             if(allDone && !currentActiveItem.completed) {
                 completeCurrentItem();
             } else if (!allDone && currentActiveItem.completed) {
                 currentActiveItem.completed = false;
                 saveState();
-                renderModalContent();
+                openDetail(currentActiveItem.id);
             } else {
                 saveState();
-                renderModalContent();
+                openDetail(currentActiveItem.id);
             }
         }
 
         function completeCurrentItem() {
             if(!currentActiveItem) return;
-            if(!currentActiveItem.completed) {
+            if (!state.tasks.some(t => t.id === currentActiveItem.id)) {
+                const clone = JSON.parse(JSON.stringify(currentActiveItem));
+                clone.id = Date.now();
+                clone.completed = true;
+                state.tasks.push(clone);
+            } else {
                 currentActiveItem.completed = true;
                 if(currentActiveItem.exercises) currentActiveItem.exercises.forEach(e => e.done = true);
-                saveState();
             }
+            saveState();
             closeDetail();
         }
 
@@ -1553,14 +1381,12 @@
 
             state.tasks.push(item);
             saveState();
-            
             document.getElementById('manual-title').value = '';
             document.getElementById('manual-exercises').value = '';
             alert("Added to Today's Grind!");
             renderTasks();
         }
 
-        // AI Generation utilizing gemini-3.1-flash-lite
         async function generateAI(type) {
             if (!state.apiKey) {
                 alert("Please add your Gemini API Key in Settings.");
@@ -1575,31 +1401,28 @@
             let prompt = "";
             if (type === 'workout' || type === 'drill') {
                 prompt = `You are an elite basketball trainer. Create a highly effective basketball ${type} focusing on: ${focus}.
-                Return ONLY a raw JSON object (no markdown, no backticks, no code blocks) with this exact structure:
+                Return ONLY a raw JSON object (no markdown) with this exact structure:
                 {
                     "title": "Short Catchy Name",
                     "description": "1 sentence motivation",
                     "type": "${type}",
                     "exercises": [
-                        { "name": "Exercise Name", "reps": "Sets x Reps/Time" },
                         { "name": "Exercise Name", "reps": "Sets x Reps/Time" }
                     ]
                 }
-                Include 3-5 exercises. Avoid using all uppercase in the values.`;
+                Include 3-5 exercises.`;
             } else if (type === 'meal') {
                 prompt = `You are an elite sports nutritionist. Create a high-performance athlete meal focusing on: ${focus}.
-                Return ONLY a raw JSON object (no markdown, no backticks, no code blocks) with this exact structure:
+                Return ONLY a raw JSON object (no markdown) with this exact structure:
                 {
                     "title": "Short Appetizing Name",
                     "description": "Short description of the meal.",
                     "type": "meal",
                     "calories": 600,
                     "protein": "40g",
-                    "imagePrompt": "A single descriptive sentence for an AI image generator to create a picture of this meal on a nice plate",
-                    "ingredients": ["100g Ingredient A", "1tbsp Ingredient B"],
-                    "instructions": ["Step 1 cooked properly.", "Step 2 ready to serve."]
-                }
-                Avoid using all uppercase in the values.`;
+                    "ingredients": ["100g Ingredient A"],
+                    "instructions": ["Step 1."]
+                }`;
             }
 
             span.style.display = 'none';
@@ -1640,7 +1463,7 @@
                 } else if (newTask.type === 'meal') {
                     newTask.calories = resultObj.calories;
                     newTask.protein = resultObj.protein;
-                    newTask.imagePrompt = resultObj.imagePrompt || newTask.title;
+                    newTask.imageUrl = "https://images.unsplash.com/photo-1490645935967-10de6ba8903c?auto=format&fit=crop&w=800&q=80"; // Fast generic placeholder
                     newTask.ingredients = resultObj.ingredients || [];
                     newTask.instructions = resultObj.instructions || [];
                 }
@@ -1660,26 +1483,52 @@
             }
         }
 
-        // Coach Chat Logic using gemini-3.1-flash-lite. 
+        // --- Chat Persistence & Interaction ---
+        function renderChatHistory() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '';
+            
+            if (chatHistory.length === 0) {
+                container.innerHTML = `<div class="chat-bubble coach">
+                    <span class="chat-message-text">Welcome to the gym, player. No excuses today. Need me to build you a custom workout? Just ask. Let's work.</span>
+                </div>`;
+                return;
+            }
+
+            chatHistory.forEach(msg => {
+                const bubble = document.createElement('div');
+                bubble.className = `chat-bubble ${msg.role === 'model' ? 'coach' : 'player'}`;
+                
+                // If it's a coach message, strip out raw JSON data before showing text
+                let rawText = msg.parts[0].text;
+                if (msg.role === 'model') {
+                    if (rawText.match(/```(?:json)?\s*[\s\S]*?\s*```/i)) {
+                        rawText = rawText.replace(/```(?:json)?\s*[\s\S]*?\s*```/i, '').trim();
+                        rawText += "<br><br><b><i>*(Coach modified your plan in the Lab)*</i></b>";
+                    }
+                }
+                bubble.innerHTML = `<span class="chat-message-text">${rawText}</span>`;
+                container.appendChild(bubble);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
         async function sendChatMessage() {
             const inputEl = document.getElementById('chat-input');
             const userMsg = inputEl.value.trim();
             if (!userMsg) return;
-
-            if (!state.apiKey) {
-                alert("Please add your Gemini API Key in Settings first.");
-                return;
-            }
+            if (!state.apiKey) return alert("Please add your Gemini API Key in Settings first.");
 
             const messagesContainer = document.getElementById('chat-messages');
             const playerBubble = document.createElement('div');
             playerBubble.className = 'chat-bubble player';
-            playerBubble.innerHTML = `<span class="chat-message-text">${escapeHtml(userMsg)}</span>`;
+            playerBubble.innerHTML = `<span class="chat-message-text">${userMsg}</span>`;
             messagesContainer.appendChild(playerBubble);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
             inputEl.value = '';
             chatHistory.push({ role: 'user', parts: [{ text: userMsg }] });
+            saveState();
 
             const loadingBubble = document.createElement('div');
             loadingBubble.className = 'chat-bubble coach';
@@ -1688,15 +1537,25 @@
             messagesContainer.appendChild(loadingBubble);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-            const systemText = `You are Coach Parade, an elite, intense, motivating basketball trainer. Help the player design training drills, motivation, and practical strategy.
-            Tone is high-energy, direct, inspiring and elite. Never drop character.
-            IMPORTANT: When the player asks you to create, suggest, or tweak a workout, drill session, or a meal plan, write your conversational response first.
-            Then, at the very end of your response, append a clean single-line JSON block wrapped exactly in |||JSON...||| so the app interface can let the player save it to today's grind.
-            Format for Workouts:
-            |||JSON:{"type":"workout","title":"Coach's Custom Grind","description":"Focus details...","exercises":[{"name":"drill name","reps":"sets x reps"}]}|||
-            Format for Meals:
-            |||JSON:{"type":"meal","title":"Coach's Power Meal","description":"Description...","calories":"500","protein":"35g","ingredients":["Ingredient A","Ingredient B"],"instructions":["Step 1 cooked properly."]}|||
-            Ensure the JSON block is strictly well-formed, all on one line, and wrapped in the triple pipes. Avoid all uppercase inside JSON values.`;
+            const currentPlanContext = JSON.stringify(state.tasks.map(t => ({ id: t.id, title: t.title, type: t.type, exercises: t.exercises, calories: t.calories, ingredients: t.ingredients })));
+            
+            const systemText = `You are Coach Parade, an intense, supportive, high-energy basketball coach. 
+            If the player asks to CREATE or TWEAK a workout, drill, or meal, YOU MUST append a JSON block to the END of your response to execute the change in their app.
+            
+            Current User Plan: ${currentPlanContext}
+            
+            JSON Format to append exactly (wrapped in \`\`\`json):
+            \`\`\`json
+            {
+              "action": "add", // use "update" if tweaking an existing ID
+              "id": 12345, // ONLY include if "action": "update"
+              "title": "Title here",
+              "type": "workout", // "workout", "drill", or "meal"
+              "description": "Short motivation",
+              "exercises": [{"name": "Squats", "reps": "3x10"}] // Only for workout/drill
+            }
+            \`\`\`
+            Keep conversation concise, direct, inspiring and elite. Never drop character. Always include the JSON block if they want to modify their plan.`;
 
             try {
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${state.apiKey}`, {
@@ -1712,145 +1571,178 @@
                 const data = await response.json();
                 if(data.error) throw new Error(data.error.message);
 
-                const coachResponse = data.candidates[0].content.parts[0].text;
-                document.getElementById('coach-loading').remove();
-
-                const jsonRegex = /\|\|\|JSON:([\s\S]+?)\|\|\|/;
-                const match = coachResponse.match(jsonRegex);
-                let cleanResponseText = coachResponse;
-                let parsedPlan = null;
-
-                if (match) {
+                let coachResponse = data.candidates[0].content.parts[0].text;
+                let displayedText = coachResponse;
+                
+                const jsonMatch = coachResponse.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+                if (jsonMatch) {
                     try {
-                        parsedPlan = JSON.parse(match[1].trim());
-                        cleanResponseText = coachResponse.replace(jsonRegex, '').trim();
-                    } catch(e) {
-                        console.error("Failed to parse coach plan JSON", e);
+                        const actionObj = JSON.parse(jsonMatch[1].trim());
+                        displayedText = displayedText.replace(/```(?:json)?\s*[\s\S]*?\s*```/i, '').trim(); 
+                        
+                        if (actionObj.action === 'add') {
+                            const newTask = {
+                                id: Date.now(),
+                                title: actionObj.title || 'Coach Plan',
+                                type: actionObj.type || 'workout',
+                                description: actionObj.description || '',
+                                completed: false
+                            };
+                            if (newTask.type === 'workout' || newTask.type === 'drill') {
+                                newTask.exercises = (actionObj.exercises || []).map(e => ({ name: e.name, reps: e.reps, done: false }));
+                            }
+                            state.tasks.push(newTask);
+                            displayedText += "<br><br><b><i>*(Coach added a new plan to your Lab!)*</i></b>";
+                        } else if (actionObj.action === 'update' && actionObj.id) {
+                            const task = state.tasks.find(t => t.id === actionObj.id);
+                            if (task) {
+                                task.title = actionObj.title || task.title;
+                                task.description = actionObj.description || task.description;
+                                if (actionObj.exercises && (task.type === 'workout' || task.type === 'drill')) {
+                                    task.exercises = actionObj.exercises.map(e => ({ name: e.name, reps: e.reps, done: false }));
+                                    task.completed = false;
+                                }
+                                displayedText += "<br><br><b><i>*(Coach updated your plan!)*</i></b>";
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Failed to parse coach JSON action", e);
                     }
                 }
 
+                document.getElementById('coach-loading').remove();
+                
+                chatHistory.push({ role: 'model', parts: [{ text: coachResponse }] });
+                if(chatHistory.length > 20) chatHistory = chatHistory.slice(chatHistory.length - 20);
+                saveState();
+                renderTasks();
+
                 const coachBubble = document.createElement('div');
                 coachBubble.className = 'chat-bubble coach';
-                
-                let bubbleHtml = `<span class="chat-message-text">${cleanResponseText.replace(/\n/g, '<br>')}</span>`;
-                
-                if (parsedPlan) {
-                    // Stable mapping key preventing HTML string quote crashes [1.2]
-                    const planId = 'coach_plan_' + Date.now();
-                    coachPlansMemory[planId] = parsedPlan;
-
-                    bubbleHtml += `
-                        <div style="margin-top:15px; border-top:1px solid var(--border); padding-top:10px;">
-                            <p style="font-weight:800; font-size:0.8rem; color:#ff4500; margin-bottom:10px; text-transform:uppercase;">COACH GENERATED A PLAN</p>
-                            <button onclick="addCoachPlanToGrind('${planId}')" style="font-size:0.85rem; padding:10px 15px;">Add to Today's Grind</button>
-                        </div>
-                    `;
-                }
-                
-                coachBubble.innerHTML = bubbleHtml;
+                coachBubble.innerHTML = `<span class="chat-message-text">${displayedText}</span>`;
                 messagesContainer.appendChild(coachBubble);
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-                chatHistory.push({ role: 'model', parts: [{ text: coachResponse }] });
-
-                if(chatHistory.length > 10) {
-                    chatHistory = chatHistory.slice(chatHistory.length - 10);
-                }
-
             } catch (error) {
-                document.getElementById('coach-loading').remove();
+                document.getElementById('coach-loading')?.remove();
                 alert("Coach is resting: " + error.message);
                 console.error(error);
             }
         }
 
-        function addCoachPlanToGrind(planId) {
-            const plan = coachPlansMemory[planId];
-            if (!plan) {
-                alert("Failed to find selected custom plan details.");
-                return;
-            }
-            try {
-                const newTask = {
-                    id: Date.now(),
-                    title: plan.title || "Coach's Customized Plan",
-                    description: plan.description || "",
-                    type: plan.type || "workout",
-                    completed: false
-                };
-
-                if (newTask.type === 'workout' || newTask.type === 'drill') {
-                    newTask.exercises = (plan.exercises || []).map(e => ({
-                        name: e.name || 'Exercise',
-                        reps: e.reps || '3 x 10',
-                        done: false
-                    }));
-                } else if (newTask.type === 'meal') {
-                    newTask.calories = plan.calories || '550';
-                    newTask.protein = plan.protein || '35g';
-                    newTask.imagePrompt = plan.imagePrompt || newTask.title;
-                    newTask.ingredients = plan.ingredients || [];
-                    newTask.instructions = plan.instructions || [];
-                }
-
-                state.tasks.push(newTask);
-                saveState();
-                renderTasks();
-                alert(`Added ${newTask.title} to Today's Grind!`);
-            } catch(e) {
-                alert("Could not load plan to grind.");
-                console.error(e);
-            }
-        }
-
-        // Settings / Store
         function saveSettings() {
             state.apiKey = document.getElementById('api-key-input').value.trim();
             saveState();
             alert("API Key saved.");
         }
 
-        // Hype Video Feed
+        // Highly Optimized Lazy Hype Video Feed
         async function loadVideos() {
             const container = document.getElementById('view-hype');
+            
+            // Setup Intersection Observer for massive lag reduction on YT API
+            hypeObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const div = entry.target;
+                    const playerId = div.dataset.playerId;
+                    const videoId = div.dataset.videoId;
+                    
+                    if (entry.isIntersecting) {
+                        if (!ytPlayers[playerId]) {
+                            createYTPlayerSafe(playerId, videoId);
+                        } else if (ytPlayers[playerId].player && typeof ytPlayers[playerId].player.playVideo === 'function') {
+                            ytPlayers[playerId].player.playVideo();
+                        }
+                    } else {
+                        if (ytPlayers[playerId] && ytPlayers[playerId].player && typeof ytPlayers[playerId].player.pauseVideo === 'function') {
+                            ytPlayers[playerId].player.pauseVideo();
+                        }
+                    }
+                });
+            }, { root: document.getElementById('view-hype'), threshold: 0.2 });
+
             try {
                 const res = await fetch('videos.txt');
                 if (!res.ok) throw new Error("videos.txt not found");
                 const text = await res.text();
                 const lines = text.split('\n').filter(l => l.trim() !== '');
-
                 if (lines.length === 0) throw new Error("Empty file");
 
                 globalVideoLines = lines;
+                renderScatteredFeed(globalVideoLines);
 
-                lines.forEach((url) => {
-                    let embedUrl = extractYouTubeEmbed(url.trim(), true, false); 
-                    if (embedUrl) {
+                // Build Hype Video DOM Shells - only initializes players when scrolled into view
+                lines.forEach((url, index) => {
+                    const videoId = extractYouTubeId(url.trim());
+                    if (videoId) {
+                        const playerId = 'yt-player-' + index;
                         const div = document.createElement('div');
                         div.className = 'video-container';
+                        div.dataset.playerId = playerId;
+                        div.dataset.videoId = videoId;
                         div.innerHTML = `
-                            <div class="video-scroll-overlay" onclick="toggleMuteVideo(this)">
-                                <span class="material-symbols-outlined volume-indicator">volume_off</span>
+                            <div class="video-scroll-overlay" onclick="toggleHypeMute('${playerId}')">
+                                <div id="unmute-badge-${playerId}" class="mute-badge">TAP TO UNMUTE</div>
                             </div>
-                            <iframe src="${embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            <div id="${playerId}" style="width:100%; height:100%; background:url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg') center/cover;"></div>
                         `;
                         container.appendChild(div);
+                        hypeObserver.observe(div);
                     }
                 });
-
-                renderScatteredFeed(globalVideoLines);
 
             } catch (e) {
                 container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); display: flex; flex-direction: column; justify-content: center; height: 100%;">
                     <h3 style="margin-bottom: 10px;">NO VIDEOS</h3>
                     <p style="font-size: 0.85rem; line-height: 1.5; text-transform:none;">Create a <b>videos.txt</b> file in the same folder with YouTube Shorts links on each line to view the hype feed.</p>
                 </div>`;
-                
                 renderScatteredFeed([]);
             }
         }
 
-        function extractYouTubeEmbed(url, autoplay = false, mute = false) {
+        function createYTPlayerSafe(playerId, videoId) {
+            if (typeof YT !== 'undefined' && YT.Player) {
+                ytPlayers[playerId] = {
+                    id: videoId,
+                    isMuted: true,
+                    player: new YT.Player(playerId, {
+                        videoId: videoId,
+                        playerVars: {
+                            'autoplay': 1,
+                            'controls': 0,
+                            'mute': 1,
+                            'loop': 1,
+                            'playlist': videoId,
+                            'modestbranding': 1,
+                            'playsinline': 1,
+                            'rel': 0
+                        },
+                        events: {
+                            'onReady': (event) => { event.target.playVideo(); }
+                        }
+                    })
+                };
+            } else {
+                setTimeout(() => createYTPlayerSafe(playerId, videoId), 300);
+            }
+        }
+
+        function toggleHypeMute(playerId) {
+            const p = ytPlayers[playerId];
+            if (p && p.player && typeof p.player.unMute === 'function') {
+                if (p.isMuted) {
+                    p.player.unMute();
+                    p.isMuted = false;
+                    document.getElementById('unmute-badge-' + playerId).innerText = 'TAP TO MUTE';
+                } else {
+                    p.player.mute();
+                    p.isMuted = true;
+                    document.getElementById('unmute-badge-' + playerId).innerText = 'TAP TO UNMUTE';
+                }
+            }
+        }
+
+        function extractYouTubeId(url) {
             let videoId = null;
             if (url.includes('shorts/')) {
                 videoId = url.split('shorts/')[1].split('?')[0];
@@ -1859,17 +1751,15 @@
             } else if (url.includes('v=')) {
                 videoId = url.split('v=')[1].split('&')[0];
             }
+            return videoId;
+        }
+
+        function extractYouTubeEmbed(url, autoplay = false, mute = false) {
+            const videoId = extractYouTubeId(url);
             if (!videoId) return null;
-            
-            let params = `loop=1&playlist=${videoId}&controls=0&modestbranding=1&playsinline=1&rel=0&enablejsapi=1`;
-            if (autoplay) {
-                params += `&autoplay=1`;
-            }
-            if (mute) {
-                params += `&mute=1`; 
-            } else {
-                params += `&mute=0`; 
-            }
+            let params = `loop=1&playlist=${videoId}&controls=0&modestbranding=1&playsinline=1&rel=0`;
+            if (autoplay) params += `&autoplay=1`;
+            if (mute) params += `&mute=1`;
             return `https://www.youtube.com/embed/${videoId}?${params}`;
         }
 
