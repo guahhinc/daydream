@@ -316,7 +316,7 @@
             opacity: 1;
         }
 
-        /* Detail Modal */
+        /* Detail Modal with Pointer-Events Safeties preventing layout trapping [1.1] */
         #detail-modal {
             position: fixed;
             top: 0;
@@ -328,11 +328,15 @@
             display: flex;
             flex-direction: column;
             transform: translateX(100%);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
+            visibility: hidden;
+            pointer-events: none; /* Fully disabled when translated off screen to allow underlying clicks */
         }
 
         #detail-modal.open {
             transform: translateX(0);
+            visibility: visible;
+            pointer-events: auto; /* Fully enabled on viewport entry */
         }
 
         .modal-header {
@@ -541,15 +545,26 @@
 
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* Coach Chat Bubbles & Layout */
-        #chat-messages {
-            display: flex;
+        /* Coach Chat Pinned Layout Fixes */
+        #view-coach {
+            display: none;
             flex-direction: column;
-            gap: 12px;
-            height: calc(100vh - var(--header-height) - var(--nav-height) - 130px);
+            height: calc(100vh - var(--header-height) - var(--nav-height));
+            padding: 20px;
+        }
+
+        #view-coach.active {
+            display: flex;
+        }
+
+        #chat-messages {
+            flex: 1;
             overflow-y: auto;
             padding-bottom: 15px;
             padding-right: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .chat-bubble {
@@ -575,6 +590,27 @@
             align-self: flex-end;
             font-weight: 600;
             border-bottom-right-radius: 2px;
+        }
+
+        #view-coach .input-group {
+            margin-top: auto; /* Force input to pin perfectly to the absolute bottom of Coach container */
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #view-coach .input-group input {
+            margin: 0;
+            flex: 1;
+        }
+
+        #view-coach .input-group button {
+            margin: 0;
+            width: auto;
+            padding: 12px 18px;
         }
 
         /* Detail Modal Edit Fields */
@@ -674,7 +710,7 @@
             <!-- COACH CHAT VIEW -->
             <div id="view-coach" class="view">
                 <h2>COACH PARADE</h2>
-                <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">Ask Coach to create or tweak any custom workout or drill session for today!</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px;">Ask Coach to design or tweak custom layouts & drills for Today's Grind!</p>
                 
                 <div id="chat-messages">
                     <div class="chat-bubble coach">
@@ -682,9 +718,9 @@
                     </div>
                 </div>
 
-                <div class="input-group" style="margin-top: 10px;">
+                <div class="input-group">
                     <input type="text" id="chat-input" placeholder="Ask Coach Parade..." onkeydown="if(event.key === 'Enter') sendChatMessage()">
-                    <button onclick="sendChatMessage()" style="padding: 0 20px; display: flex; align-items: center; justify-content: center;">
+                    <button onclick="sendChatMessage()" style="display: flex; align-items: center; justify-content: center;">
                         <span class="material-symbols-outlined" style="font-size: 20px;">send</span>
                     </button>
                 </div>
@@ -730,7 +766,7 @@
             </div>
         </nav>
 
-        <!-- Detail Modal -->
+        <!-- Detail Modal with Click Safety Fixes [1.1] -->
         <div id="detail-modal">
             <div class="modal-header" style="justify-content: space-between;">
                 <button class="back-btn" onclick="closeDetail()" aria-label="Back">
@@ -740,19 +776,18 @@
                     </svg>
                 </button>
                 <h2 id="modal-title" class="modal-title" style="flex:1; text-align:center; padding: 0 10px; font-size: 1.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">DETAIL</h2>
-                <!-- Edit action button -->
                 <button class="back-btn" id="modal-edit-toggle-btn" onclick="toggleEditMode()" aria-label="Edit" style="background: var(--surface);">
                     <span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
                 </button>
             </div>
             <div class="modal-body" id="modal-body">
-                <!-- Content injected via JS dynamically supports View vs Edit states -->
+                <!-- Content injected dynamically -->
             </div>
         </div>
     </div>
 
     <script>
-        // State Management - Premium basketball presets
+        // State Management
         let state = {
             streak: parseInt(localStorage.getItem('parade_streak')) || 0,
             apiKey: localStorage.getItem('parade_apikey') || '',
@@ -779,6 +814,7 @@
         let manualType = 'task';
         let globalVideoLines = [];
         let chatHistory = [];
+        let coachPlansMemory = {}; // Memory lookup map preventing HTML single-quote inline serialization errors [1.2]
 
         // Upgraded high-protein athlete meals catalog with both complex & simple options
         const defaultMeals = [
@@ -788,21 +824,20 @@
                 title: "Pro-Boost Chicken & Sweet Potato",
                 calories: 680,
                 protein: "52g",
-                description: "Grilled chicken breast paired with roasted sweet potato cubes and fresh steamed broccoli. Optimized for rapid basketball muscle recovery and clean metabolic energy.",
+                description: "Grilled chicken breast paired with roasted sweet potato cubes and fresh steamed broccoli. Optimized for rapid basketball muscle recovery.",
                 ingredients: [
                     "200g Lean chicken breast fillet",
                     "1 Medium sweet potato, scrubbed and cubed",
                     "1 Cup broccoli florets",
-                    "1 tbsp Extra virgin olive oil",
-                    "Spices: garlic powder, paprika, sea salt, black pepper"
+                    "1 tbsp Olive oil",
+                    "Spices: garlic powder, paprika, sea salt, pepper"
                 ],
                 instructions: [
-                    "Preheat your oven to 400°F (200°C).",
-                    "Toss the cubed sweet potatoes with 1/2 tbsp olive oil, paprika, sea salt, and black pepper. Spread evenly on a baking sheet and roast for 25 minutes.",
-                    "Brush chicken breast with remaining olive oil. Season generously with garlic powder, salt, and black pepper.",
-                    "Pan-sear or grill the chicken on medium-high heat for approximately 6-7 minutes per side or until the internal temperature reads 165°F.",
-                    "In the final 5 minutes, steam your broccoli florets over boiling water until tender-crisp.",
-                    "Slice the chicken, arrange alongside the roasted sweet potatoes and broccoli. Serve hot."
+                    "Preheat oven to 400°F (200°C).",
+                    "Toss potatoes with 1/2 tbsp olive oil, paprika, salt, and pepper. Roast on baking sheet for 25 mins.",
+                    "Brush chicken with remaining oil and garlic seasoning. Cook in medium pan for 6-7 mins per side.",
+                    "Steam broccoli for 5 minutes.",
+                    "Slice chicken, plate together with sweet potatoes and broccoli, and serve."
                 ],
                 imagePrompt: "grilled chicken breast with sweet potatoes and broccoli healthy sports meal"
             },
@@ -812,21 +847,20 @@
                 title: "Beast-Mode Beef & Rice Bowl",
                 calories: 750,
                 protein: "48g",
-                description: "Lean grass-fed ground beef served over warm jasmine rice, mixed with sautéed baby spinach and a light sesame-soy glaze. Perfect complex carbs for pre-game endurance.",
+                description: "Lean ground beef over jasmine rice, mixed with sautéed spinach and a light sesame-soy glaze. pre-game complex carbs.",
                 ingredients: [
-                    "180g Extra-lean ground beef (90/10 or better)",
-                    "1 Cup cooked Jasmine white or brown rice",
-                    "2 Cups raw baby spinach",
+                    "180g Lean ground beef",
+                    "1 Cup cooked Jasmine rice",
+                    "2 Cups baby spinach",
                     "1 Green onion, chopped",
-                    "1 tsp Sesame oil & 1 tbsp low-sodium soy sauce",
-                    "1/2 tsp Sesame seeds for garnish"
+                    "1 tsp Sesame oil & 1 tbsp soy sauce"
                 ],
                 instructions: [
-                    "Cook your Jasmine rice according to package directions and set aside warm.",
-                    "Heat a non-stick skillet over medium-high heat. Add ground beef, breaking it up with a spatula. Cook until fully browned (5-6 minutes). Drain excess fat.",
-                    "Stir soy sauce and a splash of sesame oil directly into the beef, then fold in the raw baby spinach. Cook for 1-2 minutes until spinach is fully wilted.",
-                    "Scoop the warm Jasmine rice into a bowl, layer the savory seasoned beef and wilted spinach mixture right over the top.",
-                    "Garnish with sliced green onions and sesame seeds. Power bowl complete!"
+                    "Cook Jasmine rice and set aside.",
+                    "Brown ground beef in a skillet over medium-high heat. Drain excess fat.",
+                    "Stir soy sauce and sesame oil into beef, then mix in spinach until wilted.",
+                    "Scoop rice into bowl, top with savory beef and spinach.",
+                    "Garnish with green onions and serve."
                 ],
                 imagePrompt: "beef and rice bowl with spinach healthy sports meal"
             },
@@ -836,22 +870,18 @@
                 title: "Slam-Dunk Salmon & Quinoa",
                 calories: 620,
                 protein: "42g",
-                description: "Seared Omega-3 rich salmon fillet resting on fluffy tri-color quinoa with tender roasted asparagus. Ideal for joint support, inflammation control, and cellular recovery.",
+                description: "Seared salmon fillet on fluff quinoa with roasted asparagus. Ideal for joint support.",
                 ingredients: [
-                    "150g Fresh wild-caught salmon fillet",
+                    "150g Fresh salmon fillet",
                     "3/4 Cup cooked quinoa",
-                    "8-10 Asparagus spears, woody ends trimmed",
-                    "1 tbsp Fresh lemon juice",
-                    "1/2 tbsp Olive oil",
-                    "Dill, sea salt, and lemon pepper seasoning to taste"
+                    "8-10 Asparagus spears",
+                    "1 tbsp Lemon juice & 1/2 tbsp olive oil"
                 ],
                 instructions: [
-                    "Cook quinoa according to instructions (usually 1 part quinoa to 2 parts water) and fluff with a fork.",
-                    "Preheat oven or air-fryer to 390°F (200°C).",
-                    "Toss asparagus in a light drizzle of olive oil, sea salt, and lemon pepper. Roast for 10-12 minutes.",
-                    "Season salmon with lemon juice, dill, and sea salt. Pan-sear skin-side down first for 4 minutes in a hot skillet, then flip and cook for an additional 3-4 minutes until flaky.",
-                    "Plate a bed of quinoa, arrange the roasted asparagus spears, and gently lay the seared salmon on top.",
-                    "Finish with a squeeze of fresh lemon juice over everything."
+                    "Cook quinoa according to directions and fluff.",
+                    "Preheat oven to 390°F (200°C). Toss asparagus in oil and salt. Roast for 10-12 mins.",
+                    "Season salmon with lemon juice and salt. Pan-sear skin-side down for 4 mins, flip, cook 3 mins.",
+                    "Arrange salmon on a bed of quinoa next to roasted asparagus."
                 ],
                 imagePrompt: "salmon and quinoa with asparagus healthy sports meal"
             },
@@ -861,18 +891,17 @@
                 title: "Fast-Break PB & Banana Toast",
                 calories: 390,
                 protein: "14g",
-                description: "Creamy peanut butter spread over toasted whole wheat sourdough bread, topped with sliced banana. Ultra-simple pre-practice fuel using pantry basics.",
+                description: "Creamy peanut butter on toasted whole wheat bread, topped with banana slices.",
                 ingredients: [
-                    "1 Slice whole wheat or sourdough bread",
-                    "1.5 tbsp Creamy natural peanut butter",
+                    "1 Slice whole wheat bread",
+                    "1.5 tbsp Peanut butter",
                     "1/2 Ripe banana, sliced",
-                    "Optional: a tiny pinch of chia seeds or cinnamon"
+                    "Dash of cinnamon"
                 ],
                 instructions: [
-                    "Pop your bread slice in the toaster until golden and crispy.",
-                    "Spread the peanut butter evenly over the hot toast.",
-                    "Arrange the banana slices neatly across the peanut butter.",
-                    "Garnish with a dash of cinnamon or chia seeds if desired. Eat immediately!"
+                    "Toast your bread slice.",
+                    "Spread peanut butter evenly across hot toast.",
+                    "Arrange banana slices on top. Garnish with cinnamon."
                 ],
                 imagePrompt: "toast spread with peanut butter and banana slices healthy simple food"
             },
@@ -882,19 +911,18 @@
                 title: "Triple-Double Scrambled Eggs",
                 calories: 450,
                 protein: "32g",
-                description: "Three soft-scrambled eggs whipped with a handful of fresh baby spinach, served on a warm buttered slice of whole wheat toast. Standard daily fuel.",
+                description: "Three soft-scrambled eggs whipped with fresh baby spinach on toast.",
                 ingredients: [
-                    "3 Large fresh eggs",
+                    "3 Eggs",
                     "1 Handful baby spinach",
-                    "1 Slice whole wheat bread",
-                    "1/2 tsp Butter or olive oil",
-                    "Pinch of salt and black pepper"
+                    "1 Slice whole wheat toast",
+                    "Pinch of butter, salt and pepper"
                 ],
                 instructions: [
-                    "Crack eggs into a bowl, season with a pinch of salt and pepper, and whisk thoroughly.",
-                    "Heat butter in a skillet over medium heat. Throw in baby spinach and cook for 1 minute until wilted.",
-                    "Pour whisked eggs into the skillet. Stir gently with a spatula until soft and fluffy (about 2-3 minutes).",
-                    "Toast your bread, place the warm scrambled eggs on top, and fuel up!"
+                    "Crack eggs into bowl, season, and whisk.",
+                    "Wilt spinach in pan with butter for 1 minute.",
+                    "Pour in eggs, cook and stir gently for 2-3 mins until soft and fluffy.",
+                    "Plate over warm toast."
                 ],
                 imagePrompt: "soft scrambled eggs with spinach on toast healthy food"
             },
@@ -904,19 +932,18 @@
                 title: "Pre-Game Tuna Rice Express",
                 calories: 490,
                 protein: "36g",
-                description: "Easy canned tuna flaked over hot instant microwave rice, drizzled with soy sauce and finished with fresh crisp cucumber slices.",
+                description: "Easy canned tuna flaked over hot instant microwave rice and soy sauce.",
                 ingredients: [
-                    "1 Can (150g) of tuna in springwater, drained",
-                    "1 Bag of microwave instant jasmine rice",
-                    "1/2 Cucumber, sliced into rounds",
-                    "1 tbsp Low-sodium soy sauce",
-                    "Optional: sriracha drizzle"
+                    "1 Can (150g) drained tuna",
+                    "1 Bag instant jasmine rice",
+                    "1/2 Cucumber, sliced",
+                    "1 tbsp Soy sauce"
                 ],
                 instructions: [
-                    "Microwave your instant rice according to the packet instructions.",
-                    "Drain the canned tuna and flake it gently with a fork into a bowl.",
-                    "Add the hot rice and toss with soy sauce (and sriracha if you like a kick).",
-                    "Lay cucumber rounds on the side for a crisp texture. Quick, easy, absolute zero-cook power bowl."
+                    "Cook instant microwave rice.",
+                    "Flake tuna with a fork.",
+                    "Mix warm rice and tuna, drizzle with soy sauce.",
+                    "Serve with fresh cucumber slices."
                 ],
                 imagePrompt: "tuna with white rice and cucumber healthy simple meal bowl"
             },
@@ -926,17 +953,17 @@
                 title: "Post-Practice Chocolate Oat Express",
                 calories: 510,
                 protein: "24g",
-                description: "Quick-rolled oats cooked directly in low-fat chocolate milk. Simple, sweet, and perfect balanced protein-to-carb ratios for instant recovery.",
+                description: "Quick oats cooked directly in low-fat chocolate milk. Perfect post-practice recovery.",
                 ingredients: [
                     "1/2 Cup quick oats",
-                    "1 Cup chocolate milk (or chocolate soy milk)",
+                    "1 Cup chocolate milk",
                     "1/2 tbsp Honey",
-                    "A handful of sliced almonds or raw seeds"
+                    "Handful sliced almonds"
                 ],
                 instructions: [
-                    "Combine quick oats and chocolate milk in a microwave-safe bowl.",
-                    "Microwave on high for 1.5 to 2 minutes, checking to prevent boiling over.",
-                    "Stir thoroughly, drizzle with honey, and sprinkle with sliced almonds for a healthy fat crunch."
+                    "Combine quick oats and chocolate milk in microwave-safe bowl.",
+                    "Microwave on high for 1.5 to 2 minutes.",
+                    "Stir, drizzle honey, top with sliced almonds."
                 ],
                 imagePrompt: "chocolate oatmeal bowl healthy snack"
             }
@@ -973,16 +1000,16 @@
 
         // Diverse colorful dark sports gradients
         const gradients = [
-            'linear-gradient(135deg, #1c0024 0%, #030303 100%)', // Violet
-            'linear-gradient(135deg, #2b0c02 0%, #030303 100%)', // Ember Orange
-            'linear-gradient(135deg, #00122e 0%, #030303 100%)', // Midnight Blue
-            'linear-gradient(135deg, #02200a 0%, #030303 100%)', // Court Green
-            'linear-gradient(135deg, #1f1f1f 0%, #030303 100%)', // Graphite
-            'linear-gradient(135deg, #3d0000 0%, #030303 100%)', // Crimson Red
-            'linear-gradient(135deg, #1a2a00 0%, #030303 100%)', // Volt Green Edge
-            'linear-gradient(135deg, #002d2d 0%, #030303 100%)', // Teal Cyber
-            'linear-gradient(135deg, #2b003a 0%, #030303 100%)', // Purple Court
-            'linear-gradient(135deg, #1f1100 0%, #030303 100%)'  // Raw Amber
+            'linear-gradient(135deg, #1c0024 0%, #030303 100%)',
+            'linear-gradient(135deg, #2b0c02 0%, #030303 100%)',
+            'linear-gradient(135deg, #00122e 0%, #030303 100%)',
+            'linear-gradient(135deg, #02200a 0%, #030303 100%)',
+            'linear-gradient(135deg, #1f1f1f 0%, #030303 100%)',
+            'linear-gradient(135deg, #3d0000 0%, #030303 100%)',
+            'linear-gradient(135deg, #1a2a00 0%, #030303 100%)',
+            'linear-gradient(135deg, #002d2d 0%, #030303 100%)',
+            'linear-gradient(135deg, #2b003a 0%, #030303 100%)',
+            'linear-gradient(135deg, #1f1100 0%, #030303 100%)'
         ];
 
         function init() {
@@ -1108,6 +1135,27 @@
             });
         }
 
+        // Shuffling Algorithm guaranteeing absolutely no adjacent duplicate types in long scroll home feed
+        function shuffleNoAdjacent(items) {
+            if (items.length <= 1) return items;
+            let attempts = 0;
+            while (attempts < 150) {
+                let shuffled = [...items].sort(() => 0.5 - Math.random());
+                let valid = true;
+                for (let i = 0; i < shuffled.length - 1; i++) {
+                    if (shuffled[i].type === shuffled[i+1].type) {
+                        valid = false;
+                        break;
+                    }
+                }
+                if (valid) {
+                    return shuffled;
+                }
+                attempts++;
+            }
+            return items.sort(() => 0.5 - Math.random()); // Fallback
+        }
+
         // Beautiful, Shuffled Home Feed Construction - 3 vids, 3 tips, 2 meals, 2 quotes (No consecutive duplicate cards)
         function renderScatteredFeed(videoLines) {
             const feedContainer = document.getElementById('home-scattered-feed');
@@ -1207,22 +1255,33 @@
             const isMuted = icon.innerText === 'volume_off';
 
             if (isMuted) {
-                iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute' }), '*');
+                iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
                 icon.innerText = 'volume_up';
             } else {
-                iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'mute' }), '*');
+                iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'mute', args: [] }), '*');
                 icon.innerText = 'volume_off';
             }
         }
 
-        // Detail Modal Logic - Fully Supports View & Interactive Edit Mode
+        // Escape helper safeguarding template literal strings from HTML syntax crashes
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // Detail Modal Logic - Fully Supports View & Interactive Edit Mode. Employs soft type checking bypasses [1.2]
         function openDetail(id) {
             isEditMode = false;
-            // Lookup in user task state
-            currentActiveItem = state.tasks.find(t => t.id === id);
+            // Lookup in user task state with soft comparison to safely bypass string/numeric typings [1.2]
+            currentActiveItem = state.tasks.find(t => t.id == id);
             // If not found, lookup standard meals
             if(!currentActiveItem) {
-                currentActiveItem = defaultMeals.find(t => t.id === id);
+                currentActiveItem = defaultMeals.find(t => t.id == id);
             }
             if(!currentActiveItem) return;
 
@@ -1239,37 +1298,37 @@
             let html = '';
 
             if (isEditMode) {
-                // RENDER EDIT MODE FIELDS
+                // RENDER EDIT MODE FIELDS SAFELY ESCAPED
                 html += `
                     <div class="card">
                         <label class="edit-label">Title</label>
-                        <input type="text" id="edit-title" value="${currentActiveItem.title}">
+                        <input type="text" id="edit-title" value="${escapeHtml(currentActiveItem.title)}">
                         
                         <label class="edit-label">Description</label>
-                        <textarea id="edit-desc">${currentActiveItem.description || ''}</textarea>
+                        <textarea id="edit-desc">${escapeHtml(currentActiveItem.description || '')}</textarea>
                 `;
 
                 if (currentActiveItem.type === 'workout' || currentActiveItem.type === 'drill') {
                     const exercisesText = (currentActiveItem.exercises || []).map(e => `${e.name} - ${e.reps}`).join('\n');
                     html += `
                         <label class="edit-label">Exercises (Format: Name - Sets x Reps | One Per Line)</label>
-                        <textarea id="edit-exercises" style="min-height: 150px;">${exercisesText}</textarea>
+                        <textarea id="edit-exercises" style="min-height: 150px;">${escapeHtml(exercisesText)}</textarea>
                     `;
                 } else if (currentActiveItem.type === 'meal') {
                     const ingredientsText = (currentActiveItem.ingredients || []).join('\n');
                     const instructionsText = (currentActiveItem.instructions || []).join('\n');
                     html += `
                         <label class="edit-label">Calories</label>
-                        <input type="text" id="edit-calories" value="${currentActiveItem.calories || ''}">
+                        <input type="text" id="edit-calories" value="${escapeHtml(currentActiveItem.calories || '')}">
                         
                         <label class="edit-label">Protein</label>
-                        <input type="text" id="edit-protein" value="${currentActiveItem.protein || ''}">
+                        <input type="text" id="edit-protein" value="${escapeHtml(currentActiveItem.protein || '')}">
 
                         <label class="edit-label">Ingredients (One Per Line)</label>
-                        <textarea id="edit-ingredients" style="min-height: 120px;">${ingredientsText}</textarea>
+                        <textarea id="edit-ingredients" style="min-height: 120px;">${escapeHtml(ingredientsText)}</textarea>
 
                         <label class="edit-label">Cooking Instructions (One Per Line)</label>
-                        <textarea id="edit-instructions" style="min-height: 150px;">${instructionsText}</textarea>
+                        <textarea id="edit-instructions" style="min-height: 150px;">${escapeHtml(instructionsText)}</textarea>
                     `;
                 }
 
@@ -1284,7 +1343,7 @@
                 // RENDER VIEW MODE
                 if (currentActiveItem.type === 'workout' || currentActiveItem.type === 'drill') {
                     if (currentActiveItem.description) {
-                        html += `<p class="meal-desc">${currentActiveItem.description}</p>`;
+                        html += `<p class="meal-desc">${escapeHtml(currentActiveItem.description)}</p>`;
                     }
                     html += `<div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:0 15px; margin-bottom: 20px;">`;
                     (currentActiveItem.exercises || []).forEach((ex, idx) => {
@@ -1295,8 +1354,8 @@
                                         <div style="width:10px; height:5px; border-left:2px solid var(--bg); border-bottom:2px solid var(--bg); transform:rotate(-45deg) translateY(-2px); opacity:${ex.done?1:0}"></div>
                                     </div>
                                     <div class="exercise-info">
-                                        <span class="exercise-name" style="${ex.done?'text-decoration:line-through; color:var(--text-muted)':''}">${ex.name}</span>
-                                        <span class="exercise-reps">${ex.reps}</span>
+                                        <span class="exercise-name" style="${ex.done?'text-decoration:line-through; color:var(--text-muted)':''}">${escapeHtml(ex.name)}</span>
+                                        <span class="exercise-reps">${escapeHtml(ex.reps)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -1315,14 +1374,14 @@
                         html += `<img src="${imgUrl}" class="meal-image" alt="Meal Image" loading="lazy">`;
                     }
                     if (currentActiveItem.description) {
-                        html += `<p class="meal-desc">${currentActiveItem.description}</p>`;
+                        html += `<p class="meal-desc">${escapeHtml(currentActiveItem.description)}</p>`;
                     }
                     
                     html += `<div class="card" style="margin-bottom: 20px;">
                         <h3 style="margin-bottom:10px;">MACROS</h3>
                         <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.95rem;">
-                            <span>CALORIES: <span style="color:var(--text-muted); font-weight:400;">${currentActiveItem.calories || 'N/A'}</span></span>
-                            <span>PROTEIN: <span style="color:var(--text-muted); font-weight:400;">${currentActiveItem.protein || 'N/A'}</span></span>
+                            <span>CALORIES: <span style="color:var(--text-muted); font-weight:400;">${escapeHtml(currentActiveItem.calories) || 'N/A'}</span></span>
+                            <span>PROTEIN: <span style="color:var(--text-muted); font-weight:400;">${escapeHtml(currentActiveItem.protein) || 'N/A'}</span></span>
                         </div>
                     </div>`;
 
@@ -1330,7 +1389,7 @@
                         html += `<div class="card" style="margin-bottom: 20px;">
                             <h3 style="margin-bottom:10px;">INGREDIENTS</h3>
                             <ul style="list-style: disc; margin-left: 20px; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 4px;">
-                                ${currentActiveItem.ingredients.map(ing => `<li style="text-transform: none;">${ing}</li>`).join('')}
+                                ${currentActiveItem.ingredients.map(ing => `<li style="text-transform: none;">${escapeHtml(ing)}</li>`).join('')}
                             </ul>
                         </div>`;
                     }
@@ -1339,7 +1398,7 @@
                         html += `<div class="card" style="margin-bottom: 20px;">
                             <h3 style="margin-bottom:10px;">INSTRUCTIONS</h3>
                             <ol style="margin-left: 20px; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
-                                ${currentActiveItem.instructions.map(step => `<li style="text-transform: none;">${step}</li>`).join('')}
+                                ${currentActiveItem.instructions.map(step => `<li style="text-transform: none;">${escapeHtml(step)}</li>`).join('')}
                             </ol>
                         </div>`;
                     }
@@ -1351,7 +1410,7 @@
                     html += `
                         <div style="padding: 40px 0; text-align:center;">
                             <h3 style="font-size:1.1rem; color:var(--text-muted);">BASIC TASK</h3>
-                            <p style="margin-top:10px; font-size:1.2rem; font-weight:600;">${currentActiveItem.title}</p>
+                            <p style="margin-top:10px; font-size:1.2rem; font-weight:600;">${escapeHtml(currentActiveItem.title)}</p>
                         </div>
                         <button onclick="completeCurrentItem()">
                             ${currentActiveItem.completed ? 'Completed' : 'Mark Complete'}
@@ -1601,8 +1660,7 @@
             }
         }
 
-        // Coach Chat Logic using the exact model gemini-3.1-flash-lite. 
-        // Can read user request to create/tweak a workout and append a actionable JSON plan card inside the chat bubble!
+        // Coach Chat Logic using gemini-3.1-flash-lite. 
         async function sendChatMessage() {
             const inputEl = document.getElementById('chat-input');
             const userMsg = inputEl.value.trim();
@@ -1616,7 +1674,7 @@
             const messagesContainer = document.getElementById('chat-messages');
             const playerBubble = document.createElement('div');
             playerBubble.className = 'chat-bubble player';
-            playerBubble.innerHTML = `<span class="chat-message-text">${userMsg}</span>`;
+            playerBubble.innerHTML = `<span class="chat-message-text">${escapeHtml(userMsg)}</span>`;
             messagesContainer.appendChild(playerBubble);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
@@ -1630,7 +1688,6 @@
             messagesContainer.appendChild(loadingBubble);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-            // System instructions defining Coach Parade's elite basketball persona + action logic triggers
             const systemText = `You are Coach Parade, an elite, intense, motivating basketball trainer. Help the player design training drills, motivation, and practical strategy.
             Tone is high-energy, direct, inspiring and elite. Never drop character.
             IMPORTANT: When the player asks you to create, suggest, or tweak a workout, drill session, or a meal plan, write your conversational response first.
@@ -1658,7 +1715,6 @@
                 const coachResponse = data.candidates[0].content.parts[0].text;
                 document.getElementById('coach-loading').remove();
 
-                // Process potential JSON block for UI action card insertion
                 const jsonRegex = /\|\|\|JSON:([\s\S]+?)\|\|\|/;
                 const match = coachResponse.match(jsonRegex);
                 let cleanResponseText = coachResponse;
@@ -1679,12 +1735,14 @@
                 let bubbleHtml = `<span class="chat-message-text">${cleanResponseText.replace(/\n/g, '<br>')}</span>`;
                 
                 if (parsedPlan) {
-                    // Inject a beautiful interactive native button inside the bubble
-                    const serializedPlan = JSON.stringify(parsedPlan).replace(/"/g, '&quot;');
+                    // Stable mapping key preventing HTML string quote crashes [1.2]
+                    const planId = 'coach_plan_' + Date.now();
+                    coachPlansMemory[planId] = parsedPlan;
+
                     bubbleHtml += `
                         <div style="margin-top:15px; border-top:1px solid var(--border); padding-top:10px;">
                             <p style="font-weight:800; font-size:0.8rem; color:#ff4500; margin-bottom:10px; text-transform:uppercase;">COACH GENERATED A PLAN</p>
-                            <button onclick="addCoachPlanToGrind('${serializedPlan}')" style="font-size:0.85rem; padding:10px 15px;">Add to Today's Grind</button>
+                            <button onclick="addCoachPlanToGrind('${planId}')" style="font-size:0.85rem; padding:10px 15px;">Add to Today's Grind</button>
                         </div>
                     `;
                 }
@@ -1706,10 +1764,13 @@
             }
         }
 
-        // Appends Coach suggested Plan to Today's Grind state dynamically
-        function addCoachPlanToGrind(planString) {
+        function addCoachPlanToGrind(planId) {
+            const plan = coachPlansMemory[planId];
+            if (!plan) {
+                alert("Failed to find selected custom plan details.");
+                return;
+            }
             try {
-                const plan = JSON.parse(planString);
                 const newTask = {
                     id: Date.now(),
                     title: plan.title || "Coach's Customized Plan",
@@ -1789,7 +1850,6 @@
             }
         }
 
-        // Helper: YouTube Link extraction supporting autoplay loop muting playsinline rules + enablejsapi for volume unmuting commands
         function extractYouTubeEmbed(url, autoplay = false, mute = false) {
             let videoId = null;
             if (url.includes('shorts/')) {
