@@ -18,8 +18,8 @@
             --text-muted: #777777;
             --accent: #ffffff;
             --border: #2a2a2a;
-            --nav-height: calc(80px + env(safe-area-inset-bottom));
-            --header-height: calc(60px + env(safe-area-inset-top));
+            --nav-height: calc(88px + env(safe-area-inset-bottom));
+            --header-height: calc(52px + env(safe-area-inset-top));
             --radius: 4px;
         }
 
@@ -69,6 +69,11 @@
             border-bottom: 1px solid var(--border);
         }
 
+        header h1 {
+            font-size: 1.25rem;
+            letter-spacing: 1px;
+        }
+
         .stats {
             display: flex;
             gap: 15px;
@@ -97,7 +102,7 @@
         /* Bottom Nav */
         nav {
             height: var(--nav-height);
-            padding-bottom: calc(25px + env(safe-area-inset-bottom)); /* Generous bottom spacing for iPhone home indicator */
+            padding-bottom: calc(32px + env(safe-area-inset-bottom)); /* Slightly bigger gap to avoid home line collision */
             background: var(--bg);
             display: flex;
             justify-content: space-around;
@@ -130,7 +135,7 @@
         }
 
         .nav-item .material-symbols-outlined {
-            font-size: 26px;
+            font-size: 30px; /* Slightly bigger icons */
         }
 
         /* UI Components */
@@ -581,6 +586,12 @@
                     </div>
                 </div>
 
+                <div class="card" style="margin-top: 15px;">
+                    <h3>SYSTEM</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">Refresh the application to reload video streams and sync schedules.</p>
+                    <button class="secondary" onclick="window.location.reload()">REFRESH APP</button>
+                </div>
+
                 <button class="danger" onclick="clearData()" style="margin-top: 20px;">RESET ALL DATA</button>
             </div>
         </main>
@@ -636,33 +647,79 @@
         let manualType = 'task';
         let globalVideoLines = [];
 
-        // Pool of high-quality athlete meals for dynamic home page insertion
+        // Pool of high-quality athlete meals with recipe ingredients and instructions
         const defaultMeals = [
             {
                 id: 101,
                 type: "meal",
-                title: "PRO-BOOST CHICKEN & SWEET POTATO",
+                title: "Pro-Boost Chicken & Sweet Potato",
                 calories: 680,
                 protein: "52g",
-                description: "Grilled chicken breast paired with roasted sweet potatoes and fresh steamed broccoli. Optimized for muscle recovery and sustainable athletic energy.",
+                description: "Grilled chicken breast paired with roasted sweet potato cubes and fresh steamed broccoli. Optimized for rapid basketball muscle recovery and clean metabolic energy.",
+                ingredients: [
+                    "200g Lean chicken breast fillet",
+                    "1 Medium sweet potato, scrubbed and cubed",
+                    "1 Cup broccoli florets",
+                    "1 tbsp Extra virgin olive oil",
+                    "Spices: garlic powder, paprika, sea salt, black pepper"
+                ],
+                instructions: [
+                    "Preheat your oven to 400°F (200°C).",
+                    "Toss the cubed sweet potatoes with 1/2 tbsp olive oil, paprika, sea salt, and black pepper. Spread evenly on a baking sheet and roast for 25 minutes.",
+                    "Brush chicken breast with remaining olive oil. Season generously with garlic powder, salt, and black pepper.",
+                    "Pan-sear or grill the chicken on medium-high heat for approximately 6-7 minutes per side or until the internal temperature reads 165°F.",
+                    "In the final 5 minutes, steam your broccoli florets over boiling water until tender-crisp.",
+                    "Slice the chicken, arrange alongside the roasted sweet potatoes and broccoli. Serve hot."
+                ],
                 imagePrompt: "grilled chicken breast with sweet potatoes and broccoli healthy sports meal"
             },
             {
                 id: 102,
                 type: "meal",
-                title: "BEAST-MODE BEEF & RICE BOWL",
+                title: "Beast-Mode Beef & Rice Bowl",
                 calories: 750,
                 protein: "48g",
-                description: "Lean ground beef over jasmine rice, mixed with sautéed spinach and a drizzle of sesame oil. Great pre-game complex carbs and fast-acting amino acids.",
+                description: "Lean grass-fed ground beef served over warm jasmine rice, mixed with sautéed baby spinach and a light sesame-soy glaze. Perfect complex carbs for pre-game endurance.",
+                ingredients: [
+                    "180g Extra-lean ground beef (90/10 or better)",
+                    "1 Cup cooked Jasmine white or brown rice",
+                    "2 Cups raw baby spinach",
+                    "1 Green onion, chopped",
+                    "1 tsp Sesame oil & 1 tbsp low-sodium soy sauce",
+                    "1/2 tsp Sesame seeds for garnish"
+                ],
+                instructions: [
+                    "Cook your Jasmine rice according to package directions and set aside warm.",
+                    "Heat a non-stick skillet over medium-high heat. Add ground beef, breaking it up with a spatula. Cook until fully browned (5-6 minutes). Drain excess fat.",
+                    "Stir soy sauce and a splash of sesame oil directly into the beef, then fold in the raw baby spinach. Cook for 1-2 minutes until spinach is fully wilted.",
+                    "Scoop the warm Jasmine rice into a bowl, layer the savory seasoned beef and wilted spinach mixture right over the top.",
+                    "Garnish with sliced green onions and sesame seeds. Power bowl complete!"
+                ],
                 imagePrompt: "beef and rice bowl with spinach healthy sports meal"
             },
             {
                 id: 103,
                 type: "meal",
-                title: "SLAM-DUNK SALMON & QUINOA",
+                title: "Slam-Dunk Salmon & Quinoa",
                 calories: 620,
                 protein: "42g",
-                description: "Pan-seared salmon fillet over a bed of fluffy quinoa and asparagus. Packed with Omega-3 fatty acids for joint recovery and inflammation control.",
+                description: "Seared Omega-3 rich salmon fillet resting on fluffy tri-color quinoa with tender roasted asparagus. Ideal for joint support, inflammation control, and cellular recovery.",
+                ingredients: [
+                    "150g Fresh wild-caught salmon fillet",
+                    "3/4 Cup cooked quinoa",
+                    "8-10 Asparagus spears, woody ends trimmed",
+                    "1 tbsp Fresh lemon juice",
+                    "1/2 tbsp Olive oil",
+                    "Dill, sea salt, and lemon pepper seasoning to taste"
+                ],
+                instructions: [
+                    "Cook quinoa according to instructions (usually 1 part quinoa to 2 parts water) and fluff with a fork.",
+                    "Preheat oven or air-fryer to 390°F (200°C).",
+                    "Toss asparagus in a light drizzle of olive oil, sea salt, and lemon pepper. Roast for 10-12 minutes.",
+                    "Season salmon with lemon juice, dill, and sea salt. Pan-sear skin-side down first for 4 minutes in a hot skillet, then flip and cook for an additional 3-4 minutes until flaky.",
+                    "Plate a bed of quinoa, arrange the roasted asparagus spears, and gently lay the seared salmon on top.",
+                    "Finish with a squeeze of fresh lemon juice over everything."
+                ],
                 imagePrompt: "salmon and quinoa with asparagus healthy sports meal"
             }
         ];
@@ -685,13 +742,15 @@
             '"When you expect something, it means you\'ve prepared, done the work, and expect to win!" - Coach quote'
         ];
 
-        // Tips Pool - Renamed from Pro Basketball Tip to just Tip
+        // Tips Pool
         const proTips = [
-            { title: "PERFECTING THE ROTATION", content: "Focus on getting a clean, backwards rotation on your shot. Keep your index and middle finger aligned with the center of the ball on release. [1.1.5]" },
+            { title: "PERFECTING THE ROTATION", content: "Focus on getting a clean, backwards rotation on your shot. Keep your index and middle finger aligned with the center of the ball on release." },
             { title: "BALL HANDLING: STAY LOW", content: "When executing crossovers, drop your hips, keep your chest up, and pound the ball below knee-height. A high dribble is a stolen dribble." },
             { title: "FOOTWORK: THE TRIPLE THREAT", content: "Master the jab step. A quick, aggressive jab step can freeze your defender, opening up clean space for a shot or drive." },
             { title: "FINISHING: THE SAME-FOOT LAYUP", content: "Finish off your wrong foot (e.g., right hand, right foot) to throw off the rim protector's shot-blocking timing." },
-            { title: "HUSTLE: THE 50/50 BALLS", content: "Chasing down loose balls and rebounds takes zero talent. Be the player who acts first on every deflection." }
+            { title: "HUSTLE: THE 50/50 BALLS", content: "Chasing down loose balls and rebounds takes zero talent. Be the player who acts first on every deflection." },
+            { title: "SPACING: FILL THE CORNERS", content: "Great floor spacing creates drive lanes. When running in transition, sprint to the corners to pull defenders away from the paint." },
+            { title: "DEFENSE: THE ACTIVE HANDS", content: "Never defend with your hands down. Keep one hand mirroring the ball and the other hand blocking the passing lane." }
         ];
 
         function init() {
@@ -754,9 +813,7 @@
             el.classList.add('active');
 
             if (viewId === 'home') {
-                // Instantly re-scatter the home feed on click for fresh daily vibe
                 renderScatteredFeed(globalVideoLines);
-                // Scroll home to top
                 document.getElementById('main-scrollable').scrollTop = 0;
             }
         }
@@ -819,18 +876,38 @@
             });
         }
 
-        // Beautiful, Dynamic, Shuffled Home Feed Construction
+        // Shuffling Algorithm guaranteeing absolutely no adjacent duplicate types in long scroll home feed
+        function shuffleNoAdjacent(items) {
+            let attempts = 0;
+            while (attempts < 150) {
+                let shuffled = [...items].sort(() => 0.5 - Math.random());
+                let valid = true;
+                for (let i = 0; i < shuffled.length - 1; i++) {
+                    if (shuffled[i].type === shuffled[i+1].type) {
+                        valid = false;
+                        break;
+                    }
+                }
+                if (valid) {
+                    return shuffled;
+                }
+                attempts++;
+            }
+            return items.sort(() => 0.5 - Math.random()); // Fallback
+        }
+
+        // Beautiful, Shuffled Home Feed Construction with 3 videos and 3 tips
         function renderScatteredFeed(videoLines) {
             const feedContainer = document.getElementById('home-scattered-feed');
             feedContainer.innerHTML = '';
 
             let itemsPool = [];
 
-            // 1. Pick 2 random videos from the playlist
+            // 1. Pick 3 random videos from the playlist, muted on home page
             if (videoLines && videoLines.length > 0) {
                 let shuffledVids = [...videoLines].sort(() => 0.5 - Math.random());
-                shuffledVids.slice(0, 2).forEach(url => {
-                    let embedUrl = extractYouTubeEmbed(url.trim(), true);
+                shuffledVids.slice(0, 3).forEach(url => {
+                    let embedUrl = extractYouTubeEmbed(url.trim(), true, true); // Autoplay, Muted on Home Page
                     if (embedUrl) {
                         itemsPool.push({
                             type: 'video',
@@ -842,7 +919,7 @@
                 });
             }
 
-            // 2. Pick 1 random Meal (check user added state meals, otherwise grab from highly visual catalog)
+            // 2. Pick 1 random Meal
             const stateMeals = state.tasks.filter(t => t.type === 'meal');
             const mealPool = stateMeals.length > 0 ? stateMeals : defaultMeals;
             const randomMeal = mealPool[Math.floor(Math.random() * mealPool.length)];
@@ -864,14 +941,14 @@
                 `
             });
 
-            // 3. Pick 2 random Quotes (apply sleek gradient backgrounds dynamically)
+            // 3. Pick 2 random Quotes with gradient backgrounds
             let shuffledQuotes = [...quotes].sort(() => 0.5 - Math.random());
             const gradients = [
-                'linear-gradient(135deg, #1c0024 0%, #030303 100%)', // Deep Dark Magenta
-                'linear-gradient(135deg, #2b0c02 0%, #030303 100%)', // Ember Dark Orange
-                'linear-gradient(135deg, #00122e 0%, #030303 100%)', // Midnight Slate Blue
-                'linear-gradient(135deg, #02200a 0%, #030303 100%)', // Dark Court Green
-                'linear-gradient(135deg, #1f1f1f 0%, #030303 100%)'  // Sleek Graphite Metallic
+                'linear-gradient(135deg, #1c0024 0%, #030303 100%)',
+                'linear-gradient(135deg, #2b0c02 0%, #030303 100%)',
+                'linear-gradient(135deg, #00122e 0%, #030303 100%)',
+                'linear-gradient(135deg, #02200a 0%, #030303 100%)',
+                'linear-gradient(135deg, #1f1f1f 0%, #030303 100%)'
             ];
             
             shuffledQuotes.slice(0, 2).forEach((quote) => {
@@ -887,9 +964,9 @@
                 });
             });
 
-            // 4. Pick 2 random Tips (Renamed to just TIP)
+            // 4. Pick 3 random Tips
             let shuffledTips = [...proTips].sort(() => 0.5 - Math.random());
-            shuffledTips.slice(0, 2).forEach(tip => {
+            shuffledTips.slice(0, 3).forEach(tip => {
                 itemsPool.push({
                     type: 'tip',
                     content: `
@@ -902,11 +979,11 @@
                 });
             });
 
-            // Scramble order randomly
-            itemsPool.sort(() => 0.5 - Math.random());
+            // Re-sort items pool to guarantee absolutely NO adjacent duplicate types
+            let finalNoAdjacentPool = shuffleNoAdjacent(itemsPool);
 
             // Render to container
-            itemsPool.forEach(item => {
+            finalNoAdjacentPool.forEach(item => {
                 const div = document.createElement('div');
                 div.innerHTML = item.content;
                 feedContainer.appendChild(div);
@@ -915,9 +992,7 @@
 
         // Detail Modal Logic
         function openDetail(id) {
-            // Check custom tasks
             currentActiveItem = state.tasks.find(t => t.id === id);
-            // If not found, check preconfigured meals
             if(!currentActiveItem) {
                 currentActiveItem = defaultMeals.find(t => t.id === id);
             }
@@ -973,6 +1048,26 @@
                     </div>
                 </div>`;
 
+                // Display detailed ingredients if available
+                if (currentActiveItem.ingredients && currentActiveItem.ingredients.length > 0) {
+                    html += `<div class="card" style="margin-bottom: 20px;">
+                        <h3 style="margin-bottom:10px;">INGREDIENTS</h3>
+                        <ul style="list-style: disc; margin-left: 20px; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 4px;">
+                            ${currentActiveItem.ingredients.map(ing => `<li style="text-transform: none;">${ing}</li>`).join('')}
+                        </ul>
+                    </div>`;
+                }
+
+                // Display detailed cooking instructions if available
+                if (currentActiveItem.instructions && currentActiveItem.instructions.length > 0) {
+                    html += `<div class="card" style="margin-bottom: 20px;">
+                        <h3 style="margin-bottom:10px;">INSTRUCTIONS</h3>
+                        <ol style="margin-left: 20px; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
+                            ${currentActiveItem.instructions.map(step => `<li style="text-transform: none;">${step}</li>`).join('')}
+                        </ol>
+                    </div>`;
+                }
+
                 html += `<button onclick="completeCurrentItem()" ${currentActiveItem.completed ? 'style="opacity:0.5"' : ''}>
                     ${currentActiveItem.completed ? 'Eaten' : 'Mark Meal Eaten'}
                 </button>`;
@@ -988,7 +1083,6 @@
                 `;
             }
 
-            // Exclude pre-baked placeholder list meals from state delete tasks
             if (currentActiveItem.id < 100) {
                 html += `<button class="danger" style="margin-top:15px;" onclick="deleteCurrentItem()">Delete Item</button>`;
             }
@@ -1115,11 +1209,13 @@
                 Return ONLY a raw JSON object (no markdown, no backticks, no code blocks) with this exact structure:
                 {
                     "title": "Short Appetizing Name",
-                    "description": "Short description of ingredients/prep",
+                    "description": "Short description of the meal.",
                     "type": "meal",
                     "calories": 600,
                     "protein": "40g",
-                    "imagePrompt": "A single descriptive sentence for an AI image generator to create a picture of this meal on a nice plate"
+                    "imagePrompt": "A single descriptive sentence for an AI image generator to create a picture of this meal on a nice plate",
+                    "ingredients": ["100g Ingredient A", "1tbsp Ingredient B"],
+                    "instructions": ["Step 1 cooked properly.", "Step 2 ready to serve."]
                 }
                 Avoid using all uppercase in the values.`;
             }
@@ -1128,7 +1224,7 @@
             loader.style.display = 'block';
             
             try {
-                // Modified target endpoint to use Google's next-gen gemini-3.1-flash-lite model as specified
+                // Endpoint utilizes Google's model: gemini-3.1-flash-lite
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${state.apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1164,6 +1260,8 @@
                     newTask.calories = resultObj.calories;
                     newTask.protein = resultObj.protein;
                     newTask.imagePrompt = resultObj.imagePrompt || newTask.title;
+                    newTask.ingredients = resultObj.ingredients || [];
+                    newTask.instructions = resultObj.instructions || [];
                 }
 
                 state.tasks.push(newTask);
@@ -1188,7 +1286,7 @@
             alert("API Key saved.");
         }
 
-        // Hype Video Feed (Both Scroll Feed & Home Page Integration)
+        // Hype Video Feed
         async function loadVideos() {
             const container = document.getElementById('view-hype');
             try {
@@ -1199,12 +1297,12 @@
 
                 if (lines.length === 0) throw new Error("Empty file");
 
-                globalVideoLines = lines; // Cache globally for dynamic feed generator
+                globalVideoLines = lines;
 
                 lines.forEach((url) => {
-                    let embedUrl = extractYouTubeEmbed(url.trim(), true);
+                    // Mute=false for the dedicated Hype feed, letting sound play as requested [1.1]
+                    let embedUrl = extractYouTubeEmbed(url.trim(), true, false); 
                     if (embedUrl) {
-                        // Add to dedicated scrollable HYPE Feed
                         const div = document.createElement('div');
                         div.className = 'video-container';
                         div.innerHTML = `<iframe src="${embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
@@ -1212,7 +1310,6 @@
                     }
                 });
 
-                // Trigger long scroll random scatter population on Home page
                 renderScatteredFeed(globalVideoLines);
 
             } catch (e) {
@@ -1221,13 +1318,12 @@
                     <p style="font-size: 0.85rem; line-height: 1.5; text-transform:none;">Create a <b>videos.txt</b> file in the same folder with YouTube Shorts links on each line to view the hype feed.</p>
                 </div>`;
                 
-                // Fallback rendering of home feed without active video loops
                 renderScatteredFeed([]);
             }
         }
 
         // Helper: YouTube Link extraction supporting autoplay loop muting playsinline rules
-        function extractYouTubeEmbed(url, autoplay = false) {
+        function extractYouTubeEmbed(url, autoplay = false, mute = false) {
             let videoId = null;
             if (url.includes('shorts/')) {
                 videoId = url.split('shorts/')[1].split('?')[0];
@@ -1240,7 +1336,12 @@
             
             let params = `loop=1&playlist=${videoId}&controls=0&modestbranding=1&playsinline=1&rel=0`;
             if (autoplay) {
-                params += `&autoplay=1&mute=1`; // Required by modern iOS browsers to autoplay inline
+                params += `&autoplay=1`;
+            }
+            if (mute) {
+                params += `&mute=1`; // Required by modern iOS browsers to autoplay inline silently on the Home page
+            } else {
+                params += `&mute=0`; // Play sound in HYPE feed as requested
             }
             return `https://www.youtube.com/embed/${videoId}?${params}`;
         }
