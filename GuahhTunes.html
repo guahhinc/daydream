@@ -414,7 +414,7 @@
     }
 
     /* =========================================
-       HOME VIEW: RECENTLY PLAYED, BRAND & UPDATE (FULL EDGE-TO-EDGE)
+       HOME VIEW: RECENTLY PLAYED, BRAND & UPDATE
     ========================================= */
     .home-container {
       display: flex;
@@ -588,7 +588,7 @@
     }
 
     /* =========================================
-       FULLSCREEN STORE VIEW & OFFLINE FALLBACK
+       FULLSCREEN STORE VIEW & OFFLINE CONTAINER
     ========================================= */
     #view-store {
       width: 100%;
@@ -628,9 +628,11 @@
     }
 
     .store-offline-text {
-      font-size: 20px;
+      font-size: 18px;
       color: #888888;
       letter-spacing: -0.01em;
+      max-width: 600px;
+      line-height: 1.4;
     }
 
     /* =========================================
@@ -737,7 +739,7 @@
     }
 
     /* =========================================
-       INLINE DRAWER (TOP-TO-BOTTOM ACCORDION ANIMATION)
+       INLINE DRAWER: SYMMETRICAL OPEN & CLOSE ANIMATIONS
     ========================================= */
     @keyframes drawerOpenTopToBottom {
       0% {
@@ -755,6 +757,22 @@
       }
     }
 
+    @keyframes drawerCloseBottomToTop {
+      0% {
+        opacity: 1;
+        clip-path: inset(0 0 0 0);
+        transform: translateY(0);
+      }
+      40% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        clip-path: inset(0 0 100% 0);
+        transform: translateY(-20px);
+      }
+    }
+
     @keyframes drawerContentSlideDown {
       0% {
         opacity: 0;
@@ -763,6 +781,17 @@
       100% {
         opacity: 1;
         transform: translateY(0);
+      }
+    }
+
+    @keyframes drawerContentSlideUp {
+      0% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-16px);
       }
     }
 
@@ -777,9 +806,14 @@
       grid-template-columns: minmax(280px, 420px) 1fr;
       gap: 54px;
       background: #ffffff;
-      animation: drawerOpenTopToBottom 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: drawerOpenTopToBottom 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       transform-origin: top center;
       overflow: hidden;
+    }
+
+    .itunes-drawer.closing {
+      animation: drawerCloseBottomToTop 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      pointer-events: none;
     }
 
     @media (max-width: 900px) {
@@ -792,7 +826,11 @@
     .drawer-left {
       display: flex;
       flex-direction: column;
-      animation: drawerContentSlideDown 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: drawerContentSlideDown 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .itunes-drawer.closing .drawer-left {
+      animation: drawerContentSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     .drawer-cover-wrap {
@@ -841,7 +879,11 @@
       display: flex;
       flex-direction: column;
       min-width: 0;
-      animation: drawerContentSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: drawerContentSlideDown 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .itunes-drawer.closing .drawer-right {
+      animation: drawerContentSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     .drawer-header {
@@ -1077,7 +1119,7 @@
     <div class="dropzone-sub">Extracting album cover, artist, genre & tracks</div>
   </div>
 
-  <!-- TOP BAR 1: FLAT MEDIA PLAYER -->
+  <!-- TOP BAR 1: FLAT MEDIA PLAYER (MAX DEFAULT VOLUME) -->
   <div class="player-bar">
     <div class="player-left-group">
       <div class="playback-buttons">
@@ -1098,7 +1140,7 @@
       </div>
 
       <div class="itunes-volume-wrap">
-        <input type="range" id="volume-slider" class="itunes-volume-slider" min="0" max="1" step="0.01" value="0.8" title="Volume" />
+        <input type="range" id="volume-slider" class="itunes-volume-slider" min="0" max="1" step="0.01" value="1" title="Volume" />
       </div>
     </div>
 
@@ -1193,7 +1235,7 @@
           </svg>
           <div class="home-about-meta">
             <div class="home-about-title">Guahh Tunes</div>
-            <div class="home-about-version" id="app-version-label">Version 0.1.7 Beta</div>
+            <div class="home-about-version" id="app-version-label">Version 0.1.8 Beta</div>
           </div>
           <button id="btn-check-update" class="home-update-btn" title="Check GitHub for Updates">UPDATE</button>
         </div>
@@ -1208,7 +1250,7 @@
     <!-- STORE VIEW & OFFLINE MESSAGE -->
     <section id="view-store" class="view-container">
       <div id="store-offline-container" class="store-offline-container">
-        <div class="store-offline-text">Store is currently offline, check back later.</div>
+        <div class="store-offline-text">Store is currently offline or no internet connection, please try again later.</div>
       </div>
       <iframe 
         id="store-frame" 
@@ -1226,7 +1268,7 @@
     /* =================================================================
        APP VERSION & GITHUB UPDATE SYSTEM
     ================================================================= */
-    const CURRENT_VERSION = '0.1.7 Beta';
+    const CURRENT_VERSION = '0.1.8 Beta';
     const GITHUB_UPDATE_URL = 'https://raw.githubusercontent.com/guahhinc/daydream/main/GuahhTunes.html';
 
     /* =================================================================
@@ -1302,10 +1344,10 @@
     }
 
     /* =========================================
-       AUDIO & QUEUE STATE
+       AUDIO & QUEUE STATE (MAX DEFAULT VOLUME)
     ========================================= */
     const audioEl = new Audio();
-    audioEl.volume = 0.8;
+    audioEl.volume = 1.0;
 
     let libraryData = [];
     let activeExpandedAlbumId = null;
@@ -1361,7 +1403,7 @@
     const toast = document.getElementById('toast');
 
     /* =========================================
-       UPDATE CHECK & SAVE FUNCTIONALITY
+       UPDATE CHECK & SAVE AS WORKFLOW
     ========================================= */
     async function checkForUpdates() {
       if (!btnCheckUpdate) return;
@@ -1374,7 +1416,6 @@
 
         const remoteHtml = await response.text();
 
-        // Extract version from remote script or HTML
         let remoteVersion = null;
         const versionMatch = remoteHtml.match(/CURRENT_VERSION\s*=\s*['"]([^'"]+)['"]/i) ||
                              remoteHtml.match(/Version\s+([\d\.]+(?:\s+[a-zA-Z0-9]+)?)/i);
@@ -1384,7 +1425,7 @@
         }
 
         if (remoteVersion && remoteVersion !== CURRENT_VERSION) {
-          const proceed = confirm(`Update Available!\n\nNew Version: ${remoteVersion}\nCurrent Version: ${CURRENT_VERSION}\n\nClick OK to choose where to save and replace GuahhTunes.html.`);
+          const proceed = confirm(`Update Available!\n\nNew Version: ${remoteVersion}\nCurrent Version: ${CURRENT_VERSION}\n\nClick OK to open the Save As screen and replace GuahhTunes.html.`);
           if (proceed) {
             await saveUpdatedHtmlFile(remoteHtml);
           }
@@ -1413,14 +1454,14 @@
           const writable = await handle.createWritable();
           await writable.write(htmlContent);
           await writable.close();
-          showToast('GuahhTunes.html updated! Please refresh the page.');
+          showToast('GuahhTunes.html updated! Refresh the page to load.');
           return;
         } catch (err) {
           if (err.name === 'AbortError') return;
         }
       }
 
-      // Fallback save via standard browser download
+      // Fallback save for browsers without File System Access API
       const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
       const downloadUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -1438,7 +1479,7 @@
     }
 
     /* =========================================
-       NAVIGATION SWITCHER & STORE AVAILABILITY
+       NAVIGATION SWITCHER & STORE DISPLAY
     ========================================= */
     navButtons.forEach(button => {
       button.addEventListener('click', () => {
@@ -1455,34 +1496,38 @@
         if (target === 'home') {
           renderRecentlyPlayed();
         } else if (target === 'store') {
-          checkStoreOnline();
+          handleStoreViewOpened();
         }
       });
     });
 
-    async function checkStoreOnline() {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1200);
-
-      try {
-        await fetch('https://guahhtunesstore.guahh.net/', {
-          mode: 'no-cors',
-          cache: 'no-store',
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        storeFrame.style.display = 'block';
-        storeOfflineContainer.style.display = 'none';
-      } catch (err) {
-        clearTimeout(timeoutId);
+    function handleStoreViewOpened() {
+      if (!navigator.onLine) {
         storeFrame.style.display = 'none';
         storeOfflineContainer.style.display = 'flex';
+        return;
       }
+      storeFrame.style.display = 'block';
+      storeOfflineContainer.style.display = 'none';
     }
 
     storeFrame.addEventListener('error', () => {
       storeFrame.style.display = 'none';
       storeOfflineContainer.style.display = 'flex';
+    });
+
+    window.addEventListener('offline', () => {
+      if (document.body.classList.contains('viewing-store')) {
+        storeFrame.style.display = 'none';
+        storeOfflineContainer.style.display = 'flex';
+      }
+    });
+
+    window.addEventListener('online', () => {
+      if (document.body.classList.contains('viewing-store')) {
+        storeFrame.style.display = 'block';
+        storeOfflineContainer.style.display = 'none';
+      }
     });
 
     function formatArtistSlug(artist) {
@@ -1607,7 +1652,7 @@
     }
 
     /* =================================================================
-       RENDER LIBRARY WITH INLINE ITUNES DRAWER
+       RENDER LIBRARY WITH SYMMETRICAL OPEN/CLOSE DRAWER
     ================================================================= */
     function renderLibrary() {
       albumGrid.innerHTML = '';
@@ -1648,8 +1693,36 @@
             playQueue(album.tracks, 0, album);
             return;
           }
-          activeExpandedAlbumId = (activeExpandedAlbumId === album.id) ? null : album.id;
-          renderLibrary();
+
+          const existingDrawer = document.querySelector('.itunes-drawer');
+
+          // Smooth bottom-to-top close if closing active album
+          if (activeExpandedAlbumId === album.id) {
+            if (existingDrawer) {
+              card.classList.remove('selected');
+              const arrow = card.querySelector('.album-pointer-arrow');
+              if (arrow) arrow.remove();
+
+              existingDrawer.classList.add('closing');
+              existingDrawer.addEventListener('animationend', () => {
+                activeExpandedAlbumId = null;
+                renderLibrary();
+              }, { once: true });
+              return;
+            }
+            activeExpandedAlbumId = null;
+            renderLibrary();
+          } else if (activeExpandedAlbumId !== null && existingDrawer) {
+            // Smoothly close previous before opening next
+            existingDrawer.classList.add('closing');
+            existingDrawer.addEventListener('animationend', () => {
+              activeExpandedAlbumId = album.id;
+              renderLibrary();
+            }, { once: true });
+          } else {
+            activeExpandedAlbumId = album.id;
+            renderLibrary();
+          }
         });
 
         cardEntries.push({ album, card });
@@ -1755,7 +1828,6 @@
         </div>
       `;
 
-      // Navigate to artist store upon clicking artist name
       const artistLink = drawer.querySelector('.drawer-artist');
       if (artistLink) {
         artistLink.addEventListener('click', (e) => {
@@ -1783,9 +1855,12 @@
         if (confirm(`Remove "${album.title}" from your library?`)) {
           await dbDeleteAlbum(album.id);
           libraryData = libraryData.filter(a => a.id !== album.id);
-          activeExpandedAlbumId = null;
-          renderLibrary();
-          showToast(`Deleted "${album.title}" from library`);
+          drawer.classList.add('closing');
+          drawer.addEventListener('animationend', () => {
+            activeExpandedAlbumId = null;
+            renderLibrary();
+            showToast(`Deleted "${album.title}" from library`);
+          }, { once: true });
         }
       });
 
@@ -1904,10 +1979,8 @@
         updatePlayStateUI();
       }).catch(err => console.warn('[Playback Warning] Auto-play was restricted:', err));
 
-      // Record in Recently Played
       recordRecentlyPlayed(track, meta);
 
-      // Switch LCD state to active playing
       lcdEmptyState.style.display = 'none';
       lcdActiveState.style.display = 'flex';
 
@@ -2699,7 +2772,6 @@
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Initialize immediate recent tracks and saved library
     renderRecentlyPlayed();
     loadSavedLibrary();
   </script>
