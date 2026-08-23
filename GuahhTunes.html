@@ -150,18 +150,11 @@
       padding: 6px;
     }
 
-    .lcd-empty-icon {
-      max-height: 42px;
-      max-width: 180px;
-      object-fit: contain;
-      user-select: none;
-    }
-
     .lcd-vector-icon {
       width: 38px;
       height: 38px;
       color: #9e9e9e;
-      display: none;
+      display: block;
     }
 
     /* Active State in LCD */
@@ -365,7 +358,7 @@
     ========================================= */
     main {
       flex: 1;
-      padding: 24px 36px 60px 36px;
+      padding: 0;
       width: 100%;
       min-height: 0;
       display: flex;
@@ -391,10 +384,13 @@
     .view-container {
       display: none;
       width: 100%;
+      height: 100%;
+      flex: 1;
     }
 
     .view-container.active-view {
-      display: block;
+      display: flex;
+      flex-direction: column;
     }
 
     .empty-state {
@@ -416,6 +412,10 @@
     /* =========================================
        HOME VIEW: RECENTLY PLAYED, BRAND & UPDATE
     ========================================= */
+    #view-home {
+      padding: 28px 36px 60px 36px;
+    }
+
     .home-container {
       display: flex;
       flex-direction: column;
@@ -538,18 +538,12 @@
       width: 100%;
     }
 
-    .home-about-logo {
-      width: 58px;
-      height: 58px;
-      object-fit: contain;
-      border-radius: 8px;
-    }
-
     .home-about-vector-logo {
       width: 58px;
       height: 58px;
       color: #fd4751;
-      display: none;
+      display: block;
+      flex-shrink: 0;
     }
 
     .home-about-meta {
@@ -588,55 +582,376 @@
     }
 
     /* =========================================
-       FULLSCREEN STORE VIEW & OFFLINE CONTAINER
+       LIBRARY LAYOUT & SIDEBAR NAVIGATION
     ========================================= */
-    #view-store {
+    #view-library {
       width: 100%;
+      height: 100%;
+      display: none;
+    }
+
+    #view-library.active-view {
+      display: flex;
+      flex-direction: row;
+      flex: 1;
+      min-height: calc(100vh - 102px);
+      min-height: calc(100dvh - 102px);
+    }
+
+    .library-sidebar {
+      width: 175px;
+      flex-shrink: 0;
+      border-right: 1px solid #e5e5e5;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      padding: 14px 0;
+    }
+
+    .sidebar-heading {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #999999;
+      padding: 0 16px 8px 16px;
+      user-select: none;
+    }
+
+    .sidebar-item {
+      padding: 9px 18px;
+      font-size: 14px;
+      color: #333333;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.1s ease, color 0.1s ease;
+      user-select: none;
+      border-radius: 0; /* Square edge-to-edge */
+      line-height: 1.2;
+    }
+
+    .sidebar-item:hover {
+      background: #f0f0f0;
+      color: #000000;
+    }
+
+    .sidebar-item.active {
+      background: #fd4751;
+      color: #ffffff;
+    }
+
+    .library-content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: #ffffff;
       height: 100%;
     }
 
-    #view-store.active-view {
-      display: block !important;
-      width: 100% !important;
-      height: calc(100vh - 102px) !important;
-      height: calc(100dvh - 102px) !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    #store-frame {
-      width: 100% !important;
-      height: calc(100vh - 102px) !important;
-      height: calc(100dvh - 102px) !important;
-      min-height: calc(100vh - 102px) !important;
-      min-height: calc(100dvh - 102px) !important;
-      border: none !important;
-      outline: none !important;
-      display: block;
-      background: #ffffff;
-    }
-
-    .store-offline-container {
+    .lib-subview {
       display: none;
       width: 100%;
-      height: calc(100vh - 102px);
-      height: calc(100dvh - 102px);
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 24px;
+      height: 100%;
+      flex: 1;
     }
 
-    .store-offline-text {
-      font-size: 18px;
-      color: #888888;
-      letter-spacing: -0.01em;
-      max-width: 600px;
-      line-height: 1.4;
+    .lib-subview.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Sub-split view for Artists & Genres */
+    .sub-split-view {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      flex: 1;
+    }
+
+    .sub-sidebar {
+      width: 210px;
+      flex-shrink: 0;
+      border-right: 1px solid #eeeeee;
+      background: #ffffff;
+      overflow-y: auto;
+      padding: 8px 0;
+      max-height: calc(100vh - 102px);
+      max-height: calc(100dvh - 102px);
+    }
+
+    .sub-sidebar-item {
+      padding: 8px 18px;
+      font-size: 13.5px;
+      color: #222222;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border-radius: 0; /* Square edge to edge */
+      transition: background-color 0.1s ease, color 0.1s ease;
+    }
+
+    .sub-sidebar-item:hover {
+      background: #f5f5f5;
+    }
+
+    .sub-sidebar-item.active {
+      background: #fd4751;
+      color: #ffffff;
+    }
+
+    .sub-content-pane {
+      flex: 1;
+      padding: 28px 36px 60px 36px;
+      overflow-y: auto;
+      min-width: 0;
+      max-height: calc(100vh - 102px);
+      max-height: calc(100dvh - 102px);
+    }
+
+    /* Albums Grid Subview Padding */
+    #lib-view-albums {
+      padding: 28px 36px 60px 36px;
+      overflow-y: auto;
+      max-height: calc(100vh - 102px);
+      max-height: calc(100dvh - 102px);
     }
 
     /* =========================================
-       ALBUM GRID
+       STACKED ARTIST & GENRE DETAIL VIEW
+    ========================================= */
+    .stacked-view-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+      margin-bottom: 30px;
+    }
+
+    .stacked-title-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stacked-main-title {
+      font-size: 32px;
+      letter-spacing: -0.025em;
+      color: #000000;
+      line-height: 1.15;
+      margin-bottom: 4px;
+    }
+
+    .stacked-main-subtitle {
+      font-size: 13px;
+      color: #777777;
+    }
+
+    .stacked-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stacked-shuffle-all-btn {
+      background: none;
+      border: none;
+      color: #fd4751;
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 8px;
+      border-radius: 4px;
+      transition: background-color 0.15s ease;
+    }
+
+    .stacked-shuffle-all-btn:hover {
+      background: rgba(253, 71, 81, 0.08);
+    }
+
+    .stacked-more-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #fd4751;
+      border: none;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+
+    .stacked-more-btn:hover {
+      opacity: 0.9;
+    }
+
+    .stacked-album-card {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 36px;
+      margin-bottom: 48px;
+    }
+
+    @media (max-width: 850px) {
+      .stacked-album-card {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+    }
+
+    .stacked-album-left {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stacked-album-art-wrap {
+      width: 190px;
+      height: 190px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #f0f0f0;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+      margin-bottom: 10px;
+    }
+
+    .stacked-album-art-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .stacked-album-left-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 190px;
+      padding: 0 2px;
+    }
+
+    .stacked-album-count-text {
+      font-size: 13px;
+      color: #777777;
+    }
+
+    .stacked-album-shuffle-btn {
+      background: none;
+      border: none;
+      color: #fd4751;
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 13.5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .stacked-album-right {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .stacked-album-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2px;
+      position: relative;
+    }
+
+    .stacked-album-heading {
+      font-size: 25px;
+      letter-spacing: -0.02em;
+      color: #000000;
+      line-height: 1.2;
+    }
+
+    .stacked-album-submeta {
+      font-size: 13.5px;
+      color: #777777;
+      margin-bottom: 16px;
+    }
+
+    .stacked-tracklist {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .stacked-track-row {
+      display: grid;
+      grid-template-columns: 32px 1fr 54px;
+      padding: 8px 6px;
+      border-bottom: 1px solid #f2f2f2;
+      align-items: center;
+      cursor: pointer;
+      font-size: 13.5px;
+      border-radius: 4px;
+      user-select: none;
+    }
+
+    .stacked-track-row:hover {
+      background: #f8f8f8;
+    }
+
+    .stacked-track-row.active-playing {
+      background: #f4f4f4;
+    }
+
+    .stacked-track-num {
+      color: #8e8e8e;
+      font-size: 12.5px;
+      display: flex;
+      align-items: center;
+    }
+
+    .stacked-track-row.active-playing .stacked-num-label {
+      display: none;
+    }
+
+    .stacked-track-row.active-playing .stacked-speaker-icon {
+      display: flex;
+    }
+
+    .stacked-track-row.active-playing:hover .stacked-speaker-icon {
+      display: none;
+    }
+
+    .stacked-track-row.active-playing:hover .stacked-hover-ctrl {
+      display: flex;
+      color: #fd4751;
+    }
+
+    .stacked-speaker-icon,
+    .stacked-hover-ctrl {
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stacked-track-title {
+      color: #111111;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 12px;
+    }
+
+    .stacked-track-time {
+      color: #777777;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-size: 12.5px;
+    }
+
+    /* =========================================
+       ALBUM GRID & INLINE DRAWER
     ========================================= */
     .album-grid {
       display: grid;
@@ -738,18 +1053,14 @@
       filter: drop-shadow(0 -1px 0 #e2e2e2);
     }
 
-    /* =========================================
-       INLINE DRAWER: SYMMETRICAL OPEN & CLOSE ANIMATIONS
-    ========================================= */
+    /* Inline Drawer */
     @keyframes drawerOpenTopToBottom {
       0% {
         opacity: 0;
         clip-path: inset(0 0 100% 0);
         transform: translateY(-20px);
       }
-      50% {
-        opacity: 1;
-      }
+      50% { opacity: 1; }
       100% {
         opacity: 1;
         clip-path: inset(0 0 0 0);
@@ -763,9 +1074,7 @@
         clip-path: inset(0 0 0 0);
         transform: translateY(0);
       }
-      40% {
-        opacity: 1;
-      }
+      40% { opacity: 1; }
       100% {
         opacity: 0;
         clip-path: inset(0 0 100% 0);
@@ -774,25 +1083,13 @@
     }
 
     @keyframes drawerContentSlideDown {
-      0% {
-        opacity: 0;
-        transform: translateY(-16px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      0% { opacity: 0; transform: translateY(-16px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes drawerContentSlideUp {
-      0% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      100% {
-        opacity: 0;
-        transform: translateY(-16px);
-      }
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-16px); }
     }
 
     .itunes-drawer {
@@ -995,7 +1292,6 @@
       color: #000000;
     }
 
-    /* Track numbering & Speaker/Hover controls */
     .drawer-track-num {
       color: #a0a0a0;
       font-weight: 300;
@@ -1048,6 +1344,55 @@
       font-variant-numeric: tabular-nums;
       text-align: right;
       font-size: 13px;
+    }
+
+    /* =========================================
+       STORE VIEW & ERROR NOTICES
+    ========================================= */
+    #view-store {
+      width: 100%;
+      height: 100%;
+    }
+
+    #view-store.active-view {
+      display: block !important;
+      width: 100% !important;
+      height: calc(100vh - 102px) !important;
+      height: calc(100dvh - 102px) !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    #store-frame {
+      width: 100% !important;
+      height: calc(100vh - 102px) !important;
+      height: calc(100dvh - 102px) !important;
+      min-height: calc(100vh - 102px) !important;
+      min-height: calc(100dvh - 102px) !important;
+      border: none !important;
+      outline: none !important;
+      display: none;
+      background: #ffffff;
+    }
+
+    .store-notice-container {
+      display: none;
+      width: 100%;
+      height: calc(100vh - 102px);
+      height: calc(100dvh - 102px);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .store-notice-text {
+      font-size: 18px;
+      color: #888888;
+      letter-spacing: -0.01em;
+      max-width: 600px;
+      line-height: 1.4;
     }
 
     /* =========================================
@@ -1119,7 +1464,7 @@
     <div class="dropzone-sub">Extracting album cover, artist, genre & tracks</div>
   </div>
 
-  <!-- TOP BAR 1: FLAT MEDIA PLAYER (MAX DEFAULT VOLUME) -->
+  <!-- TOP BAR 1: FLAT MEDIA PLAYER -->
   <div class="player-bar">
     <div class="player-left-group">
       <div class="playback-buttons">
@@ -1149,7 +1494,6 @@
       
       <!-- Blank Idle State -->
       <div id="lcd-empty-state" class="lcd-empty-state">
-        <img src="Data/nomusicplaying.png" alt="No Music Playing" class="lcd-empty-icon" onerror="this.style.display='none'; document.getElementById('lcd-empty-fallback-svg').style.display='block';" />
         <svg id="lcd-empty-fallback-svg" class="lcd-vector-icon" viewBox="0 0 100 100" fill="currentColor">
           <path fill-rule="evenodd" clip-rule="evenodd" d="M50 6C25.7 6 6 25.7 6 50s19.7 44 44 44 44-19.7 44-44S74.3 6 50 6zm0 6C29 12 12 29 12 50s17 38 38 38 38-17 38-38S71 12 50 12z"/>
           <path transform="matrix(0.82 0 0 0.82 9 9)" d="M72.5 23.2c-.4-.3-1-.4-1.5-.3l-32 6.8c-.8.2-1.4.9-1.4 1.7v34.4c-2.3-1.4-5.2-2.1-8.2-1.7-5.5.7-9.5 4.8-9 9.2.5 4.4 5.3 7.4 10.8 6.7 4.9-.6 8.7-4.1 9-8.1.1-.4.1-.7.1-1.1V40.2l29-6.2v27.2c-2.3-1.4-5.2-2.1-8.2-1.7-5.5.7-9.5 4.8-9 9.2.5 4.4 5.3 7.4 10.8 6.7 4.9-.6 8.7-4.1 9-8.1.1-.4.1-.7.1-1.1V24.5c0-.6-.3-1-.7-1.3z"/>
@@ -1206,7 +1550,7 @@
     <div class="player-right-spacer"></div>
   </div>
 
-  <!-- TOP BAR 2: NAVIGATION (OPENS TO HOME) -->
+  <!-- TOP BAR 2: NAVIGATION -->
   <header class="top-nav-bar">
     <nav>
       <button class="nav-btn active" data-target="home">Home</button>
@@ -1217,7 +1561,7 @@
 
   <!-- Main Views Container -->
   <main>
-    <!-- HOME VIEW (DEFAULT ACTIVE & FULL WIDTH) -->
+    <!-- HOME VIEW (DEFAULT ACTIVE) -->
     <section id="view-home" class="view-container active-view">
       <div class="home-container">
         <div>
@@ -1228,33 +1572,70 @@
         </div>
 
         <div class="home-about-card">
-          <img src="Data/guahhtunes.png" alt="Guahh Tunes" class="home-about-logo" onerror="this.style.display='none'; document.getElementById('home-vector-fallback').style.display='block';" />
           <svg id="home-vector-fallback" class="home-about-vector-logo" viewBox="0 0 100 100" fill="currentColor">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M50 6C25.7 6 6 25.7 6 50s19.7 44 44 44 44-19.7 44-44S74.3 6 50 6zm0 6C29 12 12 29 12 50s17 38 38 38 38-17 38-38S71 12 50 12z"/>
             <path transform="matrix(0.82 0 0 0.82 9 9)" d="M72.5 23.2c-.4-.3-1-.4-1.5-.3l-32 6.8c-.8.2-1.4.9-1.4 1.7v34.4c-2.3-1.4-5.2-2.1-8.2-1.7-5.5.7-9.5 4.8-9 9.2.5 4.4 5.3 7.4 10.8 6.7 4.9-.6 8.7-4.1 9-8.1.1-.4.1-.7.1-1.1V40.2l29-6.2v27.2c-2.3-1.4-5.2-2.1-8.2-1.7-5.5.7-9.5 4.8-9 9.2.5 4.4 5.3 7.4 10.8 6.7 4.9-.6 8.7-4.1 9-8.1.1-.4.1-.7.1-1.1V24.5c0-.6-.3-1-.7-1.3z"/>
           </svg>
           <div class="home-about-meta">
             <div class="home-about-title">Guahh Tunes</div>
-            <div class="home-about-version" id="app-version-label">Version 0.1.8 Beta</div>
+            <div class="home-about-version" id="app-version-label">Version 0.1.9 Beta</div>
           </div>
-          <button id="btn-check-update" class="home-update-btn" title="Check GitHub for Updates">UPDATE</button>
+          <!-- Automatically shown only if an update is found -->
+          <button id="btn-check-update" class="home-update-btn" style="display: none;" title="Update Guahh Tunes">UPDATE</button>
         </div>
       </div>
     </section>
 
-    <!-- LIBRARY VIEW -->
+    <!-- LIBRARY VIEW WITH SIDEBAR NAVIGATION -->
     <section id="view-library" class="view-container">
-      <div class="album-grid" id="album-grid"></div>
+      <aside class="library-sidebar">
+        <div class="sidebar-heading">Library</div>
+        <div class="sidebar-item active" data-lib-view="albums">Albums</div>
+        <div class="sidebar-item" data-lib-view="artists">Artists</div>
+        <div class="sidebar-item" data-lib-view="genres">Genres</div>
+      </aside>
+
+      <div class="library-content-area">
+        <!-- 1. ALBUMS SUBVIEW (GRID + INLINE DRAWER) -->
+        <div id="lib-view-albums" class="lib-subview active">
+          <div class="album-grid" id="album-grid"></div>
+        </div>
+
+        <!-- 2. ARTISTS SUBVIEW (SPLIT VIEW + STACKED ALBUMS) -->
+        <div id="lib-view-artists" class="lib-subview">
+          <div class="sub-split-view">
+            <aside class="sub-sidebar" id="artists-sub-sidebar"></aside>
+            <div class="sub-content-pane" id="artist-detail-pane"></div>
+          </div>
+        </div>
+
+        <!-- 3. GENRES SUBVIEW (SPLIT VIEW + STACKED ALBUMS) -->
+        <div id="lib-view-genres" class="lib-subview">
+          <div class="sub-split-view">
+            <aside class="sub-sidebar" id="genres-sub-sidebar"></aside>
+            <div class="sub-content-pane" id="genre-detail-pane"></div>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- STORE VIEW & OFFLINE MESSAGE -->
+    <!-- STORE VIEW: NOTICES & FRAME -->
     <section id="view-store" class="view-container">
-      <div id="store-offline-container" class="store-offline-container">
-        <div class="store-offline-text">Store is currently offline or no internet connection, please try again later.</div>
+      <!-- Major Version Lockout Notice -->
+      <div id="store-major-update-container" class="store-notice-container">
+        <div class="store-notice-text">A major update is required to access the Store.</div>
+        <button id="store-block-update-btn" class="home-update-btn" style="margin-top: 18px;">UPDATE NOW</button>
       </div>
+
+      <!-- Offline / Connection Refused / 502 Bad Gateway Notice -->
+      <div id="store-offline-container" class="store-notice-container">
+        <div class="store-notice-text">Store is currently offline or no internet connection, please try again later.</div>
+      </div>
+
+      <!-- Store Frame (Populated only when verified online to prevent console 502 errors) -->
       <iframe 
         id="store-frame" 
-        src="https://guahhtunesstore.guahh.net/" 
+        src="" 
         title="Guahh Tunes Store" 
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
         allowfullscreen>
@@ -1268,8 +1649,17 @@
     /* =================================================================
        APP VERSION & GITHUB UPDATE SYSTEM
     ================================================================= */
-    const CURRENT_VERSION = '0.1.8 Beta';
+    const CURRENT_VERSION = '0.1.9 Beta';
     const GITHUB_UPDATE_URL = 'https://raw.githubusercontent.com/guahhinc/daydream/main/GuahhTunes.html';
+
+    let availableUpdate = null;
+    let isMajorVersionBehind = false;
+
+    function getMajorVersion(verStr) {
+      if (!verStr) return 0;
+      const match = verStr.match(/^v?(\d+)/i);
+      return match ? parseInt(match[1], 10) : 0;
+    }
 
     /* =================================================================
        INDEXEDDB STORAGE ENGINE
@@ -1344,13 +1734,17 @@
     }
 
     /* =========================================
-       AUDIO & QUEUE STATE (MAX DEFAULT VOLUME)
+       AUDIO & QUEUE STATE
     ========================================= */
     const audioEl = new Audio();
     audioEl.volume = 1.0;
 
     let libraryData = [];
     let activeExpandedAlbumId = null;
+    let activeLibTab = 'albums';
+    let selectedArtistName = null;
+    let selectedGenreName = null;
+
     let originalQueue = [];
     let currentQueue = [];
     let currentTrackIndex = -1;
@@ -1376,6 +1770,13 @@
     const hiddenFileInput = document.getElementById('hidden-file-input');
     const btnCheckUpdate = document.getElementById('btn-check-update');
 
+    const librarySidebarItems = document.querySelectorAll('.library-sidebar .sidebar-item');
+    const libSubviews = document.querySelectorAll('.lib-subview');
+    const artistsSubSidebar = document.getElementById('artists-sub-sidebar');
+    const artistDetailPane = document.getElementById('artist-detail-pane');
+    const genresSubSidebar = document.getElementById('genres-sub-sidebar');
+    const genreDetailPane = document.getElementById('genre-detail-pane');
+
     const lcdEmptyState = document.getElementById('lcd-empty-state');
     const lcdActiveState = document.getElementById('lcd-active-state');
     const playerCoverImg = document.getElementById('player-cover-img');
@@ -1398,21 +1799,24 @@
 
     const storeFrame = document.getElementById('store-frame');
     const storeOfflineContainer = document.getElementById('store-offline-container');
+    const storeMajorUpdateContainer = document.getElementById('store-major-update-container');
+    const storeBlockUpdateBtn = document.getElementById('store-block-update-btn');
 
     const dropzoneOverlay = document.getElementById('dropzone-overlay');
     const toast = document.getElementById('toast');
 
     /* =========================================
-       UPDATE CHECK & SAVE AS WORKFLOW
+       BACKGROUND AUTO-UPDATE ENGINE
     ========================================= */
-    async function checkForUpdates() {
-      if (!btnCheckUpdate) return;
-      btnCheckUpdate.textContent = 'CHECKING...';
-      btnCheckUpdate.disabled = true;
-
+    async function performAutoUpdateCheck() {
       try {
-        const response = await fetch(GITHUB_UPDATE_URL, { cache: 'no-store' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+        const response = await fetch(GITHUB_UPDATE_URL, { cache: 'no-store', signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) return;
 
         const remoteHtml = await response.text();
 
@@ -1425,44 +1829,67 @@
         }
 
         if (remoteVersion && remoteVersion !== CURRENT_VERSION) {
-          const proceed = confirm(`Update Available!\n\nNew Version: ${remoteVersion}\nCurrent Version: ${CURRENT_VERSION}\n\nClick OK to open the Save As screen and replace GuahhTunes.html.`);
-          if (proceed) {
-            await saveUpdatedHtmlFile(remoteHtml);
+          availableUpdate = {
+            version: remoteVersion,
+            html: remoteHtml
+          };
+
+          const currentMajor = getMajorVersion(CURRENT_VERSION);
+          const remoteMajor = getMajorVersion(remoteVersion);
+
+          if (remoteMajor > currentMajor) {
+            isMajorVersionBehind = true;
+          }
+
+          if (btnCheckUpdate) {
+            btnCheckUpdate.style.display = 'inline-block';
+            btnCheckUpdate.textContent = `UPDATE (${remoteVersion})`;
           }
         } else {
-          showToast(`Guahh Tunes is up to date (${CURRENT_VERSION})`);
+          if (btnCheckUpdate) {
+            btnCheckUpdate.style.display = 'none';
+          }
         }
       } catch (err) {
-        console.warn('[Update Check]', err);
-        showToast('Unable to connect to GitHub repository');
-      } finally {
-        btnCheckUpdate.textContent = 'UPDATE';
-        btnCheckUpdate.disabled = false;
+        console.warn('[Auto-Update Check]', err);
       }
     }
 
-    async function saveUpdatedHtmlFile(htmlContent) {
+    async function triggerUpdateDownload() {
+      let htmlToSave = availableUpdate ? availableUpdate.html : null;
+
+      if (!htmlToSave) {
+        try {
+          const res = await fetch(GITHUB_UPDATE_URL, { cache: 'no-store' });
+          if (!res.ok) throw new Error();
+          htmlToSave = await res.text();
+        } catch (e) {
+          showToast('Unable to download update file.');
+          return;
+        }
+      }
+
       if ('showSaveFilePicker' in window) {
         try {
           const handle = await window.showSaveFilePicker({
             suggestedName: 'GuahhTunes.html',
+            startIn: 'downloads',
             types: [{
-              description: 'HTML File (*.html)',
-              accept: { 'text/html': ['.html'] }
+              description: 'HTML Document',
+              accept: { 'text/html': ['.html', '.htm'] }
             }]
           });
           const writable = await handle.createWritable();
-          await writable.write(htmlContent);
+          await writable.write(htmlToSave);
           await writable.close();
-          showToast('GuahhTunes.html updated! Refresh the page to load.');
+          showToast('GuahhTunes.html updated! Please refresh the page.');
           return;
         } catch (err) {
           if (err.name === 'AbortError') return;
         }
       }
 
-      // Fallback save for browsers without File System Access API
-      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const blob = new Blob([htmlToSave], { type: 'text/html;charset=utf-8' });
       const downloadUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
@@ -1475,11 +1902,14 @@
     }
 
     if (btnCheckUpdate) {
-      btnCheckUpdate.addEventListener('click', checkForUpdates);
+      btnCheckUpdate.addEventListener('click', triggerUpdateDownload);
+    }
+    if (storeBlockUpdateBtn) {
+      storeBlockUpdateBtn.addEventListener('click', triggerUpdateDownload);
     }
 
     /* =========================================
-       NAVIGATION SWITCHER & STORE DISPLAY
+       NAVIGATION SWITCHER & STORE HEALTH LOGIC
     ========================================= */
     navButtons.forEach(button => {
       button.addEventListener('click', () => {
@@ -1495,38 +1925,94 @@
 
         if (target === 'home') {
           renderRecentlyPlayed();
+        } else if (target === 'library') {
+          renderLibrary();
         } else if (target === 'store') {
-          handleStoreViewOpened();
+          checkStoreHealth();
         }
       });
     });
 
-    function handleStoreViewOpened() {
-      if (!navigator.onLine) {
+    // Library Sidebar subview switcher
+    librarySidebarItems.forEach(item => {
+      item.addEventListener('click', () => {
+        librarySidebarItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+
+        activeLibTab = item.getAttribute('data-lib-view');
+        libSubviews.forEach(sv => sv.classList.toggle('active', sv.id === `lib-view-${activeLibTab}`));
+
+        renderLibrary();
+      });
+    });
+
+    function showStoreState(state) {
+      if (state === 'major-update') {
         storeFrame.style.display = 'none';
+        storeFrame.src = 'about:blank';
+        storeOfflineContainer.style.display = 'none';
+        storeMajorUpdateContainer.style.display = 'flex';
+      } else if (state === 'offline') {
+        storeFrame.style.display = 'none';
+        storeFrame.src = 'about:blank';
+        storeMajorUpdateContainer.style.display = 'none';
         storeOfflineContainer.style.display = 'flex';
-        return;
+      } else if (state === 'online') {
+        storeMajorUpdateContainer.style.display = 'none';
+        storeOfflineContainer.style.display = 'none';
+        storeFrame.style.display = 'block';
       }
-      storeFrame.style.display = 'block';
-      storeOfflineContainer.style.display = 'none';
     }
 
-    storeFrame.addEventListener('error', () => {
-      storeFrame.style.display = 'none';
-      storeOfflineContainer.style.display = 'flex';
-    });
+    async function checkStoreHealth() {
+      if (isMajorVersionBehind) {
+        showStoreState('major-update');
+        return;
+      }
+
+      if (!navigator.onLine) {
+        showStoreState('offline');
+        return;
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2800);
+
+        const response = await fetch('https://guahhtunesstore.guahh.net/', {
+          method: 'GET',
+          cache: 'no-store',
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          // Bad gateway (502), service unavailable (503), or not found
+          showStoreState('offline');
+          return;
+        }
+
+        showStoreState('online');
+        if (storeFrame.src !== 'https://guahhtunesstore.guahh.net/') {
+          storeFrame.src = 'https://guahhtunesstore.guahh.net/';
+        }
+      } catch (err) {
+        // Network drop, 502 status, connection refused, or timeout
+        showStoreState('offline');
+      }
+    }
+
+    storeFrame.addEventListener('error', () => showStoreState('offline'));
 
     window.addEventListener('offline', () => {
       if (document.body.classList.contains('viewing-store')) {
-        storeFrame.style.display = 'none';
-        storeOfflineContainer.style.display = 'flex';
+        showStoreState('offline');
       }
     });
 
     window.addEventListener('online', () => {
       if (document.body.classList.contains('viewing-store')) {
-        storeFrame.style.display = 'block';
-        storeOfflineContainer.style.display = 'none';
+        checkStoreHealth();
       }
     });
 
@@ -1652,9 +2138,22 @@
     }
 
     /* =================================================================
-       RENDER LIBRARY WITH SYMMETRICAL OPEN/CLOSE DRAWER
+       MAIN LIBRARY ROUTER & RENDERERS
     ================================================================= */
     function renderLibrary() {
+      if (activeLibTab === 'albums') {
+        renderAlbumsGridView();
+      } else if (activeLibTab === 'artists') {
+        renderArtistsStackedView();
+      } else if (activeLibTab === 'genres') {
+        renderGenresStackedView();
+      }
+    }
+
+    /* =================================================================
+       1. ALBUMS GRID VIEW (WITH DRAWER)
+    ================================================================= */
+    function renderAlbumsGridView() {
       albumGrid.innerHTML = '';
 
       if (libraryData.length === 0) {
@@ -1696,7 +2195,6 @@
 
           const existingDrawer = document.querySelector('.itunes-drawer');
 
-          // Smooth bottom-to-top close if closing active album
           if (activeExpandedAlbumId === album.id) {
             if (existingDrawer) {
               card.classList.remove('selected');
@@ -1706,22 +2204,21 @@
               existingDrawer.classList.add('closing');
               existingDrawer.addEventListener('animationend', () => {
                 activeExpandedAlbumId = null;
-                renderLibrary();
+                renderAlbumsGridView();
               }, { once: true });
               return;
             }
             activeExpandedAlbumId = null;
-            renderLibrary();
+            renderAlbumsGridView();
           } else if (activeExpandedAlbumId !== null && existingDrawer) {
-            // Smoothly close previous before opening next
             existingDrawer.classList.add('closing');
             existingDrawer.addEventListener('animationend', () => {
               activeExpandedAlbumId = album.id;
-              renderLibrary();
+              renderAlbumsGridView();
             }, { once: true });
           } else {
             activeExpandedAlbumId = album.id;
-            renderLibrary();
+            renderAlbumsGridView();
           }
         });
 
@@ -1804,7 +2301,7 @@
             ${album.tracks.map((track, i) => {
               const isCurrentPlaying = currentQueue[currentTrackIndex]?.id === track.id;
               return `
-                <div class="drawer-track-row ${isCurrentPlaying ? 'active-playing' : ''}" data-idx="${i}" data-track-id="${track.id}" data-track-num="${i + 1}">
+                <div class="drawer-track-row ${isCurrentPlaying ? 'active-playing' : ''}" data-idx="${i}" data-track-id="${track.id}">
                   <span class="drawer-track-num" title="Toggle Playback">
                     <span class="track-num-label">${i + 1}</span>
                     <span class="track-speaker-icon">
@@ -1858,14 +2355,14 @@
           drawer.classList.add('closing');
           drawer.addEventListener('animationend', () => {
             activeExpandedAlbumId = null;
-            renderLibrary();
+            renderAlbumsGridView();
             showToast(`Deleted "${album.title}" from library`);
           }, { once: true });
         }
       });
 
       drawer.querySelectorAll('.drawer-track-row').forEach(row => {
-        row.addEventListener('click', (e) => {
+        row.addEventListener('click', () => {
           const idx = parseInt(row.getAttribute('data-idx'), 10);
           const trackId = row.getAttribute('data-track-id');
           const isCurrent = currentQueue[currentTrackIndex]?.id === trackId;
@@ -1881,22 +2378,258 @@
       return drawer;
     }
 
+    /* =================================================================
+       2. ARTISTS STACKED VIEW
+    ================================================================= */
+    function renderArtistsStackedView() {
+      artistsSubSidebar.innerHTML = '';
+      artistDetailPane.innerHTML = '';
+
+      if (libraryData.length === 0) {
+        artistDetailPane.innerHTML = '<div class="empty-state" onclick="document.getElementById(\'hidden-file-input\').click()">No artists in library yet. Drop music to start.</div>';
+        return;
+      }
+
+      // Group albums by artist
+      const artistMap = new Map();
+      libraryData.forEach(album => {
+        const artistName = album.artist || 'Unknown Artist';
+        if (!artistMap.has(artistName)) {
+          artistMap.set(artistName, []);
+        }
+        artistMap.get(artistName).push(album);
+      });
+
+      const sortedArtists = Array.from(artistMap.keys()).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+      if (!selectedArtistName || !artistMap.has(selectedArtistName)) {
+        selectedArtistName = sortedArtists[0];
+      }
+
+      sortedArtists.forEach(artist => {
+        const item = document.createElement('div');
+        item.className = `sub-sidebar-item ${artist === selectedArtistName ? 'active' : ''}`;
+        item.textContent = artist;
+        item.addEventListener('click', () => {
+          selectedArtistName = artist;
+          renderArtistsStackedView();
+        });
+        artistsSubSidebar.appendChild(item);
+      });
+
+      const currentArtistAlbums = artistMap.get(selectedArtistName) || [];
+      renderStackedContent(artistDetailPane, selectedArtistName, currentArtistAlbums, 'artist');
+    }
+
+    /* =================================================================
+       3. GENRES STACKED VIEW
+    ================================================================= */
+    function renderGenresStackedView() {
+      genresSubSidebar.innerHTML = '';
+      genreDetailPane.innerHTML = '';
+
+      if (libraryData.length === 0) {
+        genreDetailPane.innerHTML = '<div class="empty-state" onclick="document.getElementById(\'hidden-file-input\').click()">No genres in library yet. Drop music to start.</div>';
+        return;
+      }
+
+      // Group albums by genre
+      const genreMap = new Map();
+      libraryData.forEach(album => {
+        const genreName = album.genre || 'Genre';
+        if (!genreMap.has(genreName)) {
+          genreMap.set(genreName, []);
+        }
+        genreMap.get(genreName).push(album);
+      });
+
+      const sortedGenres = Array.from(genreMap.keys()).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+      if (!selectedGenreName || !genreMap.has(selectedGenreName)) {
+        selectedGenreName = sortedGenres[0];
+      }
+
+      sortedGenres.forEach(genre => {
+        const item = document.createElement('div');
+        item.className = `sub-sidebar-item ${genre === selectedGenreName ? 'active' : ''}`;
+        item.textContent = genre;
+        item.addEventListener('click', () => {
+          selectedGenreName = genre;
+          renderGenresStackedView();
+        });
+        genresSubSidebar.appendChild(item);
+      });
+
+      const currentGenreAlbums = genreMap.get(selectedGenreName) || [];
+      renderStackedContent(genreDetailPane, selectedGenreName, currentGenreAlbums, 'genre');
+    }
+
+    /* =================================================================
+       COMMON STACKED DETAIL BUILDER (MATCHING USER SCREENSHOT)
+    ================================================================= */
+    function renderStackedContent(containerEl, title, albums, mode = 'artist') {
+      containerEl.innerHTML = '';
+
+      let totalSongsCount = 0;
+      albums.forEach(a => totalSongsCount += a.tracks.length);
+
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'stacked-view-header';
+      headerDiv.innerHTML = `
+        <div class="stacked-title-group">
+          <h1 class="stacked-main-title">${escapeHTML(title)}</h1>
+          <div class="stacked-main-subtitle">${albums.length} album${albums.length === 1 ? '' : 's'}, ${totalSongsCount} song${totalSongsCount === 1 ? '' : 's'}</div>
+        </div>
+        <div class="stacked-header-actions">
+          <button class="stacked-shuffle-all-btn" id="stacked-shuffle-all-btn">
+            <span>Shuffle All</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.42l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.12z"/>
+            </svg>
+          </button>
+          <button class="stacked-more-btn" title="More Options">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+            </svg>
+          </button>
+        </div>
+      `;
+
+      headerDiv.querySelector('#stacked-shuffle-all-btn').addEventListener('click', () => {
+        const allTracks = albums.flatMap(a => a.tracks);
+        if (allTracks.length > 0) {
+          isShuffled = true;
+          lcdShuffleBtn.classList.add('active');
+          playQueue(allTracks, 0, albums[0]);
+        }
+      });
+
+      containerEl.appendChild(headerDiv);
+
+      albums.forEach(album => {
+        const card = document.createElement('div');
+        card.className = 'stacked-album-card';
+        const displaySub = mode === 'artist' 
+          ? `${album.genre || 'Genre'}${album.year ? ' • ' + album.year : ''}`
+          : `${album.artist}${album.year ? ' • ' + album.year : ''}`;
+
+        card.innerHTML = `
+          <div class="stacked-album-left">
+            <div class="stacked-album-art-wrap">
+              <img class="stacked-album-art-img" src="${album.coverUrl}" alt="${escapeHTML(album.title)}" />
+            </div>
+            <div class="stacked-album-left-meta">
+              <span class="stacked-album-count-text">${album.tracks.length} song${album.tracks.length === 1 ? '' : 's'}</span>
+              <button class="stacked-album-shuffle-btn" data-album-id="${album.id}">
+                <span>Shuffle</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.42l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.12z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="stacked-album-right">
+            <div class="stacked-album-header-row">
+              <h2 class="stacked-album-heading">${escapeHTML(album.title)}</h2>
+              <div class="drawer-options-wrapper">
+                <button class="drawer-options-btn" id="stacked-menu-btn-${album.id}">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#fd4751">
+                    <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+                  </svg>
+                </button>
+                <div class="drawer-dropdown-menu" id="stacked-menu-dropdown-${album.id}">
+                  <div class="dropdown-item" id="stacked-del-${album.id}">Delete Album from Library</div>
+                </div>
+              </div>
+            </div>
+            <div class="stacked-album-submeta">${escapeHTML(displaySub)}</div>
+
+            <div class="stacked-tracklist">
+              ${album.tracks.map((track, i) => {
+                const isCurrentPlaying = currentQueue[currentTrackIndex]?.id === track.id;
+                return `
+                  <div class="stacked-track-row ${isCurrentPlaying ? 'active-playing' : ''}" data-track-id="${track.id}" data-idx="${i}">
+                    <span class="stacked-track-num">
+                      <span class="stacked-num-label">${i + 1}</span>
+                      <span class="stacked-speaker-icon">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#fd4751">
+                          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                        </svg>
+                      </span>
+                      <span class="stacked-hover-ctrl">
+                        ${isPlaying && isCurrentPlaying
+                          ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="#fd4751"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`
+                          : `<svg width="12" height="12" viewBox="0 0 24 24" fill="#fd4751"><path d="M8 5v14l11-7z"/></svg>`
+                        }
+                      </span>
+                    </span>
+                    <span class="stacked-track-title">${escapeHTML(track.title)}</span>
+                    <span class="stacked-track-time">${track.duration || '--:--'}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+
+        card.querySelector('.stacked-album-shuffle-btn').addEventListener('click', () => {
+          isShuffled = true;
+          lcdShuffleBtn.classList.add('active');
+          playQueue(album.tracks, 0, album);
+        });
+
+        const menuBtn = card.querySelector(`#stacked-menu-btn-${album.id}`);
+        const menuDropdown = card.querySelector(`#stacked-menu-dropdown-${album.id}`);
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          menuDropdown.classList.toggle('show');
+        });
+
+        document.addEventListener('click', () => menuDropdown.classList.remove('show'));
+
+        card.querySelector(`#stacked-del-${album.id}`).addEventListener('click', async () => {
+          if (confirm(`Remove "${album.title}" from your library?`)) {
+            await dbDeleteAlbum(album.id);
+            libraryData = libraryData.filter(a => a.id !== album.id);
+            renderLibrary();
+            showToast(`Deleted "${album.title}" from library`);
+          }
+        });
+
+        card.querySelectorAll('.stacked-track-row').forEach(row => {
+          row.addEventListener('click', () => {
+            const idx = parseInt(row.getAttribute('data-idx'), 10);
+            const trackId = row.getAttribute('data-track-id');
+            const isCurrent = currentQueue[currentTrackIndex]?.id === trackId;
+
+            if (isCurrent) {
+              togglePlay();
+            } else {
+              playQueue(album.tracks, idx, album);
+            }
+          });
+        });
+
+        containerEl.appendChild(card);
+      });
+    }
+
     function updateActiveTrackUI() {
       const currentTrack = currentQueue[currentTrackIndex];
       const currentTrackId = currentTrack ? currentTrack.id : null;
       
-      const rows = document.querySelectorAll('.drawer-track-row');
-      rows.forEach(row => {
+      document.querySelectorAll('.drawer-track-row, .stacked-track-row').forEach(row => {
         const trackId = row.getAttribute('data-track-id');
         const isCurrent = (trackId === currentTrackId);
         
         row.classList.toggle('active-playing', isCurrent);
 
-        const hoverCtrl = row.querySelector('.track-hover-ctrl');
+        const hoverCtrl = row.querySelector('.track-hover-ctrl, .stacked-hover-ctrl');
         if (hoverCtrl) {
           hoverCtrl.innerHTML = (isPlaying && isCurrent)
-            ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="#fd4751"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`
-            : `<svg width="13" height="13" viewBox="0 0 24 24" fill="#fd4751"><path d="M8 5v14l11-7z"/></svg>`;
+            ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="#fd4751"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`
+            : `<svg width="12" height="12" viewBox="0 0 24 24" fill="#fd4751"><path d="M8 5v14l11-7z"/></svg>`;
         }
       });
     }
@@ -1905,7 +2638,7 @@
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        if (activeExpandedAlbumId) renderLibrary();
+        if (activeLibTab === 'albums' && activeExpandedAlbumId) renderAlbumsGridView();
       }, 120);
     });
 
@@ -2542,7 +3275,7 @@
     }
 
     /* =================================================================
-       ROBUST DROP HANDLER
+       DROPZONE LISTENER
     ================================================================= */
     let dragCounter = 0;
 
@@ -2650,7 +3383,7 @@
     }
 
     /* =================================================================
-       PROCESS FILES, SAVE TO INDEXEDDB & RENDER (NEWEST FIRST)
+       FILE IMPORT & INDEXEDDB STORAGE
     ================================================================= */
     async function processAudioFiles(audioFiles) {
       showToast(`Importing ${audioFiles.length} track${audioFiles.length > 1 ? 's' : ''}...`);
@@ -2728,7 +3461,7 @@
     }
 
     /* =================================================================
-       STARTUP: LOAD SAVED MUSIC & RENDER HOME VIEW
+       INITIALIZATION
     ================================================================= */
     async function loadSavedLibrary() {
       try {
@@ -2774,6 +3507,7 @@
 
     renderRecentlyPlayed();
     loadSavedLibrary();
+    performAutoUpdateCheck();
   </script>
 </body>
 </html>
