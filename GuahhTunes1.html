@@ -157,6 +157,13 @@
       user-select: none;
     }
 
+    .lcd-vector-icon {
+      width: 38px;
+      height: 38px;
+      color: #9e9e9e;
+      display: none;
+    }
+
     /* Active State in LCD */
     .lcd-active-state {
       display: none;
@@ -183,8 +190,12 @@
     }
 
     .lcd-cover-placeholder {
-      font-size: 15px;
+      width: 32px;
+      height: 32px;
       color: #888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .lcd-content-area {
@@ -529,6 +540,13 @@
       height: 58px;
       object-fit: contain;
       border-radius: 8px;
+    }
+
+    .home-about-vector-logo {
+      width: 58px;
+      height: 58px;
+      color: #fd4751;
+      display: none;
     }
 
     .home-about-meta {
@@ -1087,8 +1105,9 @@
       <!-- Blank Idle State -->
       <div id="lcd-empty-state" class="lcd-empty-state">
         <img src="Data/nomusicplaying.png" alt="No Music Playing" class="lcd-empty-icon" onerror="this.style.display='none'; document.getElementById('lcd-empty-fallback-svg').style.display='block';" />
-        <svg id="lcd-empty-fallback-svg" width="24" height="24" viewBox="0 0 24 24" fill="#a0a0a0" style="display:none;">
-          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+        <svg id="lcd-empty-fallback-svg" class="lcd-vector-icon" viewBox="0 0 100 100" fill="currentColor">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M50 6C25.7 6 6 25.7 6 50s19.7 44 44 44 44-19.7 44-44S74.3 6 50 6zm0 6C29 12 12 29 12 50s17 38 38 38 38-17 38-38S71 12 50 12z"/>
+          <path d="M72.5 23.2c-.4-.3-1-.4-1.5-.3l-32 6.8c-.8.2-1.4.9-1.4 1.7v34.4c-2.3-1.4-5.2-2.1-8.2-1.7-5.5.7-9.5 4.8-9 9.2.5 4.4 5.3 7.4 10.8 6.7 4.9-.6 8.7-4.1 9-8.1.1-.4.1-.7.1-1.1V40.2l29-6.2v27.2c-2.3-1.4-5.2-2.1-8.2-1.7-5.5.7-9.5 4.8-9 9.2.5 4.4 5.3 7.4 10.8 6.7 4.9-.6 8.7-4.1 9-8.1.1-.4.1-.7.1-1.1V24.5c0-.6-.3-1-.7-1.3z"/>
         </svg>
       </div>
 
@@ -1096,7 +1115,12 @@
       <div id="lcd-active-state" class="lcd-active-state">
         <div class="lcd-cover-box">
           <img id="player-cover-img" class="lcd-cover-img" src="" alt="" style="display:none;" />
-          <div id="player-cover-placeholder" class="lcd-cover-placeholder">♪</div>
+          <div id="player-cover-placeholder" class="lcd-cover-placeholder">
+            <svg viewBox="0 0 100 100" width="30" height="30" fill="currentColor">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M50 6C25.7 6 6 25.7 6 50s19.7 44 44 44 44-19.7 44-44S74.3 6 50 6zm0 6C29 12 12 29 12 50s17 38 38 38 38-17 38-38S71 12 50 12z"/>
+              <path d="M72.5 23.2c-.4-.3-1-.4-1.5-.3l-32 6.8c-.8.2-1.4.9-1.4 1.7v34.4c-2.3-1.4-5.2-2.1-8.2-1.7-5.5.7-9.5 4.8-9 9.2.5 4.4 5.3 7.4 10.8 6.7 4.9-.6 8.7-4.1 9-8.1.1-.4.1-.7.1-1.1V40.2l29-6.2v27.2c-2.3-1.4-5.2-2.1-8.2-1.7-5.5.7-9.5 4.8-9 9.2.5 4.4 5.3 7.4 10.8 6.7 4.9-.6 8.7-4.1 9-8.1.1-.4.1-.7.1-1.1V24.5c0-.6-.3-1-.7-1.3z"/>
+            </svg>
+          </div>
         </div>
 
         <div class="lcd-content-area">
@@ -1159,8 +1183,11 @@
         </div>
 
         <div class="home-about-card">
-          <img src="Data/guahhtunes.png" alt="Guahh Tunes" class="home-about-logo" onerror="this.style.display='none'; document.getElementById('home-logo-fallback').style.display='flex';" />
-          <div id="home-logo-fallback" class="lcd-cover-box home-about-logo" style="display:none; border: 1px solid #dcdcdc; border-radius: 8px;">♪</div>
+          <img src="Data/guahhtunes.png" alt="Guahh Tunes" class="home-about-logo" onerror="this.style.display='none'; document.getElementById('home-vector-fallback').style.display='block';" />
+          <svg id="home-vector-fallback" class="home-about-vector-logo" viewBox="0 0 100 100" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M50 6C25.7 6 6 25.7 6 50s19.7 44 44 44 44-19.7 44-44S74.3 6 50 6zm0 6C29 12 12 29 12 50s17 38 38 38 38-17 38-38S71 12 50 12z"/>
+            <path d="M72.5 23.2c-.4-.3-1-.4-1.5-.3l-32 6.8c-.8.2-1.4.9-1.4 1.7v34.4c-2.3-1.4-5.2-2.1-8.2-1.7-5.5.7-9.5 4.8-9 9.2.5 4.4 5.3 7.4 10.8 6.7 4.9-.6 8.7-4.1 9-8.1.1-.4.1-.7.1-1.1V40.2l29-6.2v27.2c-2.3-1.4-5.2-2.1-8.2-1.7-5.5.7-9.5 4.8-9 9.2.5 4.4 5.3 7.4 10.8 6.7 4.9-.6 8.7-4.1 9-8.1.1-.4.1-.7.1-1.1V24.5c0-.6-.3-1-.7-1.3z"/>
+          </svg>
           <div class="home-about-meta">
             <div class="home-about-title">Guahh Tunes</div>
             <div class="home-about-version" id="app-version-label">Version 0.1.5 Beta</div>
@@ -1197,7 +1224,6 @@
        APP VERSION & GITHUB UPDATE SYSTEM
     ================================================================= */
     const CURRENT_VERSION = '0.1.5 Beta';
-    // Link to GitHub raw repository file
     const GITHUB_UPDATE_URL = 'https://raw.githubusercontent.com/guahhinc/daydream/main/GuahhTunes.html';
 
     /* =================================================================
@@ -1355,7 +1381,7 @@
         }
 
         if (remoteVersion && remoteVersion !== CURRENT_VERSION) {
-          const proceed = confirm(`Update Found!\n\nNew Version: ${remoteVersion}\nCurrent Version: ${CURRENT_VERSION}\n\nWould you like to download and save GuahhTunes.html to replace the current file?`);
+          const proceed = confirm(`Update Available!\n\nNew Version: ${remoteVersion}\nCurrent Version: ${CURRENT_VERSION}\n\nClick OK to choose where to save and replace GuahhTunes.html.`);
           if (proceed) {
             await saveUpdatedHtmlFile(remoteHtml);
           }
@@ -1364,7 +1390,7 @@
         }
       } catch (err) {
         console.warn('[Update Check]', err);
-        showToast('Unable to check for updates from GitHub');
+        showToast('Unable to connect to GitHub repository');
       } finally {
         btnCheckUpdate.textContent = 'UPDATE';
         btnCheckUpdate.disabled = false;
@@ -1377,14 +1403,14 @@
           const handle = await window.showSaveFilePicker({
             suggestedName: 'GuahhTunes.html',
             types: [{
-              description: 'HTML Document',
+              description: 'HTML File (*.html)',
               accept: { 'text/html': ['.html'] }
             }]
           });
           const writable = await handle.createWritable();
           await writable.write(htmlContent);
           await writable.close();
-          showToast('GuahhTunes.html replaced successfully!');
+          showToast('GuahhTunes.html updated! Please refresh the page.');
           return;
         } catch (err) {
           if (err.name === 'AbortError') return;
@@ -1433,7 +1459,7 @@
 
     async function checkStoreOnline() {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const timeoutId = setTimeout(() => controller.abort(), 1200);
 
       try {
         await fetch('https://guahhtunesstore.guahh.net/', {
@@ -1510,8 +1536,11 @@
       renderRecentlyPlayed();
     }
 
+    function generatePlaceholderCover(title) {
+      return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f4f4f4"/><g fill="%23b0b0b0"><path fill-rule="evenodd" clip-rule="evenodd" d="M50 14C30.1 14 14 30.1 14 50s16.1 36 36 36 36-16.1 36-36S69.9 14 50 14zm0 5C32.9 19 19 32.9 19 50s13.9 31 31 31 31-13.9 31-31S67.1 19 50 19z"/><path d="M68.5 28.2c-.3-.2-.8-.3-1.2-.2l-26 5.5c-.6.2-1.1.7-1.1 1.4v28c-1.9-1.1-4.2-1.7-6.7-1.4-4.5.6-7.7 3.9-7.3 7.5.4 3.6 4.3 6 8.8 5.4 4-.5 7.1-3.3 7.3-6.6v-23.7l23.5-5v22.1c-1.9-1.1-4.2-1.7-6.7-1.4-4.5.6-7.7 3.9-7.3 7.5.4 3.6 4.3 6 8.8 5.4 4-.5 7.1-3.3 7.3-6.6V29.2c0-.5-.2-.8-.5-1z"/></g></svg>`;
+    }
+
     function getRecentTrackCover(item) {
-      // Find matching album instantly in libraryData for fresh Blob URL
       const foundAlbum = libraryData.find(a => 
         (item.albumId && a.id === item.albumId) ||
         (a.title.toLowerCase() === (item.albumTitle || '').toLowerCase() && a.artist.toLowerCase() === (item.artist || '').toLowerCase()) ||
@@ -2408,11 +2437,6 @@
 
     function getCleanFileName(file) {
       return file.name.replace(/\.[^/.]+$/, "").replace(/^\d+[\s.-]+/, "");
-    }
-
-    function generatePlaceholderCover(title) {
-      const initial = (title || 'A').charAt(0).toUpperCase();
-      return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="300" height="300" fill="%23ececec"/><text x="50%" y="55%" font-family="sans-serif" font-size="90" fill="%23aaaaaa" text-anchor="middle" dominant-baseline="middle">${initial}</text></svg>`;
     }
 
     function getAudioDuration(blobUrl) {
