@@ -52,7 +52,7 @@
       background: #e8e8e8;
       border-bottom: 1px solid #cfcfcf;
       display: grid;
-      grid-template-columns: 1fr auto 1fr; /* Exact mathematical center */
+      grid-template-columns: 1fr auto 1fr;
       align-items: stretch;
       padding: 0 24px;
       z-index: 100;
@@ -429,7 +429,8 @@
       letter-spacing: -0.015em;
     }
 
-    .recent-tracks-bar {
+    .recent-tracks-bar,
+    .home-playlists-bar {
       display: flex;
       gap: 18px;
       overflow-x: auto;
@@ -439,11 +440,13 @@
       scrollbar-color: #dcdcdc transparent;
     }
 
-    .recent-tracks-bar::-webkit-scrollbar {
+    .recent-tracks-bar::-webkit-scrollbar,
+    .home-playlists-bar::-webkit-scrollbar {
       height: 5px;
     }
 
-    .recent-tracks-bar::-webkit-scrollbar-thumb {
+    .recent-tracks-bar::-webkit-scrollbar-thumb,
+    .home-playlists-bar::-webkit-scrollbar-thumb {
       background: #dcdcdc;
       border-radius: 4px;
     }
@@ -529,21 +532,28 @@
     .recent-empty-text {
       font-size: 14px;
       color: #999999;
-      padding: 20px 0;
+      padding: 16px 0;
     }
 
+    .home-create-pl-link {
+      color: #fd4751;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* Bigger Home Brand & Update Card */
     .home-about-card {
       display: flex;
       align-items: center;
-      gap: 20px;
-      padding-top: 36px;
+      gap: 24px;
+      padding-top: 40px;
       border-top: 1px solid #eeeeee;
       width: 100%;
     }
 
     .home-about-vector-logo {
-      width: 58px;
-      height: 58px;
+      width: 72px;
+      height: 72px;
       color: #fd4751;
       display: block;
       flex-shrink: 0;
@@ -555,16 +565,16 @@
     }
 
     .home-about-title {
-      font-size: 22px;
+      font-size: 28px;
       color: #000000;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.025em;
       line-height: 1.2;
     }
 
     .home-about-version {
-      font-size: 13.5px;
+      font-size: 15px;
       color: #888888;
-      margin-top: 3px;
+      margin-top: 4px;
     }
 
     .home-update-btn {
@@ -573,11 +583,11 @@
       border: none;
       border-radius: 5px;
       font-family: 'Inter Tight', sans-serif;
-      font-size: 13.5px;
-      padding: 6px 14px;
+      font-size: 14.5px;
+      padding: 8px 18px;
       cursor: pointer;
       transition: opacity 0.15s ease;
-      margin-left: 12px;
+      margin-left: 16px;
     }
 
     .home-update-btn:hover {
@@ -630,7 +640,7 @@
       align-items: center;
       transition: background-color 0.1s ease, color 0.1s ease;
       user-select: none;
-      border-radius: 0; /* Square edge-to-edge */
+      border-radius: 0;
       line-height: 1.2;
     }
 
@@ -687,31 +697,26 @@
     }
 
     .sub-sidebar-action-wrap {
-      padding: 0 16px 10px 16px;
-      border-bottom: 1px solid #f0f0f0;
-      margin-bottom: 6px;
+      padding: 0 0 8px 0;
+      margin-bottom: 4px;
     }
 
     .sub-sidebar-create-btn {
-      width: 100%;
-      padding: 8px 12px;
-      background: #ffffff;
-      border: 1px solid #e0e0e0;
-      border-radius: 5px;
-      font-family: 'Inter Tight', sans-serif;
-      font-size: 13px;
+      background: none;
+      border: none;
       color: #fd4751;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.15s ease;
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 13.5px;
+      text-decoration: underline;
+      padding: 6px 20px;
+      text-align: left;
+      display: inline-block;
+      transition: opacity 0.15s ease;
     }
 
     .sub-sidebar-create-btn:hover {
-      background: #fdf2f2;
-      border-color: #fd4751;
+      opacity: 0.8;
     }
 
     .sub-sidebar-item {
@@ -722,7 +727,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      border-radius: 0; /* Square edge to edge */
+      border-radius: 0;
       transition: background-color 0.1s ease, color 0.1s ease;
     }
 
@@ -744,7 +749,6 @@
       max-height: calc(100dvh - 102px);
     }
 
-    /* Albums Grid Subview Padding */
     #lib-view-albums {
       padding: 28px 36px 60px 36px;
       overflow-y: auto;
@@ -969,8 +973,7 @@
     }
 
     .drawer-track-row:hover .track-add-pl-btn,
-    .stacked-track-row:hover .track-add-pl-btn,
-    .playlist-track-row:hover .track-add-pl-btn {
+    .stacked-track-row:hover .track-add-pl-btn {
       opacity: 1;
     }
 
@@ -987,7 +990,7 @@
     }
 
     /* =========================================
-       PLAYLISTS VIEW & DRAG/DROP REORDER
+       PLAYLISTS VIEW & FLAT TEXT ACTIONS
     ========================================= */
     .playlist-header {
       display: flex;
@@ -1032,37 +1035,37 @@
     .playlist-actions-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 18px;
     }
 
-    .playlist-btn-action {
+    .playlist-text-action {
       background: none;
-      border: 1px solid #e0e0e0;
-      border-radius: 5px;
-      font-family: 'Inter Tight', sans-serif;
-      font-size: 13.5px;
-      padding: 6px 12px;
+      border: none;
       cursor: pointer;
-      color: #222222;
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 14px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: all 0.15s ease;
+      gap: 5px;
+      transition: opacity 0.15s ease, text-decoration 0.15s ease;
+      padding: 0;
     }
 
-    .playlist-btn-action:hover {
-      border-color: #fd4751;
+    .playlist-text-action.shuffle-text-btn {
       color: #fd4751;
     }
 
-    .playlist-btn-action.delete-btn {
-      color: #ff3b30;
-      border-color: #ffd2cf;
+    .playlist-text-action.delete-text-btn {
+      color: #888888;
     }
 
-    .playlist-btn-action.delete-btn:hover {
-      background: #fff3f2;
-      border-color: #ff3b30;
+    .playlist-text-action:hover {
+      text-decoration: underline;
+      opacity: 0.85;
+    }
+
+    .playlist-text-action.delete-text-btn:hover {
+      color: #ff3b30;
     }
 
     .playlist-tracklist {
@@ -1071,9 +1074,10 @@
       width: 100%;
     }
 
+    /* Clean Playlist Track Row: NO + Button */
     .playlist-track-row {
       display: grid;
-      grid-template-columns: 28px 36px 1fr 1fr 30px 54px 30px;
+      grid-template-columns: 28px 36px 1fr 1fr 54px 30px;
       padding: 8px 8px;
       border-bottom: 1px solid #f2f2f2;
       align-items: center;
@@ -1556,7 +1560,7 @@
     }
 
     /* =========================================
-       MODAL: ADD TO PLAYLIST POPOVER
+       BUILT-IN CUSTOM MODALS & DIALOGS
     ========================================= */
     .modal-backdrop {
       position: fixed;
@@ -1607,11 +1611,11 @@
     }
 
     .modal-body {
-      padding: 16px 20px;
+      padding: 18px 20px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      max-height: 360px;
+      max-height: 380px;
       overflow-y: auto;
     }
 
@@ -1625,34 +1629,62 @@
       border-bottom: 1px solid #f2f2f2;
     }
 
-    .modal-create-row {
-      display: flex;
-      gap: 8px;
-    }
-
     .modal-input {
-      flex: 1;
-      padding: 8px 12px;
-      border: 1px solid #e0e0e0;
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #dcdcdc;
       border-radius: 5px;
       font-family: 'Inter Tight', sans-serif;
-      font-size: 13.5px;
+      font-size: 14px;
       outline: none;
+      transition: border-color 0.15s ease;
     }
 
     .modal-input:focus {
       border-color: #fd4751;
     }
 
+    .modal-actions-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .modal-btn-cancel {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid #e0e0e0;
+      border-radius: 5px;
+      font-family: 'Inter Tight', sans-serif;
+      font-size: 13.5px;
+      color: #555555;
+      cursor: pointer;
+    }
+
+    .modal-btn-cancel:hover {
+      background: #f8f8f8;
+      color: #111111;
+    }
+
     .modal-btn-confirm {
-      padding: 8px 14px;
+      padding: 8px 16px;
       background: #fd4751;
       color: #ffffff;
       border: none;
       border-radius: 5px;
       font-family: 'Inter Tight', sans-serif;
-      font-size: 13px;
+      font-size: 13.5px;
       cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+
+    .modal-btn-confirm:hover {
+      opacity: 0.9;
+    }
+
+    .modal-btn-confirm.danger {
+      background: #ff3b30;
     }
 
     .modal-playlist-list {
@@ -1897,6 +1929,7 @@
     <!-- HOME VIEW -->
     <section id="view-home" class="view-container active-view">
       <div class="home-container">
+        <!-- 1. Recently Played -->
         <div>
           <div class="home-section-title">Recently Played</div>
           <div class="recent-tracks-bar" id="recent-tracks-bar">
@@ -1904,6 +1937,15 @@
           </div>
         </div>
 
+        <!-- 2. Playlists on Home -->
+        <div>
+          <div class="home-section-title">Playlists</div>
+          <div class="home-playlists-bar" id="home-playlists-bar">
+            <div class="recent-empty-text">No playlists yet. <span class="home-create-pl-link" id="home-create-pl-btn">Create a playlist</span></div>
+          </div>
+        </div>
+
+        <!-- 3. Bigger About Guahh Tunes & Update -->
         <div class="home-about-card">
           <svg id="home-vector-fallback" class="home-about-vector-logo" viewBox="0 0 100 100" fill="currentColor">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M50 6C25.7 6 6 25.7 6 50s19.7 44 44 44 44-19.7 44-44S74.3 6 50 6zm0 6C29 12 12 29 12 50s17 38 38 38 38-17 38-38S71 12 50 12z"/>
@@ -1911,7 +1953,7 @@
           </svg>
           <div class="home-about-meta">
             <div class="home-about-title">Guahh Tunes</div>
-            <div class="home-about-version" id="app-version-label">Version 0.1.9 Beta</div>
+            <div class="home-about-version" id="app-version-label">Version 0.2.0</div>
           </div>
           <button id="btn-check-update" class="home-update-btn" style="display: none;" title="Update Guahh Tunes">UPDATE</button>
         </div>
@@ -1939,7 +1981,7 @@
           <div class="sub-split-view">
             <aside class="sub-sidebar" id="playlists-sub-sidebar">
               <div class="sub-sidebar-action-wrap">
-                <button class="sub-sidebar-create-btn" id="btn-create-playlist-sidebar">+ New Playlist</button>
+                <button class="sub-sidebar-create-btn" id="btn-create-playlist-sidebar">New Playlist</button>
               </div>
               <div id="playlists-list-container"></div>
             </aside>
@@ -1968,7 +2010,7 @@
     <!-- STORE VIEW -->
     <section id="view-store" class="view-container">
       <div id="store-major-update-container" class="store-notice-container">
-        <div class="store-notice-text">A major update is required to access the Store.</div>
+        <div class="store-notice-text">An update is required to connect to the Store.</div>
         <button id="store-block-update-btn" class="home-update-btn" style="margin-top: 18px;">UPDATE NOW</button>
       </div>
 
@@ -1986,7 +2028,7 @@
     </section>
   </main>
 
-  <!-- MODAL: ADD TRACK TO PLAYLIST -->
+  <!-- BUILT-IN MODAL: ADD TRACK TO PLAYLIST (WITHOUT INLINE CREATOR) -->
   <div id="playlist-picker-modal" class="modal-backdrop" style="display: none;">
     <div class="modal-dialog">
       <div class="modal-header">
@@ -1995,11 +2037,41 @@
       </div>
       <div class="modal-body">
         <div class="modal-track-preview" id="modal-picker-track-text">Song Title</div>
-        <div class="modal-create-row">
-          <input type="text" id="modal-new-pl-input" class="modal-input" placeholder="New playlist name..." />
-          <button id="modal-create-pl-submit" class="modal-btn-confirm">Create & Add</button>
-        </div>
         <div class="modal-playlist-list" id="modal-playlists-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUILT-IN MODAL: PROMPT (INPUT) -->
+  <div id="custom-prompt-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <span class="modal-title" id="custom-prompt-title">New Playlist</span>
+        <button class="modal-close-btn" id="custom-prompt-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="custom-prompt-input" class="modal-input" placeholder="Playlist name..." />
+        <div class="modal-actions-row">
+          <button class="modal-btn-cancel" id="custom-prompt-cancel">Cancel</button>
+          <button class="modal-btn-confirm" id="custom-prompt-confirm">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUILT-IN MODAL: CONFIRM (DELETE/ACTION) -->
+  <div id="custom-confirm-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <span class="modal-title" id="custom-confirm-title">Confirm</span>
+        <button class="modal-close-btn" id="custom-confirm-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="custom-confirm-message" style="font-size: 14px; color: #555; line-height: 1.4;">Are you sure?</div>
+        <div class="modal-actions-row">
+          <button class="modal-btn-cancel" id="custom-confirm-cancel">Cancel</button>
+          <button class="modal-btn-confirm danger" id="custom-confirm-confirm">Delete</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2010,7 +2082,7 @@
     /* =================================================================
        APP VERSION & UPDATE ENGINE
     ================================================================= */
-    const CURRENT_VERSION = '0.1.9 Beta';
+    const CURRENT_VERSION = '0.2.0';
     const GITHUB_UPDATE_URL = 'https://raw.githubusercontent.com/guahhinc/daydream/main/GuahhTunes.html';
 
     let availableUpdate = null;
@@ -2167,6 +2239,8 @@
     const views = document.querySelectorAll('.view-container');
     const albumGrid = document.getElementById('album-grid');
     const recentTracksBar = document.getElementById('recent-tracks-bar');
+    const homePlaylistsBar = document.getElementById('home-playlists-bar');
+    const homeCreatePlBtn = document.getElementById('home-create-pl-btn');
     const hiddenFileInput = document.getElementById('hidden-file-input');
     const btnCheckUpdate = document.getElementById('btn-check-update');
 
@@ -2184,8 +2258,6 @@
     const playlistPickerModal = document.getElementById('playlist-picker-modal');
     const modalClosePicker = document.getElementById('modal-close-picker');
     const modalPickerTrackText = document.getElementById('modal-picker-track-text');
-    const modalNewPlInput = document.getElementById('modal-new-pl-input');
-    const modalCreatePlSubmit = document.getElementById('modal-create-pl-submit');
     const modalPlaylistsList = document.getElementById('modal-playlists-list');
 
     const lcdEmptyState = document.getElementById('lcd-empty-state');
@@ -2215,6 +2287,83 @@
 
     const dropzoneOverlay = document.getElementById('dropzone-overlay');
     const toast = document.getElementById('toast');
+
+    /* =========================================
+       CUSTOM BUILT-IN MODAL SYSTEM
+    ========================================= */
+    function showCustomPrompt(title, placeholder = '', defaultValue = '') {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('custom-prompt-modal');
+        const titleEl = document.getElementById('custom-prompt-title');
+        const inputEl = document.getElementById('custom-prompt-input');
+        const closeBtn = document.getElementById('custom-prompt-close');
+        const cancelBtn = document.getElementById('custom-prompt-cancel');
+        const confirmBtn = document.getElementById('custom-prompt-confirm');
+
+        titleEl.textContent = title;
+        inputEl.placeholder = placeholder;
+        inputEl.value = defaultValue;
+        modal.style.display = 'flex';
+
+        setTimeout(() => {
+          inputEl.focus();
+          inputEl.select();
+        }, 50);
+
+        function cleanup(val) {
+          modal.style.display = 'none';
+          closeBtn.onclick = null;
+          cancelBtn.onclick = null;
+          confirmBtn.onclick = null;
+          inputEl.onkeydown = null;
+          resolve(val);
+        }
+
+        closeBtn.onclick = () => cleanup(null);
+        cancelBtn.onclick = () => cleanup(null);
+        confirmBtn.onclick = () => cleanup(inputEl.value.trim() || null);
+
+        inputEl.onkeydown = (e) => {
+          if (e.key === 'Enter') cleanup(inputEl.value.trim() || null);
+          if (e.key === 'Escape') cleanup(null);
+        };
+      });
+    }
+
+    function showCustomConfirm(title, message, confirmText = 'Delete', isDanger = true) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('custom-confirm-modal');
+        const titleEl = document.getElementById('custom-confirm-title');
+        const msgEl = document.getElementById('custom-confirm-message');
+        const closeBtn = document.getElementById('custom-confirm-close');
+        const cancelBtn = document.getElementById('custom-confirm-cancel');
+        const confirmBtn = document.getElementById('custom-confirm-confirm');
+
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        confirmBtn.textContent = confirmText;
+        confirmBtn.className = isDanger ? 'modal-btn-confirm danger' : 'modal-btn-confirm';
+        modal.style.display = 'flex';
+
+        function cleanup(val) {
+          modal.style.display = 'none';
+          closeBtn.onclick = null;
+          cancelBtn.onclick = null;
+          confirmBtn.onclick = null;
+          window.removeEventListener('keydown', handleKey);
+          resolve(val);
+        }
+
+        function handleKey(e) {
+          if (e.key === 'Escape') cleanup(false);
+        }
+
+        window.addEventListener('keydown', handleKey);
+        closeBtn.onclick = () => cleanup(false);
+        cancelBtn.onclick = () => cleanup(false);
+        confirmBtn.onclick = () => cleanup(true);
+      });
+    }
 
     /* =========================================
        BACKGROUND AUTO-UPDATE ENGINE
@@ -2316,7 +2465,7 @@
     if (storeBlockUpdateBtn) storeBlockUpdateBtn.addEventListener('click', triggerUpdateDownload);
 
     /* =========================================
-       NAVIGATION SWITCHER & STORE HEALTH LOGIC
+       NAVIGATION SWITCHER & STORE HEALTH
     ========================================= */
     navButtons.forEach(button => {
       button.addEventListener('click', () => {
@@ -2332,6 +2481,7 @@
 
         if (target === 'home') {
           renderRecentlyPlayed();
+          renderHomePlaylists();
         } else if (target === 'library') {
           renderLibrary();
         } else if (target === 'store') {
@@ -2421,23 +2571,33 @@
     function navigateToArtistLibrary(artistName) {
       if (!artistName) return;
 
-      // 1. Activate Top Nav Library
       navButtons.forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-target') === 'library'));
       views.forEach(view => view.classList.toggle('active-view', view.id === 'view-library'));
       document.body.classList.remove('viewing-store');
 
-      // 2. Activate Library Sidebar 'Artists'
       librarySidebarItems.forEach(i => i.classList.toggle('active', i.getAttribute('data-lib-view') === 'artists'));
       activeLibTab = 'artists';
       libSubviews.forEach(sv => sv.classList.toggle('active', sv.id === 'lib-view-artists'));
 
-      // 3. Set selected artist & render
       selectedArtistName = artistName;
       renderLibrary();
     }
 
+    function navigateToPlaylist(playlistId) {
+      navButtons.forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-target') === 'library'));
+      views.forEach(view => view.classList.toggle('active-view', view.id === 'view-library'));
+      document.body.classList.remove('viewing-store');
+
+      librarySidebarItems.forEach(i => i.classList.toggle('active', i.getAttribute('data-lib-view') === 'playlists'));
+      activeLibTab = 'playlists';
+      libSubviews.forEach(sv => sv.classList.toggle('active', sv.id === 'lib-view-playlists'));
+
+      selectedPlaylistId = playlistId;
+      renderLibrary();
+    }
+
     /* =========================================
-       RECENTLY PLAYED STORAGE & RENDERING
+       RECENTLY PLAYED & HOME PLAYLISTS
     ========================================= */
     function recordRecentlyPlayed(track, albumMeta) {
       if (!track) return;
@@ -2540,6 +2700,60 @@
 
         recentTracksBar.appendChild(card);
       });
+    }
+
+    function renderHomePlaylists() {
+      if (!homePlaylistsBar) return;
+      homePlaylistsBar.innerHTML = '';
+
+      if (playlistsData.length === 0) {
+        homePlaylistsBar.innerHTML = '<div class="recent-empty-text">No playlists yet. <span class="home-create-pl-link" id="home-create-pl-btn">Create a playlist</span></div>';
+        document.getElementById('home-create-pl-btn')?.addEventListener('click', promptCreatePlaylist);
+        return;
+      }
+
+      playlistsData.forEach(pl => {
+        const card = document.createElement('div');
+        card.className = 'recent-card';
+
+        let coverSrc = generatePlaceholderCover(pl.name);
+        if (pl.tracks.length > 0) {
+          coverSrc = resolveTrackCover(pl.tracks[0]);
+        }
+
+        card.innerHTML = `
+          <div class="recent-art-wrap">
+            <img src="${coverSrc}" class="recent-art-img" alt="${escapeHTML(pl.name)}" />
+            <div class="recent-play-overlay">
+              <div class="recent-play-btn" title="Play Playlist">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+            </div>
+          </div>
+          <div class="recent-song-title">${escapeHTML(pl.name)}</div>
+          <div class="recent-artist-name" style="cursor:default;">${pl.tracks.length} song${pl.tracks.length === 1 ? '' : 's'}</div>
+        `;
+
+        card.querySelector('.recent-play-overlay')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const playable = getPlayablePlaylistTracks(pl);
+          if (playable.length > 0) {
+            playQueue(playable, 0, { title: pl.name, artist: 'Playlist' });
+          } else {
+            showToast('Playlist is empty or has unreadable tracks.');
+          }
+        });
+
+        card.addEventListener('click', () => {
+          navigateToPlaylist(pl.id);
+        });
+
+        homePlaylistsBar.appendChild(card);
+      });
+    }
+
+    if (homeCreatePlBtn) {
+      homeCreatePlBtn.addEventListener('click', promptCreatePlaylist);
     }
 
     /* =================================================================
@@ -2769,7 +2983,8 @@
       document.addEventListener('click', () => menuDropdown.classList.remove('show'));
 
       drawer.querySelector('#btn-delete-album').addEventListener('click', async () => {
-        if (confirm(`Remove "${album.title}" from your library?`)) {
+        const confirmed = await showCustomConfirm('Delete Album', `Remove "${album.title}" from your library?`);
+        if (confirmed) {
           await dbDeleteAlbum(album.id);
           libraryData = libraryData.filter(a => a.id !== album.id);
           drawer.classList.add('closing');
@@ -2809,7 +3024,7 @@
     }
 
     /* =================================================================
-       2. PLAYLISTS VIEW & DRAG/DROP REORDER ENGINE
+       2. PLAYLISTS VIEW & FLAT TEXT ACTIONS
     ================================================================= */
     function renderPlaylistsView() {
       playlistsSubSidebarList.innerHTML = '';
@@ -2864,13 +3079,15 @@
           <div class="playlist-meta-sub">${statsStr}</div>
         </div>
         <div class="playlist-actions-row">
-          <button class="playlist-btn-action" id="btn-shuffle-playlist">
+          <button class="playlist-text-action shuffle-text-btn" id="btn-shuffle-playlist">
+            <span>Shuffle</span>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
               <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.42l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.12z"/>
             </svg>
-            <span>Shuffle</span>
           </button>
-          <button class="playlist-btn-action delete-btn" id="btn-delete-current-playlist">Delete Playlist</button>
+          <button class="playlist-text-action delete-text-btn" id="btn-delete-current-playlist">
+            Delete Playlist
+          </button>
         </div>
       `;
 
@@ -2882,6 +3099,7 @@
           playlist.name = newName;
           await dbSavePlaylist(playlist);
           renderPlaylistsView();
+          renderHomePlaylists();
           showToast(`Renamed playlist to "${newName}"`);
         } else {
           nameInput.value = playlist.name;
@@ -2890,11 +3108,13 @@
 
       // Delete Playlist
       headerDiv.querySelector('#btn-delete-current-playlist').addEventListener('click', async () => {
-        if (confirm(`Delete playlist "${playlist.name}"?`)) {
+        const confirmed = await showCustomConfirm('Delete Playlist', `Delete playlist "${playlist.name}"?`);
+        if (confirmed) {
           await dbDeletePlaylist(playlist.id);
           playlistsData = playlistsData.filter(p => p.id !== playlist.id);
           selectedPlaylistId = playlistsData[0]?.id || null;
           renderPlaylistsView();
+          renderHomePlaylists();
           showToast('Playlist deleted');
         }
       });
@@ -2933,6 +3153,7 @@
 
         const coverSrc = resolveTrackCover(track);
 
+        // CLEAN ROW WITHOUT + BUTTON
         row.innerHTML = `
           <span class="stacked-track-num">
             <span class="stacked-num-label">${i + 1}</span>
@@ -2951,26 +3172,16 @@
           <img class="playlist-cover-thumb" src="${coverSrc}" alt="" />
           <span class="playlist-track-title">${escapeHTML(track.title)}</span>
           <span class="playlist-track-artist" title="View artist in Library">${escapeHTML(track.artist)}</span>
-          <button class="track-add-pl-btn" title="Add to another playlist">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-          </button>
           <span class="stacked-track-time">${track.duration || '--:--'}</span>
           <button class="playlist-remove-track-btn" title="Remove from playlist">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
           </button>
         `;
 
-        // Click artist -> navigate to library artist
         const artistLink = row.querySelector('.playlist-track-artist');
         artistLink.addEventListener('click', (e) => {
           e.stopPropagation();
           navigateToArtistLibrary(track.artist);
-        });
-
-        // Add to other playlist
-        row.querySelector('.track-add-pl-btn').addEventListener('click', (e) => {
-          e.stopPropagation();
-          openPlaylistPickerModal(track);
         });
 
         // Remove track from current playlist
@@ -2979,12 +3190,13 @@
           playlist.tracks.splice(i, 1);
           await dbSavePlaylist(playlist);
           renderPlaylistsView();
+          renderHomePlaylists();
           showToast(`Removed "${track.title}" from playlist`);
         });
 
         // Row Click: Play
         row.addEventListener('click', (e) => {
-          if (e.target.closest('.track-add-pl-btn') || e.target.closest('.playlist-remove-track-btn') || e.target.closest('.playlist-track-artist')) return;
+          if (e.target.closest('.playlist-remove-track-btn') || e.target.closest('.playlist-track-artist')) return;
           const playable = getPlayablePlaylistTracks(playlist);
           const idx = playable.findIndex(t => t.id === track.id);
           if (idx !== -1) {
@@ -2994,7 +3206,7 @@
           }
         });
 
-        // Drag & Drop Reordering
+        // Drag & Drop Reordering (INTERNAL ONLY)
         row.addEventListener('dragstart', (e) => {
           dragSrcTrackIdx = i;
           e.dataTransfer.effectAllowed = 'move';
@@ -3054,7 +3266,7 @@
     }
 
     async function promptCreatePlaylist() {
-      const name = prompt('Enter a name for the new playlist:');
+      const name = await showCustomPrompt('New Playlist', 'Enter playlist name...');
       if (name && name.trim()) {
         const newPl = {
           id: 'pl-' + Math.random().toString(36).substr(2, 9),
@@ -3066,6 +3278,7 @@
         selectedPlaylistId = newPl.id;
         await dbSavePlaylist(newPl);
         renderPlaylistsView();
+        renderHomePlaylists();
         showToast(`Created playlist "${newPl.name}"`);
       }
     }
@@ -3073,7 +3286,7 @@
     btnCreatePlaylistSidebar.addEventListener('click', promptCreatePlaylist);
 
     /* =================================================================
-       ADD TO PLAYLIST MODAL
+       ADD TO PLAYLIST MODAL (NO INLINE CREATOR)
     ================================================================= */
     function openPlaylistPickerModal(track, albumMeta = null) {
       trackPendingAddToPlaylist = {
@@ -3087,11 +3300,10 @@
       };
 
       modalPickerTrackText.textContent = `${trackPendingAddToPlaylist.title} — ${trackPendingAddToPlaylist.artist}`;
-      modalNewPlInput.value = '';
       modalPlaylistsList.innerHTML = '';
 
       if (playlistsData.length === 0) {
-        modalPlaylistsList.innerHTML = '<div style="font-size: 13px; color: #999; padding: 8px 0;">No playlists yet. Enter a name above to create one.</div>';
+        modalPlaylistsList.innerHTML = '<div style="font-size: 13px; color: #999; padding: 12px 0;">No playlists created yet. Create a playlist under Playlists in the Library.</div>';
       } else {
         playlistsData.forEach(pl => {
           const item = document.createElement('div');
@@ -3118,28 +3330,13 @@
     async function addPendingTrackToPlaylist(playlist) {
       if (!trackPendingAddToPlaylist) return;
 
-      // Avoid duplicates or add to end
       playlist.tracks.push({ ...trackPendingAddToPlaylist });
       await dbSavePlaylist(playlist);
       closePlaylistPickerModal();
       showToast(`Added to "${playlist.name}"`);
       if (activeLibTab === 'playlists') renderPlaylistsView();
+      renderHomePlaylists();
     }
-
-    modalCreatePlSubmit.addEventListener('click', async () => {
-      const plName = modalNewPlInput.value.trim();
-      if (!plName) return;
-
-      const newPl = {
-        id: 'pl-' + Math.random().toString(36).substr(2, 9),
-        name: plName,
-        createdAt: Date.now(),
-        tracks: []
-      };
-
-      playlistsData.push(newPl);
-      await addPendingTrackToPlaylist(newPl);
-    });
 
     /* =================================================================
        3. ARTISTS STACKED VIEW
@@ -3349,7 +3546,8 @@
         document.addEventListener('click', () => menuDropdown.classList.remove('show'));
 
         card.querySelector(`#stacked-del-${album.id}`).addEventListener('click', async () => {
-          if (confirm(`Remove "${album.title}" from your library?`)) {
+          const confirmed = await showCustomConfirm('Delete Album', `Remove "${album.title}" from your library?`);
+          if (confirmed) {
             await dbDeleteAlbum(album.id);
             libraryData = libraryData.filter(a => a.id !== album.id);
             renderLibrary();
@@ -4045,11 +4243,14 @@
     }
 
     /* =================================================================
-       DROPZONE LISTENER
+       DROPZONE LISTENER (EXCLUDES INTERNAL TRACK DRAGS)
     ================================================================= */
     let dragCounter = 0;
 
     window.addEventListener('dragenter', (e) => {
+      if (!e.dataTransfer || !e.dataTransfer.types || !Array.from(e.dataTransfer.types).includes('Files')) {
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
       dragCounter++;
@@ -4057,6 +4258,9 @@
     });
 
     window.addEventListener('dragleave', (e) => {
+      if (!e.dataTransfer || !e.dataTransfer.types || !Array.from(e.dataTransfer.types).includes('Files')) {
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
       dragCounter--;
@@ -4067,11 +4271,16 @@
     });
 
     window.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+      if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes('Files')) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     });
 
     window.addEventListener('drop', async (e) => {
+      if (!e.dataTransfer || !e.dataTransfer.types || !Array.from(e.dataTransfer.types).includes('Files')) {
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
       dragCounter = 0;
@@ -4227,6 +4436,7 @@
       document.querySelector('[data-target="library"]').click();
       renderLibrary();
       renderRecentlyPlayed();
+      renderHomePlaylists();
       showToast(`Saved ${audioFiles.length} song(s) to library`);
     }
 
@@ -4266,6 +4476,7 @@
         console.warn('[Storage] Error loading library data:', err);
       }
       renderRecentlyPlayed();
+      renderHomePlaylists();
     }
 
     hiddenFileInput.addEventListener('change', (e) => {
@@ -4282,6 +4493,7 @@
     }
 
     renderRecentlyPlayed();
+    renderHomePlaylists();
     loadSavedLibrary();
     performAutoUpdateCheck();
   </script>
