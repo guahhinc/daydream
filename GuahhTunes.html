@@ -417,7 +417,7 @@
     .home-container {
       display: flex;
       flex-direction: column;
-      gap: 36px;
+      gap: 32px;
       width: 100%;
       max-width: 100%;
     }
@@ -427,6 +427,12 @@
       color: #000000;
       margin-bottom: 16px;
       letter-spacing: -0.015em;
+    }
+
+    .home-section-divider {
+      width: 100%;
+      height: 1px;
+      background-color: #eeeeee;
     }
 
     .recent-tracks-bar,
@@ -546,7 +552,7 @@
       display: flex;
       align-items: center;
       gap: 24px;
-      padding-top: 40px;
+      padding-top: 36px;
       border-top: 1px solid #eeeeee;
       width: 100%;
     }
@@ -1825,7 +1831,7 @@
 
   <!-- Fullscreen Drag and Drop Overlay -->
   <div id="dropzone-overlay">
-    <div class="dropzone-text">Drop Songs Here</div>
+    <div class="dropzone-text">Drop Songs or Folders Here</div>
     <div class="dropzone-sub">Extracting album cover, artist, genre & tracks</div>
   </div>
 
@@ -1937,6 +1943,9 @@
           </div>
         </div>
 
+        <!-- Thin dividing line between Recently Played and Playlists -->
+        <div class="home-section-divider"></div>
+
         <!-- 2. Playlists on Home -->
         <div>
           <div class="home-section-title">Playlists</div>
@@ -1953,7 +1962,7 @@
           </svg>
           <div class="home-about-meta">
             <div class="home-about-title">Guahh Tunes</div>
-            <div class="home-about-version" id="app-version-label">Version 0.2.0</div>
+            <div class="home-about-version" id="app-version-label">Version 0.2.1</div>
           </div>
           <button id="btn-check-update" class="home-update-btn" style="display: none;" title="Update Guahh Tunes">UPDATE</button>
         </div>
@@ -2028,7 +2037,7 @@
     </section>
   </main>
 
-  <!-- BUILT-IN MODAL: ADD TRACK TO PLAYLIST (WITHOUT INLINE CREATOR) -->
+  <!-- BUILT-IN MODAL: ADD TRACK TO PLAYLIST -->
   <div id="playlist-picker-modal" class="modal-backdrop" style="display: none;">
     <div class="modal-dialog">
       <div class="modal-header">
@@ -2042,7 +2051,7 @@
     </div>
   </div>
 
-  <!-- BUILT-IN MODAL: PROMPT (INPUT) -->
+  <!-- BUILT-IN MODAL: PROMPT -->
   <div id="custom-prompt-modal" class="modal-backdrop" style="display: none;">
     <div class="modal-dialog">
       <div class="modal-header">
@@ -2059,7 +2068,7 @@
     </div>
   </div>
 
-  <!-- BUILT-IN MODAL: CONFIRM (DELETE/ACTION) -->
+  <!-- BUILT-IN MODAL: CONFIRM -->
   <div id="custom-confirm-modal" class="modal-backdrop" style="display: none;">
     <div class="modal-dialog">
       <div class="modal-header">
@@ -2082,7 +2091,7 @@
     /* =================================================================
        APP VERSION & UPDATE ENGINE
     ================================================================= */
-    const CURRENT_VERSION = '0.2.0';
+    const CURRENT_VERSION = '0.2.1';
     const GITHUB_UPDATE_URL = 'https://raw.githubusercontent.com/guahhinc/daydream/main/GuahhTunes.html';
 
     let availableUpdate = null;
@@ -2202,10 +2211,11 @@
     }
 
     /* =========================================
-       AUDIO & QUEUE STATE
+       AUDIO & QUEUE STATE (BACKGROUND ENHANCED)
     ========================================= */
     const audioEl = new Audio();
     audioEl.volume = 1.0;
+    audioEl.preload = 'auto'; // Optimize for uninterrupted background streaming
 
     let libraryData = [];
     let playlistsData = [];
@@ -2366,6 +2376,85 @@
     }
 
     /* =========================================
+       MEDIA SESSION API (BACKGROUND PLAYBACK)
+    ========================================= */
+    function updateMediaSession(track, albumMeta) {
+      if (!('mediaSession' in navigator) || !track) return;
+
+      const artist = track.artist || (albumMeta ? albumMeta.artist : 'Unknown Artist');
+      const albumTitle = albumMeta ? albumMeta.title : '';
+      const coverSrc = track.coverUrl || (albumMeta ? albumMeta.coverUrl : '');
+
+      const artwork = [];
+      if (coverSrc && !coverSrc.startsWith('data:image/svg')) {
+        artwork.push(
+          { src: coverSrc, sizes: '96x96', type: 'image/jpeg' },
+          { src: coverSrc, sizes: '128x128', type: 'image/jpeg' },
+          { src: coverSrc, sizes: '192x192', type: 'image/jpeg' },
+          { src: coverSrc, sizes: '256x256', type: 'image/jpeg' },
+          { src: coverSrc, sizes: '512x512', type: 'image/jpeg' }
+        );
+      }
+
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title || 'Unknown Title',
+        artist: artist,
+        album: albumTitle,
+        artwork: artwork
+      });
+
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+      updateMediaSessionPosition();
+    }
+
+    function updateMediaSessionPosition() {
+      if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+        if (!isNaN(audioEl.duration) && audioEl.duration > 0) {
+          try {
+            navigator.mediaSession.setPositionState({
+              duration: audioEl.duration,
+              playbackRate: audioEl.playbackRate || 1.0,
+              position: Math.min(audioEl.currentTime, audioEl.duration)
+            });
+          } catch (e) {}
+        }
+      }
+    }
+
+    function initMediaSessionActions() {
+      if (!('mediaSession' in navigator)) return;
+
+      const actions = [
+        ['play', () => { togglePlay(); }],
+        ['pause', () => { togglePlay(); }],
+        ['previoustrack', () => { playPrevTrack(); }],
+        ['nexttrack', () => { playNextTrack(); }],
+        ['seekto', (details) => {
+          if (details.seekTime && !isNaN(details.seekTime)) {
+            audioEl.currentTime = details.seekTime;
+            updateMediaSessionPosition();
+          }
+        }],
+        ['seekbackward', (details) => {
+          const skip = details.seekOffset || 10;
+          audioEl.currentTime = Math.max(audioEl.currentTime - skip, 0);
+          updateMediaSessionPosition();
+        }],
+        ['seekforward', (details) => {
+          const skip = details.seekOffset || 10;
+          audioEl.currentTime = Math.min(audioEl.currentTime + skip, audioEl.duration || 0);
+          updateMediaSessionPosition();
+        }]
+      ];
+
+      for (const [action, handler] of actions) {
+        try {
+          navigator.mediaSession.setActionHandler(action, handler);
+        } catch (err) {}
+      }
+    }
+
+    /* =========================================
        BACKGROUND AUTO-UPDATE ENGINE
     ========================================= */
     async function performAutoUpdateCheck() {
@@ -2490,7 +2579,6 @@
       });
     });
 
-    // Library Sidebar switcher
     librarySidebarItems.forEach(item => {
       item.addEventListener('click', () => {
         librarySidebarItems.forEach(i => i.classList.remove('active'));
@@ -2566,7 +2654,7 @@
     });
 
     /* =========================================
-       ARTIST NAVIGATION (REDIRECTS TO LIBRARY)
+       ARTIST & PLAYLIST NAVIGATION IN LIBRARY
     ========================================= */
     function navigateToArtistLibrary(artistName) {
       if (!artistName) return;
@@ -2780,7 +2868,7 @@
       if (libraryData.length === 0) {
         const emptyDiv = document.createElement('div');
         emptyDiv.className = 'empty-state';
-        emptyDiv.textContent = 'Drag and drop songs here to start';
+        emptyDiv.textContent = 'Drag and drop songs or folders here to start';
         emptyDiv.title = 'Click to browse files';
         emptyDiv.addEventListener('click', () => hiddenFileInput.click());
         albumGrid.appendChild(emptyDiv);
@@ -3153,7 +3241,6 @@
 
         const coverSrc = resolveTrackCover(track);
 
-        // CLEAN ROW WITHOUT + BUTTON
         row.innerHTML = `
           <span class="stacked-track-num">
             <span class="stacked-num-label">${i + 1}</span>
@@ -3206,7 +3293,7 @@
           }
         });
 
-        // Drag & Drop Reordering (INTERNAL ONLY)
+        // Drag & Drop Reordering (Internal Track Only)
         row.addEventListener('dragstart', (e) => {
           dragSrcTrackIdx = i;
           e.dataTransfer.effectAllowed = 'move';
@@ -3286,7 +3373,7 @@
     btnCreatePlaylistSidebar.addEventListener('click', promptCreatePlaylist);
 
     /* =================================================================
-       ADD TO PLAYLIST MODAL (NO INLINE CREATOR)
+       ADD TO PLAYLIST MODAL
     ================================================================= */
     function openPlaylistPickerModal(track, albumMeta = null) {
       trackPendingAddToPlaylist = {
@@ -3675,9 +3762,11 @@
 
       const meta = albumMeta || currentAlbumMeta;
       audioEl.src = track.audioSrc;
+      
       audioEl.play().then(() => {
         isPlaying = true;
         updatePlayStateUI();
+        updateMediaSession(track, meta);
       }).catch(err => console.warn('[Playback Warning] Auto-play was restricted:', err));
 
       recordRecentlyPlayed(track, meta);
@@ -3699,6 +3788,8 @@
         playerCoverImg.style.display = 'none';
         playerCoverPlaceholder.style.display = 'flex';
       }
+
+      updateMediaSession(track, meta);
     }
 
     function playNextTrack() {
@@ -3768,6 +3859,9 @@
         playIcon.style.display = 'block';
         pauseIcon.style.display = 'none';
       }
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+      }
       updateActiveTrackUI();
     }
 
@@ -3829,6 +3923,8 @@
 
         const rem = audioEl.duration - audioEl.currentTime;
         remainingTimeLabel.textContent = `-${formatTime(rem)}`;
+
+        updateMediaSessionPosition();
       }
     });
 
@@ -3838,6 +3934,7 @@
       if (!isNaN(audioEl.duration)) {
         audioEl.currentTime = (scrubber.value / 100) * audioEl.duration;
         lcdScrubberFill.style.width = `${scrubber.value}%`;
+        updateMediaSessionPosition();
       }
     });
 
@@ -4201,13 +4298,12 @@
     }
 
     function getFolderAlbum(file) {
-      if (file.folderPath) {
-        const parts = file.folderPath.split('/').filter(Boolean);
-        if (parts.length > 1) return parts[parts.length - 2];
-      }
-      if (file.webkitRelativePath) {
-        const parts = file.webkitRelativePath.split('/').filter(Boolean);
-        if (parts.length > 1) return parts[parts.length - 2];
+      const p = file.folderPath || file.webkitRelativePath || '';
+      if (p) {
+        const parts = p.split('/').filter(Boolean);
+        if (parts.length > 1) {
+          return parts[parts.length - 2];
+        }
       }
       return null;
     }
@@ -4243,7 +4339,7 @@
     }
 
     /* =================================================================
-       DROPZONE LISTENER (EXCLUDES INTERNAL TRACK DRAGS)
+       DEEP RECURSIVE FOLDER & FILE DROP HANDLER
     ================================================================= */
     let dragCounter = 0;
 
@@ -4312,7 +4408,42 @@
         }
       }
 
-      if (syncItems && syncItems.length > 0) {
+      // Method 1: Modern FileSystemHandle recursion
+      let handledWithHandles = false;
+      if (syncItems && syncItems.length > 0 && typeof syncItems[0].getAsFileSystemHandle === 'function') {
+        try {
+          const handles = [];
+          for (const item of syncItems) {
+            if (item.kind === 'file') {
+              const handle = await item.getAsFileSystemHandle();
+              if (handle) handles.push(handle);
+            }
+          }
+
+          if (handles.length > 0) {
+            handledWithHandles = true;
+            async function readHandle(handle, currentPath = '') {
+              if (handle.kind === 'file') {
+                const file = await handle.getFile();
+                addFile(file, currentPath + '/' + handle.name);
+              } else if (handle.kind === 'directory') {
+                for await (const entry of handle.values()) {
+                  await readHandle(entry, currentPath + '/' + handle.name);
+                }
+              }
+            }
+
+            for (const h of handles) {
+              await readHandle(h, '');
+            }
+          }
+        } catch (e) {
+          handledWithHandles = false;
+        }
+      }
+
+      // Method 2: webkitGetAsEntry recursive batch reader (Universal folder support)
+      if (!handledWithHandles && syncItems && syncItems.length > 0) {
         const queue = [];
         for (const item of syncItems) {
           if (item.webkitGetAsEntry) {
@@ -4323,30 +4454,43 @@
           }
         }
 
-        while (queue.length > 0) {
-          const entry = queue.shift();
+        async function readEntriesPromise(reader) {
+          return new Promise((resolve) => {
+            reader.readEntries((entries) => resolve(entries || []), () => resolve([]));
+          });
+        }
+
+        async function parseEntry(entry) {
+          if (!entry) return;
           if (entry.isFile) {
             try {
-              const file = await new Promise((resolve, reject) => entry.file(resolve, reject));
+              const file = await new Promise((res, rej) => entry.file(res, rej));
               if (file) addFile(file, entry.fullPath || '');
-            } catch (err) {}
+            } catch (e) {}
           } else if (entry.isDirectory) {
             try {
               const dirReader = entry.createReader();
-              let batch;
+              let batch = [];
               do {
-                batch = await new Promise((resolve) => dirReader.readEntries(resolve, () => resolve([])));
-                if (batch && batch.length > 0) {
-                  queue.push(...batch);
+                batch = await readEntriesPromise(dirReader);
+                for (const child of batch) {
+                  await parseEntry(child);
                 }
               } while (batch && batch.length > 0);
-            } catch (err) {}
+            } catch (e) {}
           }
+        }
+
+        for (const entry of queue) {
+          await parseEntry(entry);
         }
       }
 
-      for (const f of syncFiles) {
-        addFile(f, f.webkitRelativePath || '');
+      // Method 3: Standard sync files fallback
+      if (syncFiles && syncFiles.length > 0) {
+        for (const f of syncFiles) {
+          addFile(f, f.webkitRelativePath || '');
+        }
       }
 
       return discoveredFiles;
@@ -4492,6 +4636,8 @@
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
+    // Startup
+    initMediaSessionActions();
     renderRecentlyPlayed();
     renderHomePlaylists();
     loadSavedLibrary();
