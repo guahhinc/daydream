@@ -1046,21 +1046,26 @@
     }
 
     /* =========================================
-       SMOOTH EXPANDING DRAWER (PRECISE PIXEL HEIGHT)
+       SMOOTH EXPANDING DRAWER (PRECISE PIXEL HEIGHT & PERFECT MARGIN COMPENSATION)
     ========================================= */
     .itunes-drawer-wrapper {
       grid-column: 1 / -1;
       width: 100%;
       height: 0;
+      margin-bottom: -36px;
       overflow: hidden;
-      transition: height 0.42s cubic-bezier(0.25, 1, 0.5, 1);
+      transition: height 0.38s cubic-bezier(0.25, 1, 0.5, 1), margin-bottom 0.38s cubic-bezier(0.25, 1, 0.5, 1);
       box-sizing: border-box;
+    }
+
+    .itunes-drawer-wrapper.open {
+      margin-bottom: 0px;
     }
 
     .itunes-drawer-inner {
       width: 100%;
-      min-height: 0;
       box-sizing: border-box;
+      overflow: hidden;
     }
 
     .itunes-drawer {
@@ -1076,7 +1081,7 @@
       gap: 48px;
       opacity: 0;
       transform: translateY(-8px);
-      transition: opacity 0.35s ease 0.05s, transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.35s ease, color 0.35s ease;
+      transition: opacity 0.3s ease 0.05s, transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.35s ease, color 0.35s ease;
       box-sizing: border-box;
     }
 
@@ -2239,144 +2244,42 @@
     enableHorizontalScrollWheel(homePlaylistsBar);
 
     /* =================================================================
-       ALBUMS GRID & INLINE DRAWER (PERFECT EXACT-HEIGHT ANIMATION)
+       ALBUMS GRID & INLINE DRAWER (PERFECT EXACT-HEIGHT ANIMATION & SWITCHING)
     ================================================================= */
-    function closeAlbumDrawer(onClosed) {
-      const drawerWrap = document.querySelector('.itunes-drawer-wrapper');
-      if (!drawerWrap) {
-        if (onClosed) onClosed();
-        return;
-      }
+    function getRowLastCard(targetCard) {
+      const cards = Array.from(albumGrid.querySelectorAll('.album-card'));
+      const targetIdx = cards.indexOf(targetCard);
+      if (targetIdx === -1) return targetCard;
 
-      drawerWrap.style.height = drawerWrap.scrollHeight + 'px';
-      drawerWrap.offsetHeight;
+      const targetTop = targetCard.offsetTop;
+      let lastCard = targetCard;
 
-      requestAnimationFrame(() => {
-        drawerWrap.classList.remove('open');
-        drawerWrap.style.height = '0px';
-      });
-
-      let finished = false;
-      const finishClose = () => {
-        if (finished) return;
-        finished = true;
-        drawerWrap.removeEventListener('transitionend', onTransEnd);
-        drawerWrap.remove();
-        if (onClosed) onClosed();
-      };
-
-      const onTransEnd = (e) => {
-        if (e.target === drawerWrap && e.propertyName === 'height') {
-          finishClose();
+      for (let i = targetIdx; i < cards.length; i++) {
+        if (Math.abs(cards[i].offsetTop - targetTop) <= 6) {
+          lastCard = cards[i];
+        } else {
+          break;
         }
-      };
-
-      drawerWrap.addEventListener('transitionend', onTransEnd);
-      setTimeout(finishClose, 450);
+      }
+      return lastCard;
     }
 
-    function renderAlbumsGridView() {
+    function applyLibraryTheme(album) {
       const libraryView = $('view-library');
-      albumGrid.innerHTML = '';
-
-      if (!libraryData.length) {
-        resetLibraryTheme();
-        albumGrid.innerHTML = '<div class="empty-state" onclick="document.getElementById(\'hidden-file-input\').click()">Drag and drop songs or folders here to start</div>';
-        return;
-      }
-
-      let activeAlbumTheme = null;
-      if (activeExpandedAlbumId) {
-        const activeAlb = libraryData.find(a => a.id === activeExpandedAlbumId);
-        if (activeAlb) activeAlbumTheme = getAlbumTheme(activeAlb);
-      }
-
-      if (activeAlbumTheme) {
-        libraryView.style.setProperty('--lib-theme-bg', activeAlbumTheme.bg);
-        libraryView.style.setProperty('--lib-theme-text', activeAlbumTheme.textColor);
-        libraryView.style.setProperty('--lib-theme-subtext', activeAlbumTheme.subtextColor);
-        libraryView.style.setProperty('--lib-theme-border', activeAlbumTheme.borderColor);
-        libraryView.style.setProperty('--lib-theme-track-border', activeAlbumTheme.trackBorderColor);
-        libraryView.style.setProperty('--lib-theme-hover', activeAlbumTheme.hoverBg);
-        libraryView.style.setProperty('--lib-theme-active', activeAlbumTheme.activeBg);
-        libraryView.style.setProperty('--lib-theme-accent', activeAlbumTheme.accentColor);
-        libraryView.style.setProperty('--lib-theme-art-bg', activeAlbumTheme.artBg);
+      if (!libraryView) return;
+      const theme = getAlbumTheme(album);
+      if (theme) {
+        libraryView.style.setProperty('--lib-theme-bg', theme.bg);
+        libraryView.style.setProperty('--lib-theme-text', theme.textColor);
+        libraryView.style.setProperty('--lib-theme-subtext', theme.subtextColor);
+        libraryView.style.setProperty('--lib-theme-border', theme.borderColor);
+        libraryView.style.setProperty('--lib-theme-track-border', theme.trackBorderColor);
+        libraryView.style.setProperty('--lib-theme-hover', theme.hoverBg);
+        libraryView.style.setProperty('--lib-theme-active', theme.activeBg);
+        libraryView.style.setProperty('--lib-theme-accent', theme.accentColor);
+        libraryView.style.setProperty('--lib-theme-art-bg', theme.artBg);
       } else {
         resetLibraryTheme();
-      }
-
-      const cardEntries = [];
-      libraryData.forEach(album => {
-        const isSelected = activeExpandedAlbumId === album.id;
-        const card = document.createElement('div');
-        card.className = `album-card ${isSelected ? 'selected' : ''}`;
-        card.innerHTML = `
-          <div class="album-art-wrap">
-            <img class="album-art-img" src="${album.coverUrl}" draggable="false" />
-            <div class="album-play-overlay"><div class="album-play-overlay-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
-          </div>
-          <div class="album-name">${escapeHTML(album.title)}</div>
-          <div class="album-artist">${escapeHTML(album.artist)}</div>
-          ${isSelected ? '<svg class="album-pointer-arrow" width="14" height="8" viewBox="0 0 14 8"><path d="M1 1L7 7L13 1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
-        `;
-
-        card.querySelector('.album-artist').addEventListener('click', e => { e.stopPropagation(); navigateToArtistLibrary(album.artist); });
-        
-        card.addEventListener('click', e => {
-          if (e.target.closest('.album-artist')) return;
-          if (e.target.closest('.album-play-overlay-btn')) {
-            playQueue(album.tracks, 0, album, isShuffled);
-            return;
-          }
-
-          if (activeExpandedAlbumId === album.id) {
-            card.classList.remove('selected');
-            card.querySelector('.album-pointer-arrow')?.remove();
-            activeExpandedAlbumId = null;
-            resetLibraryTheme();
-            closeAlbumDrawer(() => {
-              renderAlbumsGridView();
-            });
-          } else {
-            activeExpandedAlbumId = album.id;
-            renderAlbumsGridView();
-          }
-        });
-
-        cardEntries.push({ album, card });
-      });
-
-      cardEntries.forEach(item => albumGrid.appendChild(item.card));
-      
-      if (activeExpandedAlbumId) {
-        const activeIdx = cardEntries.findIndex(c => c.album.id === activeExpandedAlbumId);
-        if (activeIdx !== -1) {
-          const top = cardEntries[activeIdx].card.offsetTop;
-          let lastIdx = activeIdx;
-          for (let i = activeIdx; i < cardEntries.length; i++) {
-            if (cardEntries[i].card.offsetTop === top) lastIdx = i; else break;
-          }
-          const drawerWrap = createDrawerElement(cardEntries[activeIdx].album);
-          cardEntries[lastIdx].card.after(drawerWrap);
-
-          drawerWrap.style.height = '0px';
-          const targetHeight = drawerWrap.scrollHeight;
-
-          requestAnimationFrame(() => {
-            drawerWrap.classList.add('open');
-            drawerWrap.style.height = targetHeight + 'px';
-          });
-
-          const onTransEnd = (e) => {
-            if (e.target === drawerWrap && e.propertyName === 'height') {
-              drawerWrap.removeEventListener('transitionend', onTransEnd);
-              if (drawerWrap.classList.contains('open')) {
-                drawerWrap.style.height = 'auto';
-              }
-            }
-          };
-          drawerWrap.addEventListener('transitionend', onTransEnd);
-        }
       }
     }
 
@@ -2392,6 +2295,336 @@
       libraryView.style.removeProperty('--lib-theme-active');
       libraryView.style.removeProperty('--lib-theme-accent');
       libraryView.style.removeProperty('--lib-theme-art-bg');
+    }
+
+    function closeDrawerElement(drawerWrap, onClosed) {
+      if (!drawerWrap) {
+        if (onClosed) onClosed();
+        return;
+      }
+
+      if (drawerWrap.dataset.isClosing === 'true') return;
+      drawerWrap.dataset.isClosing = 'true';
+
+      const currentHeight = drawerWrap.offsetHeight;
+      drawerWrap.style.height = currentHeight + 'px';
+      drawerWrap.offsetHeight; // Force reflow
+
+      requestAnimationFrame(() => {
+        drawerWrap.classList.remove('open');
+        drawerWrap.style.height = '0px';
+      });
+
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        drawerWrap.removeEventListener('transitionend', onTransEnd);
+        drawerWrap.remove();
+        if (onClosed) onClosed();
+      };
+
+      const onTransEnd = (e) => {
+        if (e.target === drawerWrap && e.propertyName === 'height') {
+          finish();
+        }
+      };
+
+      drawerWrap.addEventListener('transitionend', onTransEnd);
+      setTimeout(finish, 420);
+    }
+
+    function updateDrawerContent(drawerWrap, album) {
+      delete drawerWrap.dataset.isClosing;
+
+      const currentH = drawerWrap.offsetHeight;
+      drawerWrap.style.height = currentH + 'px';
+      drawerWrap.offsetHeight;
+
+      const inner = drawerWrap.querySelector('.itunes-drawer-inner');
+      if (!inner) return;
+
+      inner.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
+      inner.style.opacity = '0';
+      inner.style.transform = 'translateY(-4px)';
+
+      setTimeout(() => {
+        const countStr = `${album.tracks.length} song${album.tracks.length === 1 ? '' : 's'}`;
+        inner.innerHTML = `
+          <div class="itunes-drawer">
+            <div class="drawer-left">
+              <div class="drawer-cover-wrap"><img class="drawer-cover-img" src="${album.coverUrl}" draggable="false" /></div>
+              <div class="drawer-left-bottom">
+                <span class="drawer-stats-text">${countStr}</span>
+                <button class="drawer-shuffle-btn" id="drawer-shuffle-btn">
+                  <span>Shuffle</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.42l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.12z"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="drawer-right">
+              <div class="drawer-header">
+                <div>
+                  <h2 class="drawer-title">${escapeHTML(album.title)}</h2>
+                  <div class="drawer-artist">${escapeHTML(album.artist)}</div>
+                  <div class="drawer-meta-sub">${album.year || ''}</div>
+                </div>
+                <div class="drawer-options-wrapper">
+                  <button class="drawer-options-btn" id="drawer-menu-btn" title="Album Options">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                  </button>
+                  <div class="drawer-dropdown-menu" id="drawer-dropdown-menu">
+                    <div class="dropdown-item" id="btn-delete-album">Delete Album from Library</div>
+                  </div>
+                </div>
+              </div>
+              <div class="drawer-tracklist">
+                ${album.tracks.map((t, i) => `
+                  <div class="drawer-track-row ${currentQueue[currentTrackIndex]?.id === t.id ? 'active-playing' : ''}" data-idx="${i}" data-track-id="${t.id}">
+                    <span class="drawer-track-num">
+                      <span class="track-num-label">${i + 1}</span>
+                      <span class="track-speaker-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg></span>
+                      <span class="track-hover-ctrl"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+                    </span>
+                    <span class="drawer-track-title">${escapeHTML(t.title)}</span>
+                    <button class="track-add-pl-btn" data-track-id="${t.id}" title="Add Track"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
+                    <span class="drawer-track-time">${t.duration || '--:--'}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+
+        bindDrawerEvents(drawerWrap, album);
+
+        const newTargetHeight = inner.scrollHeight;
+        drawerWrap.style.height = newTargetHeight + 'px';
+        inner.style.opacity = '1';
+        inner.style.transform = 'translateY(0)';
+
+        const onTransEnd = (e) => {
+          if (e.target === drawerWrap && e.propertyName === 'height') {
+            drawerWrap.removeEventListener('transitionend', onTransEnd);
+            if (drawerWrap.classList.contains('open') && activeExpandedAlbumId === album.id) {
+              drawerWrap.style.height = 'auto';
+            }
+          }
+        };
+        drawerWrap.addEventListener('transitionend', onTransEnd);
+      }, 120);
+    }
+
+    function handleAlbumCardClick(album, card) {
+      const currentDrawer = albumGrid.querySelector('.itunes-drawer-wrapper');
+
+      if (activeExpandedAlbumId === album.id) {
+        activeExpandedAlbumId = null;
+        card.classList.remove('selected');
+        card.querySelector('.album-pointer-arrow')?.remove();
+        resetLibraryTheme();
+        closeDrawerElement(currentDrawer);
+        return;
+      }
+
+      activeExpandedAlbumId = album.id;
+
+      albumGrid.querySelectorAll('.album-card').forEach(c => {
+        c.classList.remove('selected');
+        c.querySelector('.album-pointer-arrow')?.remove();
+      });
+      card.classList.add('selected');
+
+      const arrowSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      arrowSvg.setAttribute('class', 'album-pointer-arrow');
+      arrowSvg.setAttribute('width', '14');
+      arrowSvg.setAttribute('height', '8');
+      arrowSvg.setAttribute('viewBox', '0 0 14 8');
+      arrowSvg.innerHTML = '<path d="M1 1L7 7L13 1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>';
+      card.appendChild(arrowSvg);
+
+      applyLibraryTheme(album);
+
+      const targetLastCard = getRowLastCard(card);
+      const isSameRow = currentDrawer && (currentDrawer.previousElementSibling === targetLastCard);
+
+      if (isSameRow && currentDrawer) {
+        updateDrawerContent(currentDrawer, album);
+        return;
+      }
+
+      if (currentDrawer) {
+        closeDrawerElement(currentDrawer);
+      }
+
+      const newDrawerWrap = createDrawerElement(album);
+      targetLastCard.after(newDrawerWrap);
+
+      newDrawerWrap.style.height = '0px';
+      const inner = newDrawerWrap.querySelector('.itunes-drawer-inner');
+      const targetHeight = inner ? inner.scrollHeight : 400;
+
+      requestAnimationFrame(() => {
+        newDrawerWrap.offsetHeight;
+        newDrawerWrap.classList.add('open');
+        newDrawerWrap.style.height = targetHeight + 'px';
+      });
+
+      const onTransEnd = (e) => {
+        if (e.target === newDrawerWrap && e.propertyName === 'height') {
+          newDrawerWrap.removeEventListener('transitionend', onTransEnd);
+          if (newDrawerWrap.classList.contains('open') && activeExpandedAlbumId === album.id) {
+            newDrawerWrap.style.height = 'auto';
+          }
+        }
+      };
+      newDrawerWrap.addEventListener('transitionend', onTransEnd);
+    }
+
+    function renderAlbumsGridView() {
+      albumGrid.innerHTML = '';
+
+      if (!libraryData.length) {
+        activeExpandedAlbumId = null;
+        resetLibraryTheme();
+        albumGrid.innerHTML = '<div class="empty-state" onclick="document.getElementById(\'hidden-file-input\').click()">Drag and drop songs or folders here to start</div>';
+        return;
+      }
+
+      let activeAlbum = null;
+      if (activeExpandedAlbumId) {
+        activeAlbum = libraryData.find(a => a.id === activeExpandedAlbumId);
+        if (!activeAlbum) activeExpandedAlbumId = null;
+      }
+
+      if (activeAlbum) {
+        applyLibraryTheme(activeAlbum);
+      } else {
+        resetLibraryTheme();
+      }
+
+      const cardEntries = [];
+      libraryData.forEach(album => {
+        const isSelected = (activeExpandedAlbumId === album.id);
+        const card = document.createElement('div');
+        card.className = `album-card ${isSelected ? 'selected' : ''}`;
+        card.dataset.albumId = album.id;
+        card.innerHTML = `
+          <div class="album-art-wrap">
+            <img class="album-art-img" src="${album.coverUrl}" draggable="false" />
+            <div class="album-play-overlay"><div class="album-play-overlay-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+          </div>
+          <div class="album-name">${escapeHTML(album.title)}</div>
+          <div class="album-artist">${escapeHTML(album.artist)}</div>
+          ${isSelected ? '<svg class="album-pointer-arrow" width="14" height="8" viewBox="0 0 14 8"><path d="M1 1L7 7L13 1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
+        `;
+
+        card.querySelector('.album-artist').addEventListener('click', e => {
+          e.stopPropagation();
+          navigateToArtistLibrary(album.artist);
+        });
+
+        card.addEventListener('click', e => {
+          if (e.target.closest('.album-artist')) return;
+          if (e.target.closest('.album-play-overlay-btn')) {
+            playQueue(album.tracks, 0, album, isShuffled);
+            return;
+          }
+          handleAlbumCardClick(album, card);
+        });
+
+        cardEntries.push({ album, card });
+        albumGrid.appendChild(card);
+      });
+
+      if (activeAlbum) {
+        const activeCardEntry = cardEntries.find(c => c.album.id === activeAlbum.id);
+        if (activeCardEntry) {
+          const lastCard = getRowLastCard(activeCardEntry.card);
+          const drawerWrap = createDrawerElement(activeAlbum);
+          lastCard.after(drawerWrap);
+          drawerWrap.classList.add('open');
+          drawerWrap.style.height = 'auto';
+        }
+      }
+    }
+
+    let resizeDebounce = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeDebounce);
+      resizeDebounce = setTimeout(() => {
+        if (activeExpandedAlbumId && activeNavTab === 'library') {
+          const activeCard = albumGrid.querySelector('.album-card.selected');
+          const drawer = albumGrid.querySelector('.itunes-drawer-wrapper');
+          if (activeCard && drawer) {
+            const lastCard = getRowLastCard(activeCard);
+            if (drawer.previousElementSibling !== lastCard) {
+              lastCard.after(drawer);
+            }
+          }
+        }
+      }, 100);
+    });
+
+    function bindDrawerEvents(wrapper, album) {
+      wrapper.querySelector('.drawer-artist')?.addEventListener('click', e => {
+        e.stopPropagation();
+        navigateToArtistLibrary(album.artist);
+      });
+
+      wrapper.querySelector('#drawer-shuffle-btn')?.addEventListener('click', () => {
+        isShuffled = true;
+        lcdShuffleBtn.classList.add('active');
+        playQueue(album.tracks, 0, album, true);
+      });
+
+      const menuBtn = wrapper.querySelector('#drawer-menu-btn');
+      const menuDrop = wrapper.querySelector('#drawer-dropdown-menu');
+
+      if (menuBtn && menuDrop) {
+        menuBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          menuDrop.classList.toggle('show');
+        });
+        const hideMenu = () => menuDrop.classList.remove('show');
+        document.addEventListener('click', hideMenu);
+      }
+
+      wrapper.querySelector('#btn-delete-album')?.addEventListener('click', async e => {
+        e.stopPropagation();
+        menuDrop?.classList.remove('show');
+        const confirmed = await showCustomConfirm('Delete Album', `Remove "${album.title}" from library?`);
+        if (confirmed) {
+          await dbDelete('albums', album.id);
+          libraryData = libraryData.filter(a => a.id !== album.id);
+          activeExpandedAlbumId = null;
+          resetLibraryTheme();
+          closeDrawerElement(wrapper, () => {
+            renderAlbumsGridView();
+            showToast(`Deleted "${album.title}"`);
+          });
+        }
+      });
+
+      wrapper.querySelectorAll('.track-add-pl-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const trk = album.tracks.find(t => t.id === btn.dataset.trackId);
+          if (trk) openPlaylistPickerModal(trk, album);
+        });
+      });
+
+      wrapper.querySelectorAll('.drawer-track-row').forEach(row => {
+        row.addEventListener('click', e => {
+          if (e.target.closest('.track-add-pl-btn')) return;
+          const idx = parseInt(row.dataset.idx, 10);
+          if (currentQueue[currentTrackIndex]?.id === row.dataset.trackId) {
+            togglePlay();
+          } else {
+            playQueue(album.tracks, idx, album);
+          }
+        });
+      });
     }
 
     function createDrawerElement(album) {
@@ -2448,52 +2681,7 @@
         </div>
       `;
 
-      wrapper.querySelector('.drawer-artist').addEventListener('click', e => { e.stopPropagation(); navigateToArtistLibrary(album.artist); });
-      wrapper.querySelector('#drawer-shuffle-btn').addEventListener('click', () => { isShuffled = true; lcdShuffleBtn.classList.add('active'); playQueue(album.tracks, 0, album, true); });
-
-      const menuBtn = wrapper.querySelector('#drawer-menu-btn');
-      const menuDrop = wrapper.querySelector('#drawer-dropdown-menu');
-
-      menuBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        menuDrop.classList.toggle('show');
-      });
-
-      document.addEventListener('click', () => menuDrop.classList.remove('show'));
-
-      wrapper.querySelector('#btn-delete-album').addEventListener('click', async e => {
-        e.stopPropagation();
-        menuDrop.classList.remove('show');
-        const confirmed = await showCustomConfirm('Delete Album', `Remove "${album.title}" from library?`);
-        if (confirmed) {
-          await dbDelete('albums', album.id);
-          libraryData = libraryData.filter(a => a.id !== album.id);
-          activeExpandedAlbumId = null;
-          resetLibraryTheme();
-          closeAlbumDrawer(() => {
-            renderAlbumsGridView();
-            showToast(`Deleted "${album.title}"`);
-          });
-        }
-      });
-
-      wrapper.querySelectorAll('.track-add-pl-btn').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          const trk = album.tracks.find(t => t.id === btn.dataset.trackId);
-          if (trk) openPlaylistPickerModal(trk, album);
-        });
-      });
-
-      wrapper.querySelectorAll('.drawer-track-row').forEach(row => {
-        row.addEventListener('click', e => {
-          if (e.target.closest('.track-add-pl-btn')) return;
-          const idx = parseInt(row.dataset.idx, 10);
-          if (currentQueue[currentTrackIndex]?.id === row.dataset.trackId) togglePlay();
-          else playQueue(album.tracks, idx, album);
-        });
-      });
-
+      bindDrawerEvents(wrapper, album);
       return wrapper;
     }
 
