@@ -1577,7 +1577,6 @@
       <button class="menubar-btn" id="menu-file-btn">File</button>
       <div class="menubar-dropdown" id="menu-file-dropdown">
         <div class="dropdown-item" id="menu-file-new-playlist">New Playlist</div>
-        <div class="dropdown-item" id="menu-file-new-smart-playlist">New Smart Playlist</div>
         <div class="dropdown-item" id="menu-file-add-music">Add Music to Library</div>
         <div class="menu-separator"></div>
         <div class="dropdown-item" id="menu-file-reload">Reload Page</div>
@@ -1593,7 +1592,6 @@
         <div class="dropdown-item" id="menu-song-show-album">Show Album</div>
         <div class="menu-separator"></div>
         <div class="dropdown-item" id="menu-song-add-playlist">Add to Playlist</div>
-        <div class="dropdown-item" id="menu-song-turn-smart">Turn into Smart Playlist</div>
         <div class="menu-separator"></div>
         <div class="dropdown-item" id="menu-song-vol-up">Volume Up</div>
         <div class="dropdown-item" id="menu-song-vol-down">Volume Down</div>
@@ -2509,10 +2507,6 @@
       const hasLibrary = Boolean(libraryData.length);
       const hasRecents = Boolean(recentlyPlayedList.length);
 
-      // File Menu
-      const fileSmartPl = $('menu-file-new-smart-playlist');
-      if (fileSmartPl) fileSmartPl.classList.toggle('disabled', !hasLibrary);
-
       // Song Menu
       const songPlayPause = $('menu-song-play-pause');
       if (songPlayPause) songPlayPause.classList.toggle('disabled', !hasTrack);
@@ -2529,9 +2523,6 @@
 
       const songAddPl = $('menu-song-add-playlist');
       if (songAddPl) songAddPl.classList.toggle('disabled', !hasTrack);
-
-      const songTurnSmart = $('menu-song-turn-smart');
-      if (songTurnSmart) songTurnSmart.classList.toggle('disabled', !hasTrack);
 
       // Settings Menu
       const updateBtn = $('menu-settings-update');
@@ -2588,37 +2579,6 @@
       promptCreatePlaylist();
     });
 
-    async function promptCreateSmartPlaylist() {
-      const name = await showCustomPrompt('New Smart Playlist', 'Enter smart playlist name...', 'Top Tracks');
-      if (!name) return;
-      const allTracks = libraryData.flatMap(a => a.tracks);
-      if (!allTracks.length) return;
-      const recentsSet = new Set(recentlyPlayedList.map(r => r.title.toLowerCase()));
-      let smartTracks = allTracks.filter(t => recentsSet.has(t.title.toLowerCase()));
-      if (smartTracks.length < 10) {
-        const remaining = allTracks.filter(t => !smartTracks.includes(t));
-        smartTracks = [...smartTracks, ...fisherYatesShuffle(remaining).slice(0, 15)];
-      }
-      const newPl = {
-        id: 'pl-' + Math.random().toString(36).substr(2, 9),
-        name: `⚡ ${name.trim()}`,
-        isSmart: true,
-        createdAt: Date.now(),
-        tracks: smartTracks.slice(0, 25)
-      };
-      playlistsData.push(newPl);
-      selectedPlaylistId = newPl.id;
-      await dbPut('playlists', newPl);
-      renderPlaylistsView();
-      renderHomePlaylists();
-    }
-
-    $('menu-file-new-smart-playlist')?.addEventListener('click', (e) => {
-      closeAllMenuDropdowns();
-      if (e.currentTarget.classList.contains('disabled')) return;
-      promptCreateSmartPlaylist();
-    });
-
     $('menu-file-add-music')?.addEventListener('click', () => {
       closeAllMenuDropdowns();
       hiddenFileInput.click();
@@ -2660,27 +2620,6 @@
       if (e.currentTarget.classList.contains('disabled')) return;
       const cur = currentQueue[currentTrackIndex];
       if (cur) openPlaylistPickerModal(cur, currentAlbumMeta);
-    });
-
-    $('menu-song-turn-smart')?.addEventListener('click', async (e) => {
-      closeAllMenuDropdowns();
-      if (e.currentTarget.classList.contains('disabled')) return;
-      const cur = currentQueue[currentTrackIndex];
-      if (!cur) return;
-      const artist = cur.artist || currentAlbumMeta?.artist || '';
-      const matching = libraryData.flatMap(a => a.tracks).filter(t => (t.artist || '').toLowerCase() === artist.toLowerCase());
-      const newPl = {
-        id: 'pl-' + Math.random().toString(36).substr(2, 9),
-        name: `⚡ Best of ${artist || cur.title}`,
-        isSmart: true,
-        createdAt: Date.now(),
-        tracks: matching.length ? matching : [cur]
-      };
-      playlistsData.push(newPl);
-      selectedPlaylistId = newPl.id;
-      await dbPut('playlists', newPl);
-      renderPlaylistsView();
-      renderHomePlaylists();
     });
 
     $('menu-song-vol-up')?.addEventListener('click', () => {
