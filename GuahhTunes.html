@@ -798,6 +798,425 @@
       color: #000000;
     }
 
+    /* =========================================
+       COVERFLOW VIEW (APPLE 3D COVER FLOW)
+    ========================================= */
+    #view-coverflow {
+      width: 100%;
+      height: 100%;
+      flex: 1;
+      min-height: 0;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      background: #ffffff;
+      color: #000000;
+    }
+
+    #view-coverflow.active-view {
+      display: flex;
+    }
+
+    .coverflow-stage {
+      --cf-card-size: clamp(280px, 34vh, 400px);
+      width: 100%;
+      height: clamp(400px, 48vh, 560px);
+      min-height: 380px;
+      background: #000000;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      user-select: none;
+      box-shadow: inset 0 -18px 40px rgba(0, 0, 0, 0.98);
+      cursor: grab;
+    }
+
+    .coverflow-stage:active {
+      cursor: grabbing;
+    }
+
+    .coverflow-viewport {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      perspective: 1050px;
+      -webkit-perspective: 1050px;
+      perspective-origin: 50% 36%;
+      overflow: hidden;
+    }
+
+    .coverflow-carousel {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      pointer-events: none;
+    }
+
+    .coverflow-card {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      width: var(--cf-card-size);
+      height: var(--cf-card-size);
+      margin-left: calc(-1 * var(--cf-card-size) / 2);
+      cursor: pointer;
+      pointer-events: auto;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      transition: transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+      opacity: 1 !important;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .coverflow-card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: #111111;
+      border-radius: 0;
+      overflow: hidden;
+      box-shadow: 0 0 24px rgba(0, 0, 0, 0.65);
+    }
+
+    .coverflow-card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    /* Zero-repaint GPU darkening overlay */
+    .coverflow-dark-overlay {
+      position: absolute;
+      inset: 0;
+      background: #000000;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* 3D Reflection: seamless, slightly separated from cover, ever so slightly darker, not see-through */
+    .coverflow-card-reflection {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      margin-top: 2px;
+      overflow: hidden;
+      pointer-events: none;
+      border-radius: 0;
+      background: #000000;
+    }
+
+    .coverflow-reflection-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: scaleY(-1);
+      transform-origin: center center;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    .coverflow-reflection-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.55) 24%, #000000 48%, #000000 100%);
+      pointer-events: none;
+    }
+
+    /* Responsive coverflow area: slightly less tall everywhere */
+    @media (max-width: 1280px) {
+      .coverflow-stage {
+        --cf-card-size: clamp(260px, 33vh, 370px);
+        height: clamp(390px, 50vh, 570px);
+      }
+    }
+
+    @media (max-width: 992px) {
+      .coverflow-stage {
+        --cf-card-size: clamp(240px, 32vh, 340px);
+        height: clamp(380px, 52vh, 580px);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .coverflow-stage {
+        --cf-card-size: clamp(220px, 30vh, 300px);
+        height: clamp(370px, 54vh, 600px);
+      }
+      .coverflow-scrubber-bar {
+        width: 94%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .coverflow-stage {
+        --cf-card-size: clamp(190px, 28vh, 260px);
+        height: clamp(360px, 56vh, 600px);
+      }
+    }
+
+    .coverflow-meta-display {
+      position: absolute;
+      bottom: 44px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 150;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .coverflow-album-title {
+      color: #ffffff;
+      font-size: 16.5px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80%;
+    }
+
+    .coverflow-artist-name {
+      color: #b0b0b0;
+      font-size: 14px;
+      margin-top: 3px;
+      letter-spacing: -0.01em;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80%;
+    }
+
+    .coverflow-scrubber-bar {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(90%, 720px);
+      height: 24px;
+      background: rgba(30, 30, 30, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      gap: 12px;
+      z-index: 160;
+    }
+
+    .coverflow-scrubber-track {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .coverflow-scrubber-slider {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .coverflow-scrubber-slider::-webkit-slider-thumb {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 30px;
+      height: 12px;
+      border-radius: 6px;
+      background: #ffffff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      border: none;
+    }
+
+    .coverflow-scrubber-slider::-moz-range-thumb {
+      width: 30px;
+      height: 12px;
+      border-radius: 6px;
+      background: #ffffff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      border: none;
+    }
+
+    .coverflow-play-album-btn {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.7);
+      padding: 0;
+      transition: color 0.15s ease, transform 0.1s ease;
+      cursor: pointer;
+    }
+
+    .coverflow-play-album-btn:hover {
+      color: #ffffff;
+      transform: scale(1.1);
+    }
+
+    /* SONG TABLE PANE (BOTTOM HALF) */
+    .coverflow-table-pane {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .itunes-table-header {
+      height: 32px;
+      display: grid;
+      grid-template-columns: 48px 1fr 1fr 80px;
+      align-items: center;
+      background: #fafafa;
+      border-top: 1px solid #e5e5e5;
+      border-bottom: 1px solid #e5e5e5;
+      color: #666666;
+      font-size: 12.5px;
+      font-weight: 500;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .itunes-table-header > div {
+      padding: 0 12px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .itunes-table-header .col-num {
+      justify-content: center;
+      color: #888888;
+    }
+
+    .itunes-table-header .col-time {
+      justify-content: flex-end;
+      text-align: right;
+    }
+
+    .itunes-table-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: #ffffff;
+    }
+
+    .itunes-table-row {
+      height: 34px;
+      display: grid;
+      grid-template-columns: 48px 1fr 1fr 80px;
+      align-items: center;
+      font-size: 13.5px;
+      color: #111111;
+      cursor: pointer;
+      user-select: none;
+      line-height: 34px;
+      border-bottom: 1px solid #f2f2f2;
+      transition: background-color 0.1s ease;
+    }
+
+    .itunes-table-row.zebra-even {
+      background: #ffffff;
+    }
+
+    .itunes-table-row.zebra-odd {
+      background: #fbfbfb;
+    }
+
+    .itunes-table-row:hover {
+      background: #f0f5fc;
+    }
+
+    .itunes-table-row.selected {
+      background: #007aff !important;
+      color: #ffffff !important;
+    }
+
+    .itunes-table-row.selected span,
+    .itunes-table-row.selected div {
+      color: #ffffff !important;
+    }
+
+    .itunes-table-row.active-playing:not(.selected) {
+      background: rgba(0, 122, 255, 0.08) !important;
+    }
+
+    .itunes-table-row > div,
+    .itunes-table-row > span {
+      padding: 0 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .itunes-table-row .col-num {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #888888;
+      font-size: 12.5px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .itunes-table-row .col-name {
+      font-size: 14.5px;
+      font-weight: 400;
+      color: #111111;
+    }
+
+    .itunes-table-row .col-artist {
+      font-size: 13.5px;
+      color: #666666;
+    }
+
+    .itunes-table-row .col-time {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+      color: #777777;
+    }
+
+    .coverflow-empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 300;
+      color: #888888;
+      cursor: pointer;
+    }
+
     .sub-split-view {
       display: flex;
       width: 100%;
@@ -1646,6 +2065,7 @@
     <nav>
       <button class="nav-btn active" data-target="home">Home</button>
       <button class="nav-btn" data-target="library">Library</button>
+      <button class="nav-btn" data-target="coverflow">Coverflow</button>
       <button class="nav-btn" data-target="playlists">Playlists</button>
       <button class="nav-btn" data-target="artists">Artists</button>
     </nav>
@@ -1684,7 +2104,7 @@
           <svg class="home-about-vector-logo" viewBox="0 0 100 100" fill="currentColor"><use href="#icon-cd"/></svg>
           <div class="home-about-meta">
             <div class="home-about-title">Guahh Tunes</div>
-            <div class="home-about-version">Version 1.1.2</div>
+            <div class="home-about-version">Version 1.1.3</div>
           </div>
           <button id="btn-check-update" class="home-update-btn" style="display: none;">UPDATE</button>
         </div>
@@ -1693,6 +2113,35 @@
 
     <section id="view-library" class="view-container">
       <div class="album-grid" id="album-grid"></div>
+    </section>
+
+    <section id="view-coverflow" class="view-container">
+      <div class="coverflow-stage" id="coverflow-stage">
+        <div class="coverflow-viewport">
+          <div class="coverflow-carousel" id="coverflow-carousel"></div>
+        </div>
+        <div class="coverflow-meta-display" id="coverflow-meta">
+          <div class="coverflow-album-title" id="coverflow-meta-title"></div>
+          <div class="coverflow-artist-name" id="coverflow-meta-artist"></div>
+        </div>
+        <div class="coverflow-scrubber-bar">
+          <div class="coverflow-scrubber-track">
+            <input type="range" class="coverflow-scrubber-slider" id="coverflow-scrubber" min="0" max="0" value="0" step="1" />
+          </div>
+          <button class="coverflow-play-album-btn" id="coverflow-play-album-btn" title="Play Album">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="coverflow-table-pane" id="coverflow-table-pane">
+        <div class="itunes-table-header">
+          <div class="col-num">#</div>
+          <div class="col-name">Title</div>
+          <div class="col-artist">Artist</div>
+          <div class="col-time">Time</div>
+        </div>
+        <div class="itunes-table-body" id="coverflow-table-body"></div>
+      </div>
     </section>
 
     <section id="view-playlists" class="view-container">
@@ -1767,7 +2216,7 @@
     /* =================================================================
        APP CONSTANTS & STATE
     ================================================================= */
-    const CURRENT_VERSION = '1.1.2';
+    const CURRENT_VERSION = '1.1.3';
     const GITHUB_UPDATE_URL = 'https://raw.githubusercontent.com/guahhinc/daydream/main/GuahhTunes.html';
     const DB_NAME = 'GuahhTunesStorageDB', DB_VERSION = 2;
 
@@ -1777,6 +2226,7 @@
 
     let libraryData = [], playlistsData = [];
     let activeExpandedAlbumId = null, activeNavTab = 'home';
+    let activeCoverflowIndex = 0;
     let selectedArtistName = null, selectedPlaylistId = null;
     let trackPendingAddToPlaylist = null;
     let dragSrcTrackIdx = null, dragSrcQueueIdx = null;
@@ -1989,6 +2439,14 @@
     const navButtons = document.querySelectorAll('.nav-btn');
     const views = document.querySelectorAll('.view-container');
     const albumGrid = $('album-grid');
+    const coverflowStage = $('coverflow-stage');
+    const coverflowCarousel = $('coverflow-carousel');
+    const coverflowMetaTitle = $('coverflow-meta-title');
+    const coverflowMetaArtist = $('coverflow-meta-artist');
+    const coverflowScrubber = $('coverflow-scrubber');
+    const coverflowPlayAlbumBtn = $('coverflow-play-album-btn');
+    const coverflowTableBody = $('coverflow-table-body');
+    const coverflowTablePane = $('coverflow-table-pane');
     const recentTracksBar = $('recent-tracks-bar');
     const homeRecommendedBar = $('home-recommended-bar');
     const homePlaylistsBar = $('home-playlists-bar');
@@ -2223,6 +2681,8 @@
           renderHomePlaylists();
         } else if (activeNavTab === 'library') {
           renderAlbumsGridView();
+        } else if (activeNavTab === 'coverflow') {
+          renderCoverflowView();
         } else if (activeNavTab === 'playlists') {
           renderPlaylistsView();
         } else if (activeNavTab === 'artists') {
@@ -3180,6 +3640,272 @@
     }
 
     /* =================================================================
+       COVERFLOW VIEW (APPLE 3D COVER FLOW & ITUNES TABLE)
+    ================================================================= */
+    let isCoverflowInitialized = false;
+    let isDraggingCoverflow = false;
+    let coverflowDragStartX = 0;
+    let coverflowDragStartIndex = 0;
+    let coverflowHasMovedDuringDrag = false;
+
+    function renderCoverflowView() {
+      if (!libraryData.length) {
+        activeCoverflowIndex = 0;
+        coverflowCarousel.innerHTML = '<div class="coverflow-empty-state" onclick="document.getElementById(\'hidden-file-input\').click()">Drag and drop songs or folders here to start</div>';
+        coverflowMetaTitle.textContent = '';
+        coverflowMetaArtist.textContent = '';
+        coverflowTableBody.innerHTML = '';
+        coverflowScrubber.max = 0;
+        coverflowScrubber.value = 0;
+        return;
+      }
+
+      if (activeCoverflowIndex < 0 || activeCoverflowIndex >= libraryData.length) {
+        const curAlbId = currentAlbumMeta?.id || currentQueue[currentTrackIndex]?.albumId;
+        const foundIdx = libraryData.findIndex(a => a.id === curAlbId);
+        activeCoverflowIndex = foundIdx !== -1 ? foundIdx : 0;
+      }
+
+      coverflowScrubber.min = 0;
+      coverflowScrubber.max = libraryData.length - 1;
+      coverflowScrubber.value = activeCoverflowIndex;
+
+      // Render 3D Cards - full resolution everywhere
+      coverflowCarousel.innerHTML = '';
+      libraryData.forEach((album, idx) => {
+        const isCenter = (idx === activeCoverflowIndex);
+        const imgSrc = album.coverUrl || generatePlaceholderCover();
+        const card = document.createElement('div');
+        card.className = `coverflow-card ${isCenter ? 'is-center' : ''}`;
+        card.dataset.index = idx;
+        card.dataset.albumId = album.id;
+        card.innerHTML = `
+          <div class="coverflow-card-inner">
+            <img class="coverflow-card-img" src="${imgSrc}" draggable="false" />
+            <div class="coverflow-dark-overlay"></div>
+          </div>
+          <div class="coverflow-card-reflection">
+            <img class="coverflow-reflection-img" src="${imgSrc}" draggable="false" />
+            <div class="coverflow-reflection-overlay"></div>
+            <div class="coverflow-dark-overlay"></div>
+          </div>
+        `;
+
+        card.addEventListener('click', (e) => {
+          if (coverflowHasMovedDuringDrag) return;
+          if (activeCoverflowIndex === idx) {
+            playQueue(album.tracks, 0, album, isShuffled);
+          } else {
+            selectCoverflowAlbum(idx);
+          }
+        });
+
+        card.addEventListener('dblclick', (e) => {
+          e.stopPropagation();
+          playQueue(album.tracks, 0, album, isShuffled);
+        });
+
+        coverflowCarousel.appendChild(card);
+      });
+
+      // Render Song Table for current album
+      renderCoverflowTable();
+
+      // Apply 3D Carousel Transforms
+      updateCoverflowTransforms();
+
+      // Initialize controls once
+      if (!isCoverflowInitialized) {
+        initCoverflowControls();
+        isCoverflowInitialized = true;
+      }
+    }
+
+    function renderCoverflowTable() {
+      const curAlbum = libraryData[activeCoverflowIndex];
+      if (!curAlbum || !curAlbum.tracks?.length) {
+        coverflowTableBody.innerHTML = '<div class="coverflow-empty-state">No songs in this album</div>';
+        return;
+      }
+
+      let tableHtml = '';
+      const curTrackId = currentQueue[currentTrackIndex]?.id;
+
+      curAlbum.tracks.forEach((track, trkIdx) => {
+        const isCurrent = (curTrackId === track.id);
+        const zebraClass = (trkIdx % 2 === 0) ? 'zebra-even' : 'zebra-odd';
+        const trackNumDisplay = track.trackNum || (trkIdx + 1);
+
+        tableHtml += `
+          <div class="itunes-table-row ${zebraClass} ${isCurrent ? 'active-playing' : ''}"
+               data-track-id="${track.id}"
+               data-track-idx="${trkIdx}">
+            <div class="col-num">${isCurrent ? (isPlaying ? '▶' : '❙❙') : trackNumDisplay}</div>
+            <div class="col-name" title="${escapeHTML(track.title)}">${escapeHTML(track.title)}</div>
+            <div class="col-artist" title="${escapeHTML(track.artist || curAlbum.artist)}">${escapeHTML(track.artist || curAlbum.artist)}</div>
+            <div class="col-time">${track.duration || '--:--'}</div>
+          </div>
+        `;
+      });
+
+      coverflowTableBody.innerHTML = tableHtml;
+
+      coverflowTableBody.querySelectorAll('.itunes-table-row').forEach(row => {
+        row.addEventListener('click', () => {
+          coverflowTableBody.querySelectorAll('.itunes-table-row.selected').forEach(r => r.classList.remove('selected'));
+          row.classList.add('selected');
+        });
+
+        row.addEventListener('dblclick', () => {
+          const trkIdx = parseInt(row.dataset.trackIdx, 10);
+          if (!isNaN(trkIdx) && curAlbum.tracks[trkIdx]) {
+            playQueue(curAlbum.tracks, trkIdx, curAlbum, false);
+          }
+        });
+      });
+    }
+
+    function updateCoverflowTransforms() {
+      const cards = coverflowCarousel.querySelectorAll('.coverflow-card');
+      if (!cards.length) return;
+
+      const curAlbum = libraryData[activeCoverflowIndex];
+      if (curAlbum) {
+        coverflowMetaTitle.textContent = curAlbum.title;
+        coverflowMetaArtist.textContent = curAlbum.artist;
+      }
+      coverflowScrubber.value = activeCoverflowIndex;
+
+      const stageWidth = coverflowStage ? coverflowStage.clientWidth : window.innerWidth;
+      const spacing = stageWidth < 800 ? 46 : (stageWidth < 1100 ? 56 : 66);
+      const centerGap = stageWidth < 800 ? 142 : (stageWidth < 1100 ? 175 : 205);
+      const zDrop = stageWidth < 800 ? 165 : 195;
+
+      cards.forEach((card, i) => {
+        const diff = i - activeCoverflowIndex;
+        const dist = Math.abs(diff);
+
+        // Deload way way less covers: keep all nearby and mid-distance covers fully active
+        if (dist > 50) {
+          card.style.display = 'none';
+          return;
+        }
+        card.style.display = 'block';
+
+        const darkOverlays = card.querySelectorAll('.coverflow-dark-overlay');
+
+        if (diff === 0) {
+          // Center Cover: full resolution, zero darkening, front and center
+          card.classList.add('is-center');
+          darkOverlays.forEach(ov => ov.style.opacity = '0');
+          card.style.transform = 'translate3d(0px, 0px, 0px) rotateY(0deg) scale(1.04)';
+          card.style.zIndex = '120';
+        } else {
+          // Side Cover: full resolution, non-selected covers further away get a little darker
+          card.classList.remove('is-center');
+          const darkOpacity = Math.min(0.72, 0.04 + dist * 0.095);
+          darkOverlays.forEach(ov => ov.style.opacity = String(darkOpacity));
+
+          if (diff < 0) {
+            const offsetX = diff * spacing - centerGap;
+            const offsetZ = -zDrop - (dist * 4);
+            const rot = Math.min(68, 56 + dist * 2);
+            card.style.transform = `translate3d(${offsetX}px, 0px, ${offsetZ}px) rotateY(${rot}deg) scale(0.86)`;
+            card.style.zIndex = String(100 - dist);
+          } else {
+            const offsetX = diff * spacing + centerGap;
+            const offsetZ = -zDrop - (dist * 4);
+            const rot = -Math.min(68, 56 + dist * 2);
+            card.style.transform = `translate3d(${offsetX}px, 0px, ${offsetZ}px) rotateY(${rot}deg) scale(0.86)`;
+            card.style.zIndex = String(100 - dist);
+          }
+        }
+      });
+    }
+
+    function selectCoverflowAlbum(idx) {
+      if (idx < 0 || idx >= libraryData.length) return;
+      activeCoverflowIndex = idx;
+      updateCoverflowTransforms();
+      renderCoverflowTable();
+    }
+
+    function initCoverflowControls() {
+      coverflowScrubber.addEventListener('input', () => {
+        const val = parseInt(coverflowScrubber.value, 10);
+        if (!isNaN(val)) selectCoverflowAlbum(val);
+      });
+
+      coverflowPlayAlbumBtn.addEventListener('click', () => {
+        const curAlbum = libraryData[activeCoverflowIndex];
+        if (curAlbum?.tracks.length) {
+          playQueue(curAlbum.tracks, 0, curAlbum, isShuffled);
+        }
+      });
+
+      let wheelDebounce = null;
+      coverflowStage.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (wheelDebounce) return;
+        const delta = Math.sign(e.deltaY || e.deltaX);
+        if (delta !== 0) {
+          const nextIdx = Math.max(0, Math.min(libraryData.length - 1, activeCoverflowIndex + delta));
+          if (nextIdx !== activeCoverflowIndex) selectCoverflowAlbum(nextIdx);
+          wheelDebounce = setTimeout(() => { wheelDebounce = null; }, 140);
+        }
+      }, { passive: false });
+
+      coverflowStage.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.coverflow-scrubber-bar')) return;
+        isDraggingCoverflow = true;
+        coverflowHasMovedDuringDrag = false;
+        coverflowDragStartX = e.clientX;
+        coverflowDragStartIndex = activeCoverflowIndex;
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDraggingCoverflow) return;
+        const deltaX = e.clientX - coverflowDragStartX;
+        if (Math.abs(deltaX) > 6) coverflowHasMovedDuringDrag = true;
+        const steps = -Math.round(deltaX / 68);
+        const newIndex = Math.max(0, Math.min(libraryData.length - 1, coverflowDragStartIndex + steps));
+        if (newIndex !== activeCoverflowIndex) {
+          selectCoverflowAlbum(newIndex);
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isDraggingCoverflow) {
+          setTimeout(() => { coverflowHasMovedDuringDrag = false; }, 40);
+          isDraggingCoverflow = false;
+        }
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (activeNavTab !== 'coverflow') return;
+        const activeTag = document.activeElement?.tagName;
+        if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          selectCoverflowAlbum(Math.max(0, activeCoverflowIndex - 1));
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          selectCoverflowAlbum(Math.min(libraryData.length - 1, activeCoverflowIndex + 1));
+        } else if (e.key === 'Enter') {
+          const curAlbum = libraryData[activeCoverflowIndex];
+          if (curAlbum?.tracks.length) playQueue(curAlbum.tracks, 0, curAlbum, isShuffled);
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        if (activeNavTab === 'coverflow') {
+          updateCoverflowTransforms();
+        }
+      });
+    }
+
+    /* =================================================================
        PLAYLISTS & ARTISTS VIEWS
     ================================================================= */
     function getPlayablePlaylistTracks(pl) {
@@ -3531,11 +4257,16 @@
 
     function updateActiveTrackUI() {
       const curId = currentQueue[currentTrackIndex]?.id;
-      document.querySelectorAll('.drawer-track-row, .stacked-track-row, .playlist-track-row').forEach(row => {
+      document.querySelectorAll('.drawer-track-row, .stacked-track-row, .playlist-track-row, .itunes-table-row').forEach(row => {
         const isCurrent = (row.dataset.trackId === curId);
         row.classList.toggle('active-playing', isCurrent);
         const hoverCtrl = row.querySelector('.track-hover-ctrl, .stacked-hover-ctrl');
         if (hoverCtrl) hoverCtrl.innerHTML = (isPlaying && isCurrent) ? PAUSE_MINI_SVG : PLAY_MINI_SVG;
+        const colNum = row.querySelector('.col-num');
+        if (colNum) {
+          const origIdx = parseInt(row.dataset.trackIdx, 10);
+          colNum.textContent = isCurrent ? (isPlaying ? '▶' : '❙❙') : (isNaN(origIdx) ? '' : String(origIdx + 1));
+        }
       });
       updateMenubarStates();
     }
@@ -3623,7 +4354,7 @@
             }
           }
 
-          let res = { title: '', artist: '', album: '', year: '', trackNum: 0, coverBlob: null };
+          let res = { title: '', artist: '', album: '', year: '', trackNum: 0, genre: '', coverBlob: null };
 
           while (offset + (version === 2 ? 6 : 10) < tagEnd) {
             let frameId = '', frameSize = 0, headerSize = 10;
@@ -3651,6 +4382,7 @@
             else if (frameId === 'TALB' || frameId === 'TAL') res.album = decodeID3Text(frameData);
             else if (frameId === 'TYER' || frameId === 'TDRC' || frameId === 'TYE') res.year = decodeID3Text(frameData).substring(0, 4);
             else if (frameId === 'TRCK' || frameId === 'TRK') res.trackNum = parseInt(decodeID3Text(frameData), 10) || 0;
+            else if (frameId === 'TCON' || frameId === 'TCO') res.genre = decodeID3Text(frameData);
             else if ((frameId === 'APIC' || frameId === 'PIC') && !res.coverBlob) {
               for (let i = 0; i < frameData.length - 4; i++) {
                 if (frameData[i] === 0xFF && frameData[i+1] === 0xD8 && frameData[i+2] === 0xFF) {
@@ -3674,6 +4406,7 @@
               album: res.album || getFolderAlbum(file) || 'Single Tracks',
               year: res.year || '',
               trackNum: res.trackNum || 0,
+              genre: res.genre || '',
               coverBlob: res.coverBlob
             };
           }
@@ -3681,10 +4414,10 @@
 
         // M4A / MP4
         if (/\.(m4a|mp4|aac|alac|m4b)$/i.test(file.name) || (bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70)) {
-          let title = '', artist = '', album = '', year = '', trackNum = 0, coverBlob = null;
+          let title = '', artist = '', album = '', year = '', trackNum = 0, genre = '', coverBlob = null;
           for (let i = 0; i < bytes.length - 8; i++) {
             const tag = String.fromCharCode(bytes[i], bytes[i+1], bytes[i+2], bytes[i+3]);
-            if (['©nam', '©ART', 'aART', '©alb', '©day', 'covr', 'trkn'].includes(tag)) {
+            if (['©nam', '©ART', 'aART', '©alb', '©day', 'covr', 'trkn', '©gen', 'gnre'].includes(tag)) {
               for (let j = i + 4; j < Math.min(bytes.length - 8, i + 400); j++) {
                 if (bytes[j] === 0x64 && bytes[j+1] === 0x61 && bytes[j+2] === 0x74 && bytes[j+3] === 0x70) {
                   const typeFlags = view.getUint32(j + 4, false);
@@ -3696,6 +4429,7 @@
                     else if (tag === '©alb' && !album) album = new TextDecoder('utf-8').decode(payload).trim();
                     else if (tag === '©day' && !year) year = new TextDecoder('utf-8').decode(payload).trim().substring(0, 4);
                     else if (tag === 'trkn' && !trackNum && payload.length >= 4) trackNum = payload[3];
+                    else if ((tag === '©gen' || tag === 'gnre') && !genre) genre = new TextDecoder('utf-8').decode(payload).trim();
                     else if (tag === 'covr' && !coverBlob) {
                       const isPng = (typeFlags & 0xFF) === 14 || (payload[0] === 0x89 && payload[1] === 0x50);
                       coverBlob = new Blob([payload], { type: isPng ? 'image/png' : 'image/jpeg' });
@@ -3713,6 +4447,7 @@
               album: album || getFolderAlbum(file) || 'Single Tracks',
               year: year || '',
               trackNum: trackNum,
+              genre: genre || '',
               coverBlob: coverBlob
             };
           }
@@ -3913,6 +4648,7 @@
           trackNum: meta.trackNum || (map[k].tracks.length + 1),
           duration: dur.durationStr,
           durationSec: dur.durationSec,
+          genre: meta.genre || '',
           coverUrl: map[k].coverUrl,
           audioBlob: file,
           audioSrc: url
@@ -3952,8 +4688,11 @@
         }
       }
 
-      document.querySelector('[data-target="library"]')?.click();
-      renderAlbumsGridView();
+      if (activeNavTab === 'coverflow') renderCoverflowView();
+      else {
+        document.querySelector('[data-target="library"]')?.click();
+        renderAlbumsGridView();
+      }
       renderRecentlyPlayed();
       renderHomeRecommended();
       renderHomePlaylists();
@@ -3996,6 +4735,7 @@
       renderHomeRecommended();
       renderHomePlaylists();
       renderAlbumsGridView();
+      if (activeNavTab === 'coverflow') renderCoverflowView();
       updateMenubarStates();
       performAutoUpdateCheck();
     }
