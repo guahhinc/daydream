@@ -303,24 +303,54 @@
     ========================================= */
     .queue-panel {
       position: fixed;
-      top: 88px;
-      right: 24px;
+      top: 68px;
+      right: 20px;
       width: 350px;
       max-height: 460px;
       background: #ffffff;
-      border: 1px solid #d0d0d0;
-      border-radius: 0;
+      border: 1px solid #c8c8c8;
+      border-radius: 6px;
       z-index: 1000;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.14);
+      overflow: visible;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
       color: #000000;
+    }
+
+    /* Popover arrow point pointing up towards the queue button */
+    .queue-panel::before,
+    .queue-panel::after {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      right: 22px;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    /* Outer border of point */
+    .queue-panel::before {
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-bottom: 9px solid #c8c8c8;
+      transform: translateX(50%);
+    }
+
+    /* Inner fill of point matching header */
+    .queue-panel::after {
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 8px solid #fafafa;
+      transform: translateX(50%);
+      margin-bottom: -1px;
     }
 
     .queue-panel-header {
       padding: 10px 14px;
       border-bottom: 1px solid #e5e5e5;
+      border-radius: 5px 5px 0 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -820,8 +850,8 @@
     .coverflow-stage {
       --cf-card-size: clamp(280px, 34vh, 400px);
       width: 100%;
-      height: clamp(400px, 48vh, 560px);
-      min-height: 380px;
+      height: clamp(420px, 50vh, 580px);
+      min-height: 400px;
       background: #000000;
       position: relative;
       overflow: hidden;
@@ -841,7 +871,7 @@
       position: relative;
       perspective: 1050px;
       -webkit-perspective: 1050px;
-      perspective-origin: 50% 36%;
+      perspective-origin: 50% 38%;
       overflow: hidden;
     }
 
@@ -858,7 +888,7 @@
 
     .coverflow-card {
       position: absolute;
-      top: 14px;
+      top: 34px;
       left: 50%;
       width: var(--cf-card-size);
       height: var(--cf-card-size);
@@ -903,7 +933,7 @@
       transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* 3D Reflection: seamless, slightly separated from cover, ever so slightly darker, not see-through */
+    /* 3D Reflection: seamless, slightly separated from cover, dimmer, not see-through */
     .coverflow-card-reflection {
       position: absolute;
       top: 100%;
@@ -915,6 +945,7 @@
       pointer-events: none;
       border-radius: 0;
       background: #000000;
+      opacity: 0.92;
     }
 
     .coverflow-reflection-img {
@@ -931,7 +962,7 @@
     .coverflow-reflection-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.55) 24%, #000000 48%, #000000 100%);
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.44) 0%, rgba(0, 0, 0, 0.70) 24%, #000000 50%, #000000 100%);
       pointer-events: none;
     }
 
@@ -3844,15 +3875,50 @@
       });
 
       let wheelDebounce = null;
+      let lastWheelTime = 0;
+      let wheelVelocity = 1;
+      let wheelDeltaAccum = 0;
+
       coverflowStage.addEventListener('wheel', (e) => {
         e.preventDefault();
-        if (wheelDebounce) return;
-        const delta = Math.sign(e.deltaY || e.deltaX);
-        if (delta !== 0) {
-          const nextIdx = Math.max(0, Math.min(libraryData.length - 1, activeCoverflowIndex + delta));
-          if (nextIdx !== activeCoverflowIndex) selectCoverflowAlbum(nextIdx);
-          wheelDebounce = setTimeout(() => { wheelDebounce = null; }, 140);
+        const rawDelta = e.deltaY || e.deltaX;
+        if (!rawDelta) return;
+
+        const now = performance.now();
+        const dt = now - lastWheelTime;
+        lastWheelTime = now;
+
+        wheelDeltaAccum += rawDelta;
+        const dir = Math.sign(wheelDeltaAccum);
+        const threshold = 55;
+
+        if (Math.abs(wheelDeltaAccum) >= threshold) {
+          if (dt > 140) {
+            // Small quick scroll or single notch from idle: always exactly 1 album
+            wheelVelocity = 1;
+          } else {
+            // Faster rapid scrolling: dynamically scale up speed
+            if (dt < 45) {
+              wheelVelocity = Math.min(4, wheelVelocity + 1);
+            } else if (dt < 90) {
+              wheelVelocity = Math.min(3, wheelVelocity + 0.5);
+            }
+          }
+
+          const steps = dir * Math.round(wheelVelocity);
+          wheelDeltaAccum = 0;
+
+          const nextIdx = Math.max(0, Math.min(libraryData.length - 1, activeCoverflowIndex + steps));
+          if (nextIdx !== activeCoverflowIndex) {
+            selectCoverflowAlbum(nextIdx);
+          }
         }
+
+        clearTimeout(wheelDebounce);
+        wheelDebounce = setTimeout(() => {
+          wheelDeltaAccum = 0;
+          wheelVelocity = 1;
+        }, 160);
       }, { passive: false });
 
       coverflowStage.addEventListener('mousedown', (e) => {
