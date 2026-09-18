@@ -897,7 +897,7 @@
       pointer-events: auto;
       transform-style: preserve-3d;
       -webkit-transform-style: preserve-3d;
-      transition: transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform 1.05s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: transform;
       opacity: 1 !important;
       backface-visibility: hidden;
@@ -930,7 +930,7 @@
       background: #000000;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 1.05s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     /* 3D Reflection: seamless, slightly separated from cover, dimmer, not see-through */
@@ -940,7 +940,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      margin-top: 2px;
+      margin-top: 5px;
       overflow: hidden;
       pointer-events: none;
       border-radius: 0;
@@ -1125,7 +1125,7 @@
     .itunes-table-header {
       height: 32px;
       display: grid;
-      grid-template-columns: 48px 1fr 1fr 80px;
+      grid-template-columns: 48px 1fr 1fr 34px 76px;
       align-items: center;
       background: #fafafa;
       border-top: 1px solid #e5e5e5;
@@ -1151,6 +1151,11 @@
       color: #888888;
     }
 
+    .itunes-table-header .col-add {
+      justify-content: center;
+      padding: 0;
+    }
+
     .itunes-table-header .col-time {
       justify-content: flex-end;
       text-align: right;
@@ -1167,7 +1172,7 @@
     .itunes-table-row {
       height: 34px;
       display: grid;
-      grid-template-columns: 48px 1fr 1fr 80px;
+      grid-template-columns: 48px 1fr 1fr 34px 76px;
       align-items: center;
       font-size: 13.5px;
       color: #111111;
@@ -1176,6 +1181,22 @@
       line-height: 34px;
       border-bottom: 1px solid #f2f2f2;
       transition: background-color 0.1s ease;
+    }
+
+    .itunes-table-row .col-add {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .itunes-table-row:hover .track-add-pl-btn {
+      opacity: 1;
+    }
+
+    .itunes-table-row.selected .track-add-pl-btn {
+      color: #ffffff !important;
+      opacity: 1;
     }
 
     .itunes-table-row.zebra-even {
@@ -1979,7 +2000,7 @@
       </div>
 
       <div id="lcd-active-state" class="lcd-active-state">
-        <div class="lcd-cover-box" id="player-cover-box" title="View Album in Library">
+        <div class="lcd-cover-box" id="player-cover-box" title="View in Cover Flow">
           <img id="player-cover-img" class="lcd-cover-img" src="" alt="" style="display:none;" draggable="false" />
           <div id="player-cover-placeholder" class="lcd-cover-placeholder">
             <svg viewBox="0 0 100 100" width="30" height="30" fill="currentColor">
@@ -2067,7 +2088,6 @@
         <div class="dropdown-item" id="menu-song-prev">Play Previous</div>
         <div class="dropdown-item" id="menu-song-show-album">Show Album</div>
         <div class="menu-separator"></div>
-        <div class="dropdown-item" id="menu-song-add-queue">Add to Queue</div>
         <div class="dropdown-item" id="menu-song-add-playlist">Add to Playlist</div>
         <div class="menu-separator"></div>
         <div class="dropdown-item" id="menu-song-vol-up">Volume Up</div>
@@ -2094,9 +2114,9 @@
   <!-- NAVIGATION TABS -->
   <header class="top-nav-bar">
     <nav>
-      <button class="nav-btn active" data-target="home">Home</button>
+      <button class="nav-btn" data-target="home">Home</button>
       <button class="nav-btn" data-target="library">Library</button>
-      <button class="nav-btn" data-target="coverflow">Coverflow</button>
+      <button class="nav-btn active" data-target="coverflow">Coverflow</button>
       <button class="nav-btn" data-target="playlists">Playlists</button>
       <button class="nav-btn" data-target="artists">Artists</button>
     </nav>
@@ -2104,7 +2124,7 @@
 
   <!-- VIEWS CONTAINER -->
   <main>
-    <section id="view-home" class="view-container active-view">
+    <section id="view-home" class="view-container">
       <div class="home-container">
         <div>
           <div class="home-section-title">Recently Played</div>
@@ -2135,7 +2155,7 @@
           <svg class="home-about-vector-logo" viewBox="0 0 100 100" fill="currentColor"><use href="#icon-cd"/></svg>
           <div class="home-about-meta">
             <div class="home-about-title">Guahh Tunes</div>
-            <div class="home-about-version">Version 1.1.3</div>
+            <div class="home-about-version">Version 1.1.4</div>
           </div>
           <button id="btn-check-update" class="home-update-btn" style="display: none;">UPDATE</button>
         </div>
@@ -2146,7 +2166,7 @@
       <div class="album-grid" id="album-grid"></div>
     </section>
 
-    <section id="view-coverflow" class="view-container">
+    <section id="view-coverflow" class="view-container active-view">
       <div class="coverflow-stage" id="coverflow-stage">
         <div class="coverflow-viewport">
           <div class="coverflow-carousel" id="coverflow-carousel"></div>
@@ -2169,6 +2189,7 @@
           <div class="col-num">#</div>
           <div class="col-name">Title</div>
           <div class="col-artist">Artist</div>
+          <div class="col-add"></div>
           <div class="col-time">Time</div>
         </div>
         <div class="itunes-table-body" id="coverflow-table-body"></div>
@@ -2247,7 +2268,7 @@
     /* =================================================================
        APP CONSTANTS & STATE
     ================================================================= */
-    const CURRENT_VERSION = '1.1.3';
+    const CURRENT_VERSION = '1.1.4';
     const GITHUB_UPDATE_URL = 'https://raw.githubusercontent.com/guahhinc/daydream/main/GuahhTunes.html';
     const DB_NAME = 'GuahhTunesStorageDB', DB_VERSION = 2;
 
@@ -2256,7 +2277,7 @@
     audioEl.preload = 'auto';
 
     let libraryData = [], playlistsData = [];
-    let activeExpandedAlbumId = null, activeNavTab = 'home';
+    let activeExpandedAlbumId = null, activeNavTab = 'coverflow';
     let activeCoverflowIndex = 0;
     let selectedArtistName = null, selectedPlaylistId = null;
     let trackPendingAddToPlaylist = null;
@@ -2754,11 +2775,14 @@
       }, 80);
     }
 
-    // Now Playing Cover Click -> Jump to Album in Library
+    // Now Playing Cover Click -> Jump and slide to Album in Coverflow
     if (playerCoverBox) {
       playerCoverBox.addEventListener('click', () => {
         const nowPlaying = currentQueue[currentTrackIndex];
-        if (!nowPlaying && !currentAlbumMeta) return;
+        if (!nowPlaying && !currentAlbumMeta) {
+          document.querySelector('[data-target="coverflow"]')?.click();
+          return;
+        }
 
         let targetAlbum = null;
         if (currentAlbumMeta?.id) {
@@ -2769,12 +2793,24 @@
             (nowPlaying.albumId && a.id === nowPlaying.albumId) ||
             a.tracks.some(tr => tr.id === nowPlaying.id) ||
             (a.title.toLowerCase() === (currentAlbumMeta?.title || '').toLowerCase() &&
-             a.artist.toLowerCase() === (nowPlaying.artist || currentAlbumMeta?.artist || '').toLowerCase())
+              a.artist.toLowerCase() === (nowPlaying.artist || currentAlbumMeta?.artist || '').toLowerCase())
           );
         }
 
-        if (targetAlbum) navigateToAlbum(targetAlbum.id);
-        else document.querySelector('[data-target="library"]')?.click();
+        const isAlreadyCoverflow = (activeNavTab === 'coverflow');
+        if (!isAlreadyCoverflow) {
+          document.querySelector('[data-target="coverflow"]')?.click();
+        }
+        if (targetAlbum) {
+          const albIdx = libraryData.findIndex(a => a.id === targetAlbum.id);
+          if (albIdx !== -1) {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                selectCoverflowAlbum(albIdx);
+              });
+            });
+          }
+        }
       });
     }
 
@@ -3141,6 +3177,10 @@
 
       const clearRecents = $('menu-settings-clear-recents');
       if (clearRecents) clearRecents.classList.toggle('disabled', !hasRecents);
+
+      // Devices Menu
+      const devSyncBtn = $('menu-devices-sync');
+      if (devSyncBtn) devSyncBtn.classList.toggle('disabled', !hasLibrary);
     }
 
     menuBtns.forEach(btn => {
@@ -3219,9 +3259,8 @@
       playPrevTrack();
     });
 
-    $('menu-song-show-album')?.addEventListener('click', (e) => {
+    $('menu-song-show-album')?.addEventListener('click', () => {
       closeAllMenuDropdowns();
-      if (e.currentTarget.classList.contains('disabled')) return;
       const albId = currentAlbumMeta?.id || currentQueue[currentTrackIndex]?.albumId;
       if (albId) navigateToAlbum(albId);
     });
@@ -3679,7 +3718,7 @@
     let coverflowDragStartIndex = 0;
     let coverflowHasMovedDuringDrag = false;
 
-    function renderCoverflowView() {
+    function renderCoverflowView(forceRebuild = false) {
       if (!libraryData.length) {
         activeCoverflowIndex = 0;
         coverflowCarousel.innerHTML = '<div class="coverflow-empty-state" onclick="document.getElementById(\'hidden-file-input\').click()">Drag and drop songs or folders here to start</div>';
@@ -3700,6 +3739,13 @@
       coverflowScrubber.min = 0;
       coverflowScrubber.max = libraryData.length - 1;
       coverflowScrubber.value = activeCoverflowIndex;
+
+      const existingCards = coverflowCarousel.querySelectorAll('.coverflow-card');
+      if (!forceRebuild && existingCards.length === libraryData.length) {
+        updateCoverflowTransforms();
+        renderCoverflowTable();
+        return;
+      }
 
       // Render 3D Cards - full resolution everywhere
       coverflowCarousel.innerHTML = '';
@@ -3774,6 +3820,9 @@
             <div class="col-num">${isCurrent ? (isPlaying ? '▶' : '❙❙') : trackNumDisplay}</div>
             <div class="col-name" title="${escapeHTML(track.title)}">${escapeHTML(track.title)}</div>
             <div class="col-artist" title="${escapeHTML(track.artist || curAlbum.artist)}">${escapeHTML(track.artist || curAlbum.artist)}</div>
+            <div class="col-add">
+              <button class="track-add-pl-btn" data-track-id="${track.id}" title="Add to Queue or Playlist">${PLUS_SVG}</button>
+            </div>
             <div class="col-time">${track.duration || '--:--'}</div>
           </div>
         `;
@@ -3781,16 +3830,26 @@
 
       coverflowTableBody.innerHTML = tableHtml;
 
+      coverflowTableBody.querySelectorAll('.track-add-pl-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const trk = curAlbum.tracks.find(t => t.id === btn.dataset.trackId);
+          if (trk) openPlaylistPickerModal(trk, curAlbum);
+        });
+      });
+
       coverflowTableBody.querySelectorAll('.itunes-table-row').forEach(row => {
-        row.addEventListener('click', () => {
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('.track-add-pl-btn')) return;
           coverflowTableBody.querySelectorAll('.itunes-table-row.selected').forEach(r => r.classList.remove('selected'));
           row.classList.add('selected');
-        });
-
-        row.addEventListener('dblclick', () => {
           const trkIdx = parseInt(row.dataset.trackIdx, 10);
           if (!isNaN(trkIdx) && curAlbum.tracks[trkIdx]) {
-            playQueue(curAlbum.tracks, trkIdx, curAlbum, false);
+            if (currentQueue[currentTrackIndex]?.id === row.dataset.trackId) {
+              togglePlay();
+            } else {
+              playQueue(curAlbum.tracks, trkIdx, curAlbum, false);
+            }
           }
         });
       });
@@ -4754,7 +4813,7 @@
         }
       }
 
-      if (activeNavTab === 'coverflow') renderCoverflowView();
+      if (activeNavTab === 'coverflow') renderCoverflowView(true);
       else {
         document.querySelector('[data-target="library"]')?.click();
         renderAlbumsGridView();
