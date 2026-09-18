@@ -38,16 +38,17 @@
     html, body {
       height: 100%;
       width: 100%;
-      overflow-x: hidden;
+      overflow: hidden;
     }
 
     body {
       background: #ffffff;
       color: #000000;
       font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif;
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     button {
@@ -515,6 +516,15 @@
       pointer-events: none !important;
     }
 
+    .menubar-dropdown .dropdown-item.danger {
+      color: #ff3b30;
+    }
+
+    .menubar-dropdown .dropdown-item.danger:hover {
+      background: #ff3b30;
+      color: #ffffff;
+    }
+
     .menu-separator {
       height: 1px;
       background: #e5e5e5;
@@ -567,6 +577,7 @@
       min-height: 0;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     .view-container { display: none; width: 100%; height: 100%; flex: 1; }
@@ -770,7 +781,8 @@
       overflow-y: auto;
       width: 100%;
       height: 100%;
-      min-height: calc(100vh - 102px);
+      flex: 1;
+      min-height: 0;
       background-color: var(--lib-theme-bg, #ffffff);
       color: var(--lib-theme-text, #000000);
       transition: background-color 0.35s ease, color 0.35s ease;
@@ -779,13 +791,21 @@
     #view-playlists, #view-artists {
       width: 100%;
       height: 100%;
-      min-height: calc(100vh - 102px);
-      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
       background: #ffffff;
       color: #000000;
     }
 
-    .sub-split-view { display: flex; width: 100%; height: 100%; flex: 1; }
+    .sub-split-view {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
 
     .sub-sidebar {
       width: 230px;
@@ -793,8 +813,11 @@
       border-right: 1px solid #eeeeee;
       background: #ffffff;
       overflow-y: auto;
+      overscroll-behavior: contain;
       padding: 10px 0;
-      max-height: calc(100vh - 102px);
+      height: 100%;
+      max-height: 100%;
+      min-height: 0;
       display: flex;
       flex-direction: column;
     }
@@ -831,8 +854,11 @@
       flex: 1;
       padding: 28px 36px 60px 36px;
       overflow-y: auto;
+      overscroll-behavior: contain;
       min-width: 0;
-      max-height: calc(100vh - 102px);
+      height: 100%;
+      max-height: 100%;
+      min-height: 0;
     }
 
     .stacked-view-header {
@@ -1591,6 +1617,7 @@
         <div class="dropdown-item" id="menu-song-prev">Play Previous</div>
         <div class="dropdown-item" id="menu-song-show-album">Show Album</div>
         <div class="menu-separator"></div>
+        <div class="dropdown-item" id="menu-song-add-queue">Add to Queue</div>
         <div class="dropdown-item" id="menu-song-add-playlist">Add to Playlist</div>
         <div class="menu-separator"></div>
         <div class="dropdown-item" id="menu-song-vol-up">Volume Up</div>
@@ -1606,6 +1633,7 @@
         <div class="dropdown-item" id="menu-settings-version">Check Version</div>
         <div class="dropdown-item disabled" id="menu-settings-update">Update Guahh Tunes</div>
         <div class="dropdown-item" id="menu-settings-clear-recents">Clear Recently Played</div>
+        <div class="dropdown-item" id="menu-settings-erase-data" style="display: none;">Erase All Data</div>
         <div class="menu-separator"></div>
         <div class="dropdown-item" id="menu-settings-color-on">Page Colour Changing On</div>
         <div class="dropdown-item" id="menu-settings-color-off">Page Colour Changing Off</div>
@@ -1656,7 +1684,7 @@
           <svg class="home-about-vector-logo" viewBox="0 0 100 100" fill="currentColor"><use href="#icon-cd"/></svg>
           <div class="home-about-meta">
             <div class="home-about-title">Guahh Tunes</div>
-            <div class="home-about-version">Version 1.1.0</div>
+            <div class="home-about-version">Version 1.1.2</div>
           </div>
           <button id="btn-check-update" class="home-update-btn" style="display: none;">UPDATE</button>
         </div>
@@ -1739,7 +1767,7 @@
     /* =================================================================
        APP CONSTANTS & STATE
     ================================================================= */
-    const CURRENT_VERSION = '1.1.0';
+    const CURRENT_VERSION = '1.1.2';
     const GITHUB_UPDATE_URL = 'https://raw.githubusercontent.com/guahhinc/daydream/main/GuahhTunes.html';
     const DB_NAME = 'GuahhTunesStorageDB', DB_VERSION = 2;
 
@@ -1939,10 +1967,18 @@
     const dbDelete = (s, k) => dbOp(s, 'readwrite', st => st.delete(k));
 
     window.eraseall = async function() {
-      localStorage.clear();
-      sessionStorage.clear();
-      indexedDB.deleteDatabase(DB_NAME);
-      setTimeout(() => location.reload(), 150);
+      try { localStorage.clear(); } catch (e) {}
+      try { sessionStorage.clear(); } catch (e) {}
+      try {
+        const dbs = await window.indexedDB?.databases?.();
+        if (dbs && dbs.length) {
+          dbs.forEach(dbInfo => {
+            if (dbInfo.name) window.indexedDB.deleteDatabase(dbInfo.name);
+          });
+        }
+      } catch (e) {}
+      try { window.indexedDB.deleteDatabase(DB_NAME); } catch (e) {}
+      setTimeout(() => location.reload(), 200);
       return 'Erased all data.';
     };
 
@@ -2026,7 +2062,11 @@
         const modal = $('custom-confirm-modal');
         $('custom-confirm-title').textContent = title;
         $('custom-confirm-message').textContent = message;
-        $('custom-confirm-confirm').textContent = confirmText;
+        const confirmBtn = $('custom-confirm-confirm');
+        const cancelBtn = $('custom-confirm-cancel');
+        confirmBtn.textContent = confirmText;
+        confirmBtn.classList.add('danger');
+        cancelBtn.style.display = 'inline-block';
         modal.style.display = 'flex';
 
         const close = val => {
@@ -2035,8 +2075,8 @@
           res(val);
         };
         const onKey = e => { if (e.key === 'Escape') close(false); };
-        $('custom-confirm-close').onclick = $('custom-confirm-cancel').onclick = () => close(false);
-        $('custom-confirm-confirm').onclick = () => close(true);
+        $('custom-confirm-close').onclick = cancelBtn.onclick = () => close(false);
+        confirmBtn.onclick = () => close(true);
         modal.onclick = e => { if (e.target === modal) close(false); };
         window.addEventListener('keydown', onKey);
       });
@@ -2116,10 +2156,8 @@
       } catch (e) {}
     }
 
-    btnCheckUpdate.addEventListener('click', async () => {
-      const html = availableUpdate?.html || '';
-      if (!html) return;
-
+    async function downloadGuahhTunesHtml(html, successMsg = 'Update saved successfully.') {
+      if (!html) return false;
       if ('showSaveFilePicker' in window) {
         try {
           const handle = await window.showSaveFilePicker({
@@ -2129,10 +2167,10 @@
           const writable = await handle.createWritable();
           await writable.write(html);
           await writable.close();
-          showToast('Update saved successfully.');
-          return;
+          showToast(successMsg);
+          return true;
         } catch (err) {
-          if (err.name === 'AbortError') return;
+          if (err.name === 'AbortError') return false;
         }
       }
 
@@ -2143,7 +2181,30 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      showToast('Downloaded update file.');
+      showToast(successMsg);
+      return true;
+    }
+
+    async function handleRestoreGuahhTunes() {
+      showToast('Fetching latest Guahh Tunes...');
+      try {
+        let html = availableUpdate?.html;
+        if (!html) {
+          const res = await fetch(GITHUB_UPDATE_URL, { cache: 'no-store' });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          html = await res.text();
+        }
+        await downloadGuahhTunesHtml(html, 'Restored latest Guahh Tunes file.');
+      } catch (err) {
+        console.error('Failed to restore Guahh Tunes:', err);
+        showToast('Failed to download latest Guahh Tunes.');
+      }
+    }
+
+    btnCheckUpdate.addEventListener('click', async () => {
+      const html = availableUpdate?.html || '';
+      if (!html) return;
+      await downloadGuahhTunesHtml(html, 'Update saved successfully.');
     });
 
     /* =========================================
@@ -2493,6 +2554,45 @@
        FILE / MENU BAR LOGIC
     ================================================================= */
     let pageColourChangingEnabled = localStorage.getItem('guahh_color_changing') !== 'false';
+    let isMenuAltModifier = false;
+    const activeModifiers = new Set();
+
+    function setMenuModifierState(isHeld) {
+      if (isMenuAltModifier !== isHeld) {
+        isMenuAltModifier = isHeld;
+        updateMenubarStates();
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      const activeTag = document.activeElement?.tagName;
+      const isInput = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || Boolean(document.activeElement?.isContentEditable);
+
+      if (e.key === ' ' || e.code === 'Space') {
+        if (isInput) return;
+        e.preventDefault();
+        activeModifiers.add('Space');
+        setMenuModifierState(true);
+      } else if (e.key === 'Control' || e.ctrlKey) {
+        activeModifiers.add('Control');
+        setMenuModifierState(true);
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.key === ' ' || e.code === 'Space') {
+        activeModifiers.delete('Space');
+      }
+      if (e.key === 'Control' || !e.ctrlKey) {
+        activeModifiers.delete('Control');
+      }
+      setMenuModifierState(activeModifiers.size > 0);
+    });
+
+    window.addEventListener('blur', () => {
+      activeModifiers.clear();
+      setMenuModifierState(false);
+    });
 
     const menuBtns = document.querySelectorAll('.menubar-btn');
     const menuDropdowns = document.querySelectorAll('.menubar-dropdown');
@@ -2521,20 +2621,32 @@
       const albId = currentAlbumMeta?.id || (hasTrack ? currentQueue[currentTrackIndex]?.albumId : null);
       if (songShowAlbum) songShowAlbum.classList.toggle('disabled', !albId);
 
+      const songAddQueue = $('menu-song-add-queue');
+      if (songAddQueue) songAddQueue.classList.toggle('disabled', !hasTrack);
+
       const songAddPl = $('menu-song-add-playlist');
       if (songAddPl) songAddPl.classList.toggle('disabled', !hasTrack);
 
       // Settings Menu
       const updateBtn = $('menu-settings-update');
+      const eraseBtn = $('menu-settings-erase-data');
+
       if (updateBtn) {
-        const hasUpdate = Boolean(availableUpdate && availableUpdate.html);
-        updateBtn.classList.toggle('disabled', !hasUpdate);
-        if (hasUpdate && availableUpdate.version) {
-          updateBtn.textContent = `Update Guahh Tunes (${availableUpdate.version})`;
+        if (isMenuAltModifier) {
+          updateBtn.textContent = 'Restore Guahh Tunes';
+          updateBtn.classList.remove('disabled');
         } else {
-          updateBtn.textContent = 'Update Guahh Tunes';
+          const hasUpdate = Boolean(availableUpdate && availableUpdate.html);
+          updateBtn.classList.toggle('disabled', !hasUpdate);
+          if (hasUpdate && availableUpdate.version) {
+            updateBtn.textContent = `Update Guahh Tunes (${availableUpdate.version})`;
+          } else {
+            updateBtn.textContent = 'Update Guahh Tunes';
+          }
         }
       }
+
+      if (eraseBtn) eraseBtn.style.display = isMenuAltModifier ? 'block' : 'none';
 
       const clearRecents = $('menu-settings-clear-recents');
       if (clearRecents) clearRecents.classList.toggle('disabled', !hasRecents);
@@ -2543,6 +2655,10 @@
     menuBtns.forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
+        if (e.ctrlKey) {
+          activeModifiers.add('Control');
+          isMenuAltModifier = true;
+        }
         updateMenubarStates();
         const targetId = btn.id.replace('-btn', '-dropdown');
         const drop = $(targetId);
@@ -2554,9 +2670,13 @@
         }
       });
 
-      btn.addEventListener('mouseenter', () => {
+      btn.addEventListener('mouseenter', e => {
         const anyOpen = Array.from(menuDropdowns).some(d => d.classList.contains('show'));
         if (anyOpen) {
+          if (e.ctrlKey) {
+            activeModifiers.add('Control');
+            isMenuAltModifier = true;
+          }
           updateMenubarStates();
           const targetId = btn.id.replace('-btn', '-dropdown');
           const drop = $(targetId);
@@ -2615,6 +2735,16 @@
       if (albId) navigateToAlbum(albId);
     });
 
+    $('menu-song-add-queue')?.addEventListener('click', (e) => {
+      closeAllMenuDropdowns();
+      if (e.currentTarget.classList.contains('disabled')) return;
+      const cur = currentQueue[currentTrackIndex];
+      if (cur) {
+        addTrackToQueue(cur);
+        showToast(`Added "${cur.title}" to queue`);
+      }
+    });
+
     $('menu-song-add-playlist')?.addEventListener('click', (e) => {
       closeAllMenuDropdowns();
       if (e.currentTarget.classList.contains('disabled')) return;
@@ -2650,10 +2780,33 @@
       showCustomAlert('Guahh Tunes', `Version ${CURRENT_VERSION}`);
     });
 
-    $('menu-settings-update')?.addEventListener('click', (e) => {
+    $('menu-settings-update')?.addEventListener('click', async (e) => {
       closeAllMenuDropdowns();
-      if (e.currentTarget.classList.contains('disabled') || !availableUpdate?.html) return;
-      btnCheckUpdate.click();
+      if (isMenuAltModifier) {
+        await handleRestoreGuahhTunes();
+      } else {
+        if (e.currentTarget.classList.contains('disabled') || !availableUpdate?.html) return;
+        btnCheckUpdate.click();
+      }
+    });
+
+    $('menu-settings-erase-data')?.addEventListener('click', async () => {
+      closeAllMenuDropdowns();
+      const confirmed = await showCustomConfirm(
+        'Erase All Data',
+        'Are you sure you want to erase all data? This will permanently delete your library, playlists, and settings.',
+        'Erase Everything'
+      );
+      if (confirmed) {
+        if (typeof window.eraseall === 'function') {
+          await window.eraseall();
+        } else {
+          localStorage.clear();
+          sessionStorage.clear();
+          try { indexedDB.deleteDatabase(DB_NAME); } catch (e) {}
+          location.reload();
+        }
+      }
     });
 
     $('menu-settings-clear-recents')?.addEventListener('click', (e) => {
