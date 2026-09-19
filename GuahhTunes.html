@@ -635,7 +635,7 @@
     .home-section-title { font-size: 19px; color: #000000; margin-bottom: 16px; letter-spacing: -0.015em; }
     .home-section-divider { width: 100%; height: 1px; background-color: #eeeeee; }
 
-    .recent-tracks-bar, .home-playlists-bar, .home-recommended-bar {
+    .recent-tracks-bar, .home-playlists-bar {
       display: flex;
       gap: 18px;
       overflow-x: auto;
@@ -646,73 +646,25 @@
     }
 
     .recent-tracks-bar::-webkit-scrollbar,
-    .home-playlists-bar::-webkit-scrollbar,
-    .home-recommended-bar::-webkit-scrollbar {
+    .home-playlists-bar::-webkit-scrollbar {
       display: block;
       height: 4px;
     }
 
     .recent-tracks-bar::-webkit-scrollbar-track,
-    .home-playlists-bar::-webkit-scrollbar-track,
-    .home-recommended-bar::-webkit-scrollbar-track {
+    .home-playlists-bar::-webkit-scrollbar-track {
       background: transparent;
     }
 
     .recent-tracks-bar::-webkit-scrollbar-thumb,
-    .home-playlists-bar::-webkit-scrollbar-thumb,
-    .home-recommended-bar::-webkit-scrollbar-thumb {
+    .home-playlists-bar::-webkit-scrollbar-thumb {
       background: rgba(0, 0, 0, 0.15);
       border-radius: 4px;
     }
 
     .recent-tracks-bar::-webkit-scrollbar-thumb:hover,
-    .home-playlists-bar::-webkit-scrollbar-thumb:hover,
-    .home-recommended-bar::-webkit-scrollbar-thumb:hover {
+    .home-playlists-bar::-webkit-scrollbar-thumb:hover {
       background: rgba(0, 0, 0, 0.3);
-    }
-
-    /* Recommended Albums (Bigger) */
-    .recommended-card {
-      flex: 0 0 185px;
-      width: 185px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .recommended-art-wrap {
-      position: relative;
-      width: 185px;
-      height: 185px;
-      border-radius: 6px;
-      overflow: hidden;
-      background: #f4f4f4;
-      margin-bottom: 10px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-    }
-
-    .recommended-art-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .recommended-title {
-      font-size: 15px;
-      font-weight: 500;
-      color: #000000;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      line-height: 1.3;
-    }
-
-    .recommended-artist {
-      font-size: 13.5px;
-      color: #777777;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-top: 3px;
     }
 
     .recent-card { flex: 0 0 148px; width: 148px; cursor: pointer; }
@@ -895,13 +847,13 @@
       margin-left: calc(-1 * var(--cf-card-size) / 2);
       cursor: pointer;
       pointer-events: auto;
-      transform-style: preserve-3d;
-      -webkit-transform-style: preserve-3d;
+      transform-style: flat;
+      -webkit-transform-style: flat;
       transition: transform 1.05s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: transform;
       opacity: 1 !important;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
+      backface-visibility: visible;
+      -webkit-backface-visibility: visible;
     }
 
     .coverflow-card-inner {
@@ -912,6 +864,10 @@
       border-radius: 0;
       overflow: hidden;
       box-shadow: 0 0 24px rgba(0, 0, 0, 0.65);
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
 
     .coverflow-card-img {
@@ -921,16 +877,29 @@
       display: block;
       image-rendering: -webkit-optimize-contrast;
       image-rendering: high-quality;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
 
-    /* Zero-repaint GPU darkening overlay */
+    /* Zero-repaint GPU darkening overlay with Safari flicker prevention */
     .coverflow-dark-overlay {
       position: absolute;
       inset: 0;
       background: #000000;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 1.05s cubic-bezier(0.16, 1, 0.3, 1);
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      transition: opacity 0.25s ease-out;
+    }
+
+    .coverflow-card.is-center .coverflow-dark-overlay {
+      opacity: 0 !important;
+      transition: none !important;
     }
 
     /* 3D Reflection: seamless, slightly separated from cover, dimmer, not see-through */
@@ -946,6 +915,10 @@
       border-radius: 0;
       background: #000000;
       opacity: 0.92;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
 
     .coverflow-reflection-img {
@@ -953,10 +926,13 @@
       height: 100%;
       object-fit: cover;
       display: block;
-      transform: scaleY(-1);
+      transform: scaleY(-1) translateZ(0);
+      -webkit-transform: scaleY(-1) translateZ(0);
       transform-origin: center center;
       image-rendering: -webkit-optimize-contrast;
       image-rendering: high-quality;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
 
     .coverflow-reflection-overlay {
@@ -964,6 +940,10 @@
       inset: 0;
       background: linear-gradient(to bottom, rgba(0, 0, 0, 0.44) 0%, rgba(0, 0, 0, 0.70) 24%, #000000 50%, #000000 100%);
       pointer-events: none;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
 
     /* Responsive coverflow area: slightly less tall everywhere */
@@ -988,13 +968,6 @@
       }
       .coverflow-scrubber-bar {
         width: 94%;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .coverflow-stage {
-        --cf-card-size: clamp(190px, 28vh, 260px);
-        height: clamp(360px, 56vh, 600px);
       }
     }
 
@@ -1893,6 +1866,29 @@
     .modal-btn-confirm:hover { background: #0062cc; }
     .modal-btn-confirm.danger { background: #ff3b30; }
     .modal-btn-confirm.danger:hover { background: #e02d23; }
+    .modal-btn-restore {
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: transparent;
+      color: #ff3b30;
+      border: 1px solid rgba(255, 59, 48, 0.4);
+      margin-right: auto;
+    }
+    .modal-btn-restore:hover {
+      background: #ff3b30;
+      color: #ffffff;
+      border-color: #ff3b30;
+    }
+    .modal-btn-restore:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      border-color: #cccccc;
+      color: #999999;
+    }
 
     .modal-playlist-list { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
 
@@ -1912,6 +1908,412 @@
     .modal-action-item:hover span, .modal-playlist-item:hover span { color: #ffffff !important; }
     .modal-divider { height: 1px; background: #e5e5e5; margin: 4px 0 6px 0; }
     .modal-playlist-item { color: #000000; justify-content: space-between; border: 1px solid transparent; }
+
+    /* =========================================
+       DEVICE MANAGEMENT VIEW & ENGINE
+    ========================================= */
+    #view-device {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      display: none;
+    }
+
+    #view-device.active-view {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .device-view-scroll-container {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 32px 36px 60px 36px;
+      display: flex;
+      justify-content: center;
+      background: #ffffff;
+    }
+
+    .device-page-layout {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .device-hero-card {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding: 20px 24px;
+      background: #ffffff;
+      border: 1px solid #dcdce2;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .device-hero-preview {
+      width: 150px;
+      height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .device-hero-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .device-hero-details {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .device-hero-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .device-page-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: #111111;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+      border-bottom: 1px dashed #cccccc;
+      padding-bottom: 1px;
+      display: inline-block;
+      transition: border-color 0.15s ease;
+    }
+
+    .device-page-title:hover {
+      border-bottom-color: #000000;
+    }
+
+    .device-page-title-input {
+      font-family: inherit;
+      font-size: 22px;
+      font-weight: 600;
+      color: #111111;
+      letter-spacing: -0.02em;
+      background: #ffffff;
+      border: 1px solid #111111;
+      border-radius: 0;
+      padding: 0 4px;
+      margin: 0;
+      outline: none;
+      box-shadow: none;
+      min-width: 120px;
+      max-width: 240px;
+    }
+
+    .device-hero-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 13px;
+      color: #555555;
+    }
+
+    .device-card-status {
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: #000000;
+    }
+
+    #device-status-text {
+      color: #000000;
+    }
+
+    .device-card-storage {
+      font-size: 12.5px;
+      color: #777777;
+    }
+
+    .device-hero-actions-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .device-text-link {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 12.5px;
+      color: #007aff;
+      cursor: pointer;
+      text-decoration: underline;
+      font-family: inherit;
+      box-shadow: none;
+    }
+
+    .device-text-link:hover {
+      opacity: 0.8;
+      box-shadow: none;
+    }
+
+    .device-text-link.danger {
+      color: #ff3b30;
+    }
+
+    .device-text-link:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      text-decoration: none;
+    }
+
+    .device-text-sep {
+      color: #cccccc;
+      font-size: 11px;
+      user-select: none;
+    }
+
+    .device-sync-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      padding: 14px 18px;
+      background: #ffffff;
+      border: 1px solid #dcdce2;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .sync-stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .sync-stat-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111111;
+    }
+
+    .sync-stat-label {
+      font-size: 11px;
+      color: #888888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    .device-content-box {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #ffffff;
+      border: 1px solid #dcdce2;
+      border-radius: 0;
+      padding: 16px 18px;
+      box-shadow: none;
+    }
+
+    .device-sync-options {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13.5px;
+      color: #333333;
+    }
+
+    .device-check-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .device-check-label input {
+      accent-color: #007aff;
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+      border-radius: 0;
+    }
+
+    .device-existing-info {
+      font-size: 12px;
+      color: #777777;
+    }
+
+    .device-sync-mode-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #eeeeee;
+    }
+
+    .device-sync-mode-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .device-section-subtitle {
+      font-size: 13px;
+      font-weight: 600;
+      color: #222222;
+    }
+
+    .device-sync-mode-radios {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+      color: #333333;
+    }
+
+    .device-sync-mode-radios label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .device-sync-mode-radios input[type="radio"] {
+      accent-color: #007aff;
+      cursor: pointer;
+    }
+
+    .device-selective-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #777777;
+      margin-bottom: 6px;
+      padding: 0 2px;
+    }
+
+    .device-selective-btns {
+      display: flex;
+      gap: 10px;
+    }
+
+    .device-selective-btns button {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #007aff;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+      box-shadow: none;
+    }
+
+    .device-song-selection-list {
+      max-height: 200px;
+      overflow-y: auto;
+      background: #ffffff;
+      border: 1px solid #cccccc;
+      border-radius: 0;
+      padding: 2px 0;
+    }
+
+    .device-progress-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 14px 18px;
+      background: #ffffff;
+      border: 1px solid #dcdce2;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .device-progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: #222222;
+    }
+
+    .device-progress-track {
+      width: 100%;
+      height: 8px;
+      background: #eeeeee;
+      border: 1px solid #d0d0d0;
+      border-radius: 0;
+      overflow: hidden;
+      box-shadow: none;
+    }
+
+    .device-progress-fill {
+      width: 0%;
+      height: 100%;
+      background: #007aff;
+      border-radius: 0;
+      box-shadow: none;
+      transition: width 0.15s ease;
+    }
+
+    .device-progress-details {
+      font-size: 12px;
+      color: #666666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .device-page-bottom-actions {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: 2px;
+    }
+
+    .device-sync-primary-btn {
+      width: 100%;
+      padding: 11px 24px;
+      font-size: 14.5px;
+      font-weight: 500;
+      color: #ffffff;
+      background: #007aff;
+      border: 1px solid #006ce0;
+      border-radius: 0;
+      cursor: pointer;
+      box-shadow: none;
+      transition: background-color 0.1s ease, opacity 0.1s ease;
+    }
+
+    .device-sync-primary-btn:hover {
+      background: #006ce0;
+      box-shadow: none;
+    }
+
+    .device-sync-primary-btn:active {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .device-sync-primary-btn:disabled {
+      background: #b0cce8;
+      border-color: #b0cce8;
+      cursor: not-allowed;
+      opacity: 0.75;
+      box-shadow: none;
+      transform: none;
+    }
 
     /* Dropzone & Toast */
     #dropzone-overlay {
@@ -2098,6 +2500,14 @@
     </div>
 
     <div class="menubar-item">
+      <button class="menubar-btn" id="menu-devices-btn">Devices</button>
+      <div class="menubar-dropdown" id="menu-devices-dropdown">
+        <div class="dropdown-item" id="menu-devices-choose">Choose Device (USB Port)...</div>
+        <div class="dropdown-item disabled" id="menu-devices-sync">Sync Library to Device</div>
+      </div>
+    </div>
+
+    <div class="menubar-item">
       <button class="menubar-btn" id="menu-settings-btn">Settings</button>
       <div class="menubar-dropdown" id="menu-settings-dropdown">
         <div class="dropdown-item" id="menu-settings-version">Check Version</div>
@@ -2119,6 +2529,7 @@
       <button class="nav-btn active" data-target="coverflow">Coverflow</button>
       <button class="nav-btn" data-target="playlists">Playlists</button>
       <button class="nav-btn" data-target="artists">Artists</button>
+      <button class="nav-btn" data-target="device" id="nav-btn-device" style="display: none;">Device</button>
     </nav>
   </header>
 
@@ -2136,15 +2547,6 @@
         <div class="home-section-divider"></div>
 
         <div>
-          <div class="home-section-title">Recommended</div>
-          <div class="home-recommended-bar" id="home-recommended-bar">
-            <div class="recent-empty-text">Play songs in your library to get recommendations.</div>
-          </div>
-        </div>
-
-        <div class="home-section-divider"></div>
-
-        <div>
           <div class="home-section-title">Playlists</div>
           <div class="home-playlists-bar" id="home-playlists-bar">
             <div class="recent-empty-text">No playlists yet. <span class="home-create-pl-link" id="home-create-pl-btn">Create a playlist</span></div>
@@ -2155,7 +2557,7 @@
           <svg class="home-about-vector-logo" viewBox="0 0 100 100" fill="currentColor"><use href="#icon-cd"/></svg>
           <div class="home-about-meta">
             <div class="home-about-title">Guahh Tunes</div>
-            <div class="home-about-version">Version 1.1.4</div>
+            <div class="home-about-version">Version 1.1.5</div>
           </div>
           <button id="btn-check-update" class="home-update-btn" style="display: none;">UPDATE</button>
         </div>
@@ -2214,6 +2616,112 @@
         <div class="sub-content-pane" id="artist-detail-pane"></div>
       </div>
     </section>
+
+    <!-- DEVICE MANAGEMENT VIEW -->
+    <section id="view-device" class="view-container">
+      <div class="device-view-scroll-container">
+        <div class="device-page-layout">
+          <!-- Top Header / Hero Card -->
+          <div class="device-hero-card">
+            <div class="device-hero-preview">
+              <img src="https://raw.githubusercontent.com/guahhinc/daydream/main/cardputeradv.png" alt="Cardputer Adv" class="device-hero-img" draggable="false" />
+            </div>
+            <div class="device-hero-details">
+              <div class="device-hero-title-row">
+                <h2 class="device-page-title" id="device-card-name" title="Click to rename">soundOS</h2>
+              </div>
+
+              <div class="device-hero-meta-row">
+                <div class="device-card-status" id="device-card-status">
+                  <span id="device-status-text">Connected & Ready</span>
+                </div>
+                <div class="device-card-storage" id="device-card-storage">Storage: MicroSD Card</div>
+              </div>
+
+              <div class="device-hero-actions-row">
+                <button type="button" class="device-text-link" id="device-btn-disconnect">Disconnect Device</button>
+                <span class="device-text-sep">•</span>
+                <button type="button" class="device-text-link danger" id="device-btn-restore">Erase Device</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Summary Stats -->
+          <div class="device-sync-summary">
+            <div class="sync-stat-item">
+              <span class="sync-stat-value" id="sync-stat-albums">0</span>
+              <span class="sync-stat-label">Albums</span>
+            </div>
+            <div class="sync-stat-item">
+              <span class="sync-stat-value" id="sync-stat-tracks">0</span>
+              <span class="sync-stat-label">Songs</span>
+            </div>
+            <div class="sync-stat-item">
+              <span class="sync-stat-value" id="sync-stat-space">--</span>
+              <span class="sync-stat-label">Free Space</span>
+            </div>
+          </div>
+
+          <!-- Sync Configuration & Options -->
+          <div class="device-content-box">
+            <div class="device-sync-options">
+              <label class="device-check-label">
+                <input type="checkbox" id="device-sync-skip-existing" checked />
+                <span>Skip music already on device</span>
+              </label>
+              <span id="device-existing-info" class="device-existing-info"></span>
+            </div>
+
+            <div class="device-sync-mode-box">
+              <div class="device-sync-mode-header">
+                <span class="device-section-subtitle">Sync Content</span>
+                <div class="device-sync-mode-radios">
+                  <label>
+                    <input type="radio" name="device-sync-mode" id="device-sync-mode-all" value="all" checked />
+                    <span>Entire Library</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="device-sync-mode" id="device-sync-mode-selective" value="selective" />
+                    <span>Select Songs</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Selective Songs Container -->
+              <div id="device-selective-container" style="display: none; flex-direction: column; gap: 8px; margin-top: 6px;">
+                <div class="device-selective-toolbar">
+                  <span id="device-selective-count">0 songs selected</span>
+                  <div class="device-selective-btns">
+                    <button type="button" id="device-select-all-btn">Select All</button>
+                    <button type="button" id="device-deselect-all-btn">Deselect All</button>
+                  </div>
+                </div>
+                <div id="device-song-selection-list" class="device-song-selection-list">
+                  <!-- Song checklist items rendered here -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Section -->
+          <div class="device-progress-section" id="device-progress-section" style="display: none;">
+            <div class="device-progress-header">
+              <span class="device-progress-msg" id="device-progress-msg">Preparing sync...</span>
+              <span class="device-progress-pct" id="device-progress-pct">0%</span>
+            </div>
+            <div class="device-progress-track">
+              <div class="device-progress-fill" id="device-progress-fill"></div>
+            </div>
+            <div class="device-progress-details" id="device-progress-details">Initializing USB transmission...</div>
+          </div>
+
+          <!-- Primary Action Button -->
+          <div class="device-page-bottom-actions">
+            <button type="button" class="device-sync-primary-btn" id="device-sync-btn">Sync Library to Device</button>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- MODALS -->
@@ -2261,14 +2769,13 @@
       </div>
     </div>
   </div>
-
   <div id="toast">Tracks added to library</div>
 
   <script>
     /* =================================================================
        APP CONSTANTS & STATE
     ================================================================= */
-    const CURRENT_VERSION = '1.1.4';
+    const CURRENT_VERSION = '1.1.5';
     const GITHUB_UPDATE_URL = 'https://raw.githubusercontent.com/guahhinc/daydream/main/GuahhTunes.html';
     const DB_NAME = 'GuahhTunesStorageDB', DB_VERSION = 2;
 
@@ -2527,8 +3034,31 @@
     const lcdRepeatBtn = $('lcd-repeat-btn'), repeatIconSvg = $('repeat-icon-svg');
 
     const btnQueueToggle = $('btn-queue-toggle'), queuePanel = $('queue-panel');
-    const queueListContainer = $('queue-list-container');
     const dropzoneOverlay = $('dropzone-overlay'), toast = $('toast');
+    const deviceSyncBtn = $('device-sync-btn');
+    const deviceBtnDisconnect = $('device-btn-disconnect');
+    const deviceBtnRestore = $('device-btn-restore');
+    const navBtnDevice = $('nav-btn-device');
+    const deviceCardName = $('device-card-name');
+    const deviceStatusText = $('device-status-text');
+    const deviceCardStorage = $('device-card-storage');
+    const syncStatAlbums = $('sync-stat-albums');
+    const syncStatTracks = $('sync-stat-tracks');
+    const syncStatSpace = $('sync-stat-space');
+    const deviceProgressSection = $('device-progress-section');
+    const deviceProgressMsg = $('device-progress-msg');
+    const deviceProgressPct = $('device-progress-pct');
+    const deviceProgressFill = $('device-progress-fill');
+    const deviceProgressDetails = $('device-progress-details');
+    const deviceSyncSkipExisting = $('device-sync-skip-existing');
+    const deviceExistingInfo = $('device-existing-info');
+    const deviceSyncModeAll = $('device-sync-mode-all');
+    const deviceSyncModeSelective = $('device-sync-mode-selective');
+    const deviceSelectiveContainer = $('device-selective-container');
+    const deviceSelectiveCount = $('device-selective-count');
+    const deviceSelectAllBtn = $('device-select-all-btn');
+    const deviceDeselectAllBtn = $('device-deselect-all-btn');
+    const deviceSongSelectionList = $('device-song-selection-list');
 
     /* =================================================================
        HELPERS & MODALS
@@ -2739,9 +3269,21 @@
           renderPlaylistsView();
         } else if (activeNavTab === 'artists') {
           renderArtistsStackedView();
+        } else if (activeNavTab === 'device') {
+          updateDevicePageView();
         }
       });
     });
+
+    function navigateToDevicePage() {
+      const devNavBtn = $('nav-btn-device');
+      if (devNavBtn) devNavBtn.style.display = 'inline-block';
+      navButtons.forEach(b => b.classList.remove('active'));
+      devNavBtn?.classList.add('active');
+      activeNavTab = 'device';
+      views.forEach(v => v.classList.toggle('active-view', v.id === 'view-device'));
+      updateDevicePageView();
+    }
 
     function navigateToArtistLibrary(artist) {
       if (!artist) return;
@@ -2775,7 +3317,7 @@
       }, 80);
     }
 
-    // Now Playing Cover Click -> Jump and slide to Album in Coverflow
+    // Now Playing Cover Click -> Jump and slide to Current Album & Song in Coverflow
     if (playerCoverBox) {
       playerCoverBox.addEventListener('click', () => {
         const nowPlaying = currentQueue[currentTrackIndex];
@@ -2784,31 +3326,44 @@
           return;
         }
 
+        // Always prioritize the currently playing track's album first
         let targetAlbum = null;
-        if (currentAlbumMeta?.id) {
-          targetAlbum = libraryData.find(a => a.id === currentAlbumMeta.id);
-        }
-        if (!targetAlbum && nowPlaying) {
+        if (nowPlaying) {
           targetAlbum = libraryData.find(a => 
             (nowPlaying.albumId && a.id === nowPlaying.albumId) ||
-            a.tracks.some(tr => tr.id === nowPlaying.id) ||
-            (a.title.toLowerCase() === (currentAlbumMeta?.title || '').toLowerCase() &&
-              a.artist.toLowerCase() === (nowPlaying.artist || currentAlbumMeta?.artist || '').toLowerCase())
+            a.tracks?.some(tr => tr.id === nowPlaying.id)
           );
+        }
+        if (!targetAlbum && currentAlbumMeta?.id) {
+          targetAlbum = libraryData.find(a => a.id === currentAlbumMeta.id);
+        }
+
+        if (targetAlbum) {
+          const albIdx = libraryData.findIndex(a => a.id === targetAlbum.id);
+          if (albIdx !== -1) {
+            activeCoverflowIndex = albIdx;
+          }
         }
 
         const isAlreadyCoverflow = (activeNavTab === 'coverflow');
         if (!isAlreadyCoverflow) {
           document.querySelector('[data-target="coverflow"]')?.click();
         }
+
         if (targetAlbum) {
           const albIdx = libraryData.findIndex(a => a.id === targetAlbum.id);
           if (albIdx !== -1) {
-            requestAnimationFrame(() => {
+            selectCoverflowAlbum(albIdx);
+            if (nowPlaying) {
               requestAnimationFrame(() => {
-                selectCoverflowAlbum(albIdx);
+                const activeRow = coverflowTableBody.querySelector(`.itunes-table-row[data-track-id="${nowPlaying.id}"]`);
+                if (activeRow) {
+                  coverflowTableBody.querySelectorAll('.itunes-table-row.selected').forEach(r => r.classList.remove('selected'));
+                  activeRow.classList.add('selected');
+                  activeRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
               });
-            });
+            }
           }
         }
       });
@@ -2885,7 +3440,7 @@
           row.addEventListener('click', e => {
             if (e.target.closest('.queue-item-remove-btn')) return;
             currentTrackIndex = absIdx;
-            loadTrack(currentQueue[currentTrackIndex], currentAlbumMeta);
+            loadTrack(currentQueue[currentTrackIndex]);
             renderQueueUI();
             updateActiveTrackUI();
           });
@@ -2996,55 +3551,7 @@
       });
     }
 
-    function renderHomeRecommended() {
-      if (!homeRecommendedBar) return;
-      homeRecommendedBar.innerHTML = '';
-
-      if (!libraryData.length) {
-        homeRecommendedBar.innerHTML = '<div class="recent-empty-text">No albums in library yet.</div>';
-        return;
-      }
-
-      const artistWeights = new Map();
-      const albumWeights = new Map();
-      recentlyPlayedList.forEach((item, idx) => {
-        const weight = Math.max(1, 20 - idx);
-        const art = (item.artist || '').toLowerCase().trim();
-        if (art) artistWeights.set(art, (artistWeights.get(art) || 0) + weight);
-        if (item.albumId) albumWeights.set(item.albumId, (albumWeights.get(item.albumId) || 0) + weight);
-      });
-
-      const scored = libraryData.map((alb, originalIdx) => {
-        const art = (alb.artist || '').toLowerCase().trim();
-        const artistScore = artistWeights.get(art) || 0;
-        const albumScore = albumWeights.get(alb.id) || 0;
-        const score = artistScore * 3 + albumScore;
-        return { alb, score, originalIdx };
-      });
-
-      scored.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        return a.originalIdx - b.originalIdx;
-      });
-
-      const recommendedAlbums = scored.slice(0, 5).map(s => s.alb);
-
-      recommendedAlbums.forEach(alb => {
-        const card = document.createElement('div');
-        card.className = 'recommended-card';
-        card.innerHTML = `
-          <div class="recommended-art-wrap">
-            <img src="${alb.coverUrl || generatePlaceholderCover()}" class="recommended-art-img" draggable="false" />
-          </div>
-          <div class="recommended-title">${escapeHTML(alb.title)}</div>
-          <div class="recommended-artist">${escapeHTML(alb.artist)}</div>
-        `;
-        card.addEventListener('click', () => {
-          navigateToAlbum(alb.id);
-        });
-        homeRecommendedBar.appendChild(card);
-      });
-    }
+    function renderHomeRecommended() {}
 
     function renderHomePlaylists() {
       homePlaylistsBar.innerHTML = playlistsData.length ? '' : '<div class="recent-empty-text">No playlists yet. <span class="home-create-pl-link" id="home-create-pl-btn">Create a playlist</span></div>';
@@ -3074,7 +3581,6 @@
     }
 
     enableHorizontalScrollWheel(recentTracksBar);
-    enableHorizontalScrollWheel(homeRecommendedBar);
     enableHorizontalScrollWheel(homePlaylistsBar);
 
     /* =================================================================
@@ -3180,7 +3686,11 @@
 
       // Devices Menu
       const devSyncBtn = $('menu-devices-sync');
-      if (devSyncBtn) devSyncBtn.classList.toggle('disabled', !hasLibrary);
+      if (devSyncBtn) devSyncBtn.classList.toggle('disabled', !activeSerialPort || !hasLibrary);
+      const devRestoreBtn = $('menu-devices-restore');
+      if (devRestoreBtn) devRestoreBtn.classList.toggle('disabled', !activeSerialPort);
+      const devDisconnectBtn = $('menu-devices-disconnect');
+      if (devDisconnectBtn) devDisconnectBtn.classList.toggle('disabled', !activeSerialPort);
     }
 
     menuBtns.forEach(btn => {
@@ -3364,6 +3874,977 @@
       pageColourChangingEnabled = false;
       try { localStorage.setItem('guahh_color_changing', 'false'); } catch (e) {}
       resetLibraryTheme();
+    });
+
+    /* =================================================================
+       DEVICES & WEB SERIAL SYNC ENGINE (GUAHH SOUND / CARDPUTER)
+    ================================================================= */
+    let activeSerialPort = null;
+    let serialBuffer = '';
+    let isSyncingToDevice = false;
+    let connectedDeviceInfo = null;
+
+    function formatByteSize(bytes) {
+      if (!bytes || isNaN(bytes) || bytes <= 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+    }
+
+    function renderDeviceSongChecklist() {
+      if (!deviceSongSelectionList) return;
+      deviceSongSelectionList.innerHTML = '';
+      let totalCount = 0;
+
+      libraryData.forEach(alb => {
+        (alb.tracks || []).forEach(trk => {
+          totalCount++;
+          const row = document.createElement('label');
+          row.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 5px 8px; font-size: 12px; cursor: pointer; border-bottom: 1px solid #f2f2f5; user-select: none;';
+          row.onmouseover = () => row.style.background = '#f7f7fa';
+          row.onmouseout = () => row.style.background = 'transparent';
+
+          const left = document.createElement('div');
+          left.style.cssText = 'display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;';
+
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.className = 'device-song-checkbox';
+          cb.dataset.trackId = trk.id;
+          cb.checked = true;
+          cb.style.cssText = 'accent-color: #007aff; width: 14px; height: 14px; cursor: pointer; flex-shrink: 0;';
+          cb.addEventListener('change', updateDeviceSelectedSongCount);
+
+          const titleSpan = document.createElement('span');
+          titleSpan.style.cssText = 'font-weight: 500; color: #222222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+          titleSpan.textContent = trk.title;
+
+          const artistSpan = document.createElement('span');
+          artistSpan.style.cssText = 'color: #888888; font-size: 11px; margin-left: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+          artistSpan.textContent = `— ${trk.artist || alb.artist || 'Unknown'}`;
+
+          left.appendChild(cb);
+          left.appendChild(titleSpan);
+          left.appendChild(artistSpan);
+
+          const timeSpan = document.createElement('span');
+          timeSpan.style.cssText = 'color: #999999; font-size: 11px; margin-left: 8px; flex-shrink: 0;';
+          timeSpan.textContent = trk.duration || '--:--';
+
+          row.appendChild(left);
+          row.appendChild(timeSpan);
+          deviceSongSelectionList.appendChild(row);
+        });
+      });
+
+      updateDeviceSelectedSongCount();
+    }
+
+    function updateDeviceSelectedSongCount() {
+      if (!deviceSelectiveCount || !deviceSongSelectionList) return;
+      const checkboxes = deviceSongSelectionList.querySelectorAll('.device-song-checkbox');
+      const total = checkboxes.length;
+      let checked = 0;
+      checkboxes.forEach(c => { if (c.checked) checked++; });
+      deviceSelectiveCount.textContent = `${checked} of ${total} songs selected`;
+    }
+
+    function getSelectedSongIds() {
+      const selected = new Set();
+      if (!deviceSongSelectionList) return selected;
+      deviceSongSelectionList.querySelectorAll('.device-song-checkbox:checked').forEach(c => {
+        if (c.dataset.trackId) selected.add(c.dataset.trackId);
+      });
+      return selected;
+    }
+
+    deviceSyncModeAll?.addEventListener('change', () => {
+      if (deviceSelectiveContainer) deviceSelectiveContainer.style.display = 'none';
+    });
+    deviceSyncModeSelective?.addEventListener('change', () => {
+      if (deviceSelectiveContainer) deviceSelectiveContainer.style.display = 'flex';
+      updateDeviceSelectedSongCount();
+    });
+    deviceSelectAllBtn?.addEventListener('click', () => {
+      if (!deviceSongSelectionList) return;
+      deviceSongSelectionList.querySelectorAll('.device-song-checkbox').forEach(c => c.checked = true);
+      updateDeviceSelectedSongCount();
+    });
+    deviceDeselectAllBtn?.addEventListener('click', () => {
+      if (!deviceSongSelectionList) return;
+      deviceSongSelectionList.querySelectorAll('.device-song-checkbox').forEach(c => c.checked = false);
+      updateDeviceSelectedSongCount();
+    });
+
+    function startEditingDeviceName() {
+      if (isSyncingToDevice) {
+        showToast('Operation in progress. Please wait.');
+        return;
+      }
+      if (!connectedDeviceInfo || !activeSerialPort) {
+        showToast('Please connect your Cardputer first.');
+        return;
+      }
+      if (!deviceCardName || deviceCardName.querySelector('input')) return;
+
+      const currentName = connectedDeviceInfo.name || 'soundOS';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.maxLength = 24;
+      input.value = currentName;
+      input.className = 'device-page-title-input';
+
+      let isFinished = false;
+
+      async function saveRename(val) {
+        if (isFinished) return;
+        isFinished = true;
+        const sanitized = (val || '').trim().substring(0, 24);
+        if (!sanitized || sanitized === currentName) {
+          deviceCardName.textContent = currentName;
+          return;
+        }
+        deviceCardName.textContent = sanitized;
+        try {
+          await sendSerialText(`GUAHH_SET_NAME:${sanitized}\n`);
+          await waitForDeviceResponse('GUAHH_NAME_OK', 5000);
+          connectedDeviceInfo.name = sanitized;
+          deviceCardName.textContent = sanitized;
+          const chooseItem = $('menu-devices-choose');
+          if (chooseItem) chooseItem.textContent = `Connected: ${sanitized} (${connectedDeviceInfo.storage})`;
+          showToast(`Device renamed to "${sanitized}"`);
+        } catch (e) {
+          console.error('Failed to rename device:', e);
+          deviceCardName.textContent = currentName;
+          showToast('Could not rename device: ' + (e.message || 'Unknown error'));
+        }
+      }
+
+      function cancelRename() {
+        if (isFinished) return;
+        isFinished = true;
+        deviceCardName.textContent = currentName;
+      }
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveRename(input.value);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          cancelRename();
+        }
+      });
+
+      input.addEventListener('blur', () => {
+        saveRename(input.value);
+      });
+
+      deviceCardName.textContent = '';
+      deviceCardName.appendChild(input);
+      input.focus();
+      input.select();
+    }
+    deviceCardName?.addEventListener('click', startEditingDeviceName);
+
+    function updateDevicePageView() {
+      const totalTracks = libraryData.reduce((sum, alb) => sum + (alb.tracks?.length || 0), 0);
+      if (syncStatAlbums) syncStatAlbums.textContent = libraryData.length;
+      if (syncStatTracks) syncStatTracks.textContent = totalTracks;
+
+      const isConnected = !!(connectedDeviceInfo && activeSerialPort);
+      const isSD = isConnected && (connectedDeviceInfo.storage === 'SD');
+
+      if (deviceCardName && !deviceCardName.querySelector('input')) {
+        deviceCardName.textContent = connectedDeviceInfo?.name || 'soundOS';
+      }
+
+      if (!isConnected) {
+        if (deviceCardStorage) {
+          deviceCardStorage.textContent = 'Storage: Device Not Connected';
+          deviceCardStorage.style.color = '#888888';
+        }
+        if (syncStatSpace) syncStatSpace.textContent = '--';
+        if (deviceSyncBtn) {
+          deviceSyncBtn.disabled = true;
+          deviceSyncBtn.title = 'Please connect your Cardputer first';
+        }
+        if (deviceStatusText) {
+          deviceStatusText.textContent = 'Disconnected';
+          deviceStatusText.style.color = '#888888';
+        }
+        if (deviceBtnDisconnect) deviceBtnDisconnect.disabled = true;
+        if (deviceBtnRestore) deviceBtnRestore.disabled = true;
+      } else if (isSD) {
+        if (deviceCardStorage) {
+          deviceCardStorage.textContent = 'Storage: MicroSD Card';
+          deviceCardStorage.style.color = '';
+        }
+        if (syncStatSpace) syncStatSpace.textContent = connectedDeviceInfo.freeBytes ? formatByteSize(connectedDeviceInfo.freeBytes) : 'Card Ready';
+        if (deviceSyncBtn) {
+          deviceSyncBtn.disabled = false;
+          deviceSyncBtn.title = '';
+        }
+        if (deviceStatusText) {
+          deviceStatusText.textContent = 'Connected & Ready';
+          deviceStatusText.style.color = '#000000';
+        }
+        if (deviceBtnDisconnect) deviceBtnDisconnect.disabled = false;
+        if (deviceBtnRestore) deviceBtnRestore.disabled = false;
+      } else {
+        if (deviceCardStorage) {
+          deviceCardStorage.textContent = 'Storage: No MicroSD Card Found!';
+          deviceCardStorage.style.color = '#ff3b30';
+        }
+        if (syncStatSpace) syncStatSpace.textContent = 'No SD Card';
+        if (deviceSyncBtn) {
+          deviceSyncBtn.disabled = true;
+          deviceSyncBtn.title = 'Insert a MicroSD card to sync music';
+        }
+        if (deviceStatusText) {
+          deviceStatusText.textContent = 'MicroSD Missing';
+          deviceStatusText.style.color = '#ff3b30';
+        }
+        if (deviceBtnDisconnect) deviceBtnDisconnect.disabled = false;
+        if (deviceBtnRestore) deviceBtnRestore.disabled = true;
+      }
+
+      renderDeviceSongChecklist();
+      if (deviceSyncModeAll) deviceSyncModeAll.checked = true;
+      if (deviceSelectiveContainer) deviceSelectiveContainer.style.display = 'none';
+
+      if (!isSyncingToDevice) {
+        if (deviceProgressSection) deviceProgressSection.style.display = 'none';
+        if (deviceExistingInfo) deviceExistingInfo.textContent = 'Checking device...';
+        queryDeviceExistingTracks().then(existing => {
+          if (deviceExistingInfo && !isSyncingToDevice) {
+            deviceExistingInfo.textContent = existing.tracks.size > 0
+              ? `${existing.tracks.size} songs on Cardputer`
+              : 'No songs on Cardputer';
+          }
+        }).catch(() => {});
+      }
+    }
+
+    $('device-btn-disconnect')?.addEventListener('click', () => {
+      disconnectSerialDevice(false);
+    });
+
+    $('device-btn-restore')?.addEventListener('click', () => {
+      restoreSerialDevice();
+    });
+
+    // Web Serial Communication Helpers
+    let isSerialReaderActive = false;
+    let serialReaderObj = null;
+    let serialDataNotifier = null;
+
+    async function startSerialReadLoop() {
+      if (isSerialReaderActive || !activeSerialPort || !activeSerialPort.readable) return;
+      isSerialReaderActive = true;
+      const decoder = new TextDecoder();
+
+      try {
+        while (activeSerialPort && activeSerialPort.readable && isSerialReaderActive) {
+          try {
+            serialReaderObj = activeSerialPort.readable.getReader();
+            while (isSerialReaderActive) {
+              const { value, done } = await serialReaderObj.read();
+              if (done) break;
+              if (value) {
+                serialBuffer += decoder.decode(value, { stream: true });
+                if (serialDataNotifier) {
+                  const notify = serialDataNotifier;
+                  serialDataNotifier = null;
+                  notify();
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('[Web Serial] Port reader closed or unplugged:', e);
+            if (activeSerialPort) {
+              disconnectSerialDevice(true);
+            }
+            break;
+          } finally {
+            if (serialReaderObj) {
+              try { serialReaderObj.releaseLock(); } catch (e) {}
+              serialReaderObj = null;
+            }
+          }
+        }
+      } finally {
+        isSerialReaderActive = false;
+      }
+    }
+
+    async function sendSerialText(text) {
+      if (!activeSerialPort || !activeSerialPort.writable) throw new Error('Device not connected');
+      const writer = activeSerialPort.writable.getWriter();
+      try {
+        const enc = new TextEncoder();
+        await writer.write(enc.encode(text));
+      } finally {
+        writer.releaseLock();
+      }
+    }
+
+    async function sendSerialBytes(bytes, chunkSize = 1024) {
+      if (!activeSerialPort || !activeSerialPort.writable) throw new Error('Device not connected');
+      const writer = activeSerialPort.writable.getWriter();
+      try {
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+          const chunk = bytes.subarray(i, Math.min(bytes.length, i + chunkSize));
+          await writer.write(chunk);
+          if (i + chunkSize < bytes.length) {
+            await new Promise(r => setTimeout(r, 4));
+          }
+        }
+      } finally {
+        writer.releaseLock();
+      }
+    }
+
+    async function sendSerialBytesWithAck(bytes, chunkSize = 1024, onProgress = null) {
+      if (!activeSerialPort || !activeSerialPort.writable) throw new Error('Device not connected');
+      const writer = activeSerialPort.writable.getWriter();
+      try {
+        const total = bytes.length;
+        let offset = 0;
+        let lastProgressTime = 0;
+        const subPacketSize = 256; // CDC FIFO-safe sub-packet size
+        const subPacketDelay = 4;  // ms between sub-packets (prevents CDC overflow)
+        while (offset < total) {
+          const chunkEnd = Math.min(offset + chunkSize, total);
+
+          // Write chunk in paced 256-byte sub-packets to prevent ESP32-S3 USB CDC FIFO overflow
+          for (let p = offset; p < chunkEnd; p += subPacketSize) {
+            const subEnd = Math.min(p + subPacketSize, chunkEnd);
+            const sub = bytes.subarray(p, subEnd);
+            await writer.write(sub);
+            if (subEnd < chunkEnd) {
+              await new Promise(r => setTimeout(r, subPacketDelay));
+            }
+          }
+          offset = chunkEnd;
+
+          if (onProgress && (Date.now() - lastProgressTime > 80 || offset >= total)) {
+            lastProgressTime = Date.now();
+            onProgress(offset, total);
+          }
+
+          if (offset < total) {
+            // Wait for intermediate chunk acknowledgment (accepts GUAHH_ACK or GUAHH_OK)
+            await waitForDeviceResponse(['GUAHH_ACK', 'GUAHH_OK'], 25000);
+          } else {
+            // Final chunk: Cardputer flushes, closes file, and replies GUAHH_OK
+            await waitForDeviceResponse('GUAHH_OK', 35000);
+          }
+        }
+      } finally {
+        writer.releaseLock();
+      }
+    }
+
+    async function readSerialLine(timeoutMs = 12000) {
+      const startTime = Date.now();
+      while (Date.now() - startTime < timeoutMs) {
+        const nl = serialBuffer.indexOf('\n');
+        if (nl !== -1) {
+          const line = serialBuffer.substring(0, nl).trim();
+          serialBuffer = serialBuffer.substring(nl + 1);
+          if (line.length > 0) return line;
+          continue;
+        }
+        const remaining = timeoutMs - (Date.now() - startTime);
+        if (remaining <= 0) break;
+        await new Promise(resolve => {
+          serialDataNotifier = resolve;
+          setTimeout(resolve, Math.min(remaining, 20));
+        });
+      }
+      throw new Error('Device response timeout');
+    }
+
+    async function waitForDeviceResponse(expectedPrefix, timeoutMs = 15000) {
+      const prefixes = Array.isArray(expectedPrefix) ? expectedPrefix : [expectedPrefix];
+      const startTime = Date.now();
+      while (Date.now() - startTime < timeoutMs) {
+        const remaining = timeoutMs - (Date.now() - startTime);
+        if (remaining <= 0) break;
+        const line = await readSerialLine(remaining).catch(() => null);
+        if (line) {
+          if (!line.startsWith('GUAHH_ACK')) {
+            console.log('[Cardputer -> Web]', line);
+          }
+          for (const p of prefixes) {
+            if (line.startsWith(p)) return line;
+          }
+          if (line.startsWith('GUAHH_ERR')) {
+            let detail = line;
+            if (line.includes('FILE_OPEN_FAILED')) detail = 'Could not open/create storage file: ' + line.substring(line.indexOf('FILE_OPEN_FAILED'));
+            else if (line.includes('STORAGE_FULL')) detail = 'Cardputer storage is full!';
+            else if (line.includes('CHUNK_TIMEOUT')) detail = 'USB data transmission timed out (' + line + ')';
+            throw new Error('Cardputer storage write error: ' + detail);
+          }
+        }
+      }
+      throw new Error(`Timeout waiting for "${expectedPrefix}" from Cardputer`);
+    }
+
+    // Query songs and artwork currently stored on Cardputer to prevent duplicate sync
+    async function queryDeviceExistingTracks() {
+      if (!activeSerialPort) return { tracks: new Set(), covers: new Set() };
+      try {
+        await sendSerialText('GUAHH_GET_EXISTING\n');
+        await waitForDeviceResponse('GUAHH_EXISTING_START', 5000);
+        const tracks = new Set();
+        const covers = new Set();
+        const t0 = Date.now();
+        while (Date.now() - t0 < 8000) {
+          const line = await readSerialLine(3000).catch(() => null);
+          if (!line) break;
+          if (line === 'GUAHH_EXISTING_END') break;
+          if (line.startsWith('TRACK:')) {
+            tracks.add(line.substring(6).trim());
+          } else if (line.startsWith('COVER:')) {
+            covers.add(line.substring(6).trim());
+          }
+        }
+        return { tracks, covers };
+      } catch (e) {
+        console.warn('Could not query existing tracks from Cardputer:', e);
+        return { tracks: new Set(), covers: new Set() };
+      }
+    }
+
+    // Device Connection Handler
+    async function connectSerialDevice() {
+      if (!('serial' in navigator)) {
+        showCustomAlert(
+          'Web Serial Not Supported',
+          'The Web Serial API is required to sync with your M5Stack Cardputer.\nPlease open Guahh Tunes in Google Chrome, Microsoft Edge, or Opera.'
+        );
+        return false;
+      }
+
+      try {
+        showToast('Select your Cardputer USB Serial Port...');
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+        activeSerialPort = port;
+        serialBuffer = '';
+        startSerialReadLoop();
+
+        // Brief delay to allow USB link to establish
+        await new Promise(r => setTimeout(r, 250));
+
+        // Handshake: GUAHH_PING
+        await sendSerialText('GUAHH_PING\n');
+        const pong = await waitForDeviceResponse('GUAHH_PONG', 6000);
+
+        let version = '1.2.0', storage = 'SD', freeBytes = 0, devName = 'soundOS';
+        const nMatch = pong.match(/NAME:([^,\r\n]+)/i);
+        if (nMatch) devName = nMatch[1].trim();
+        else {
+          const pMatch = pong.match(/GUAHH_PONG:([^,\r\n]+?)\s+v/i);
+          if (pMatch) devName = pMatch[1].trim();
+        }
+        const vMatch = pong.match(/v([0-9.]+)/i);
+        if (vMatch) version = vMatch[1];
+        const sMatch = pong.match(/STORAGE:([A-Z]+)/i);
+        if (sMatch) storage = sMatch[1];
+        const fMatch = pong.match(/FREE:([0-9]+)/i);
+        if (fMatch) freeBytes = parseInt(fMatch[1], 10) || 0;
+
+        connectedDeviceInfo = {
+          name: devName,
+          version,
+          storage,
+          freeBytes
+        };
+
+        const chooseItem = $('menu-devices-choose');
+        if (chooseItem) chooseItem.textContent = `Connected: ${devName} (${storage})`;
+        $('menu-devices-sync')?.classList.remove('disabled');
+
+        showToast(`Connected to ${devName} (${storage})`);
+        navigateToDevicePage();
+        return true;
+      } catch (err) {
+        console.error('Serial connection failed:', err);
+        if (err.name !== 'NotFoundError') {
+          showCustomAlert('Connection Error', 'Could not communicate with Cardputer.\nMake sure Guahh Sound firmware is running and the USB port is not open in another application.');
+        }
+        return false;
+      }
+    }
+
+    async function disconnectSerialDevice(isUnplugged = false) {
+      if (!activeSerialPort) return;
+      isSerialReaderActive = false;
+      if (serialReaderObj) {
+        try { await serialReaderObj.cancel(); } catch (e) {}
+        try { serialReaderObj.releaseLock(); } catch (e) {}
+        serialReaderObj = null;
+      }
+      try {
+        await activeSerialPort.close();
+      } catch (e) {}
+      activeSerialPort = null;
+      connectedDeviceInfo = null;
+      serialBuffer = '';
+
+      const chooseItem = $('menu-devices-choose');
+      if (chooseItem) chooseItem.textContent = 'Choose Device (USB Port)...';
+      $('menu-devices-sync')?.classList.add('disabled');
+
+      showToast(isUnplugged ? 'Cardputer unplugged' : 'Cardputer disconnected');
+      const devNavBtn = $('nav-btn-device');
+      if (devNavBtn) devNavBtn.style.display = 'none';
+      if (activeNavTab === 'device') {
+        document.querySelector('[data-target="home"]')?.click();
+      } else {
+        updateDevicePageView();
+      }
+    }
+
+    if ('serial' in navigator) {
+      navigator.serial.addEventListener('disconnect', (event) => {
+        if (activeSerialPort && event.port === activeSerialPort) {
+          console.log('[Web Serial] Cardputer unplugged (disconnect event)');
+          disconnectSerialDevice(true);
+        }
+      });
+    }
+
+    // Artwork Converter: Image -> 116x118 RGB565 raw binary (27,376 bytes, full right pane)
+    function convertCoverToRGB565(imgSrc) {
+      const targetW = 116;
+      const targetH = 118;
+      const totalBytes = targetW * targetH * 2;
+      return new Promise((resolve) => {
+        if (!imgSrc) {
+          resolve(new Uint8Array(totalBytes));
+          return;
+        }
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = targetW;
+          canvas.height = targetH;
+          const ctx = canvas.getContext('2d');
+          // Center-crop to preserve aspect ratio without stretching
+          const aspectImg = (img.naturalWidth || targetW) / (img.naturalHeight || targetH);
+          const aspectTarget = targetW / targetH;
+          let sx = 0, sy = 0, sw = img.naturalWidth || targetW, sh = img.naturalHeight || targetH;
+          if (aspectImg > aspectTarget) {
+            sw = (img.naturalHeight || targetH) * aspectTarget;
+            sx = ((img.naturalWidth || targetW) - sw) / 2;
+          } else {
+            sh = (img.naturalWidth || targetW) / aspectTarget;
+            sy = ((img.naturalHeight || targetH) - sh) / 2;
+          }
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+          const imgData = ctx.getImageData(0, 0, targetW, targetH).data;
+          const out = new Uint8Array(totalBytes);
+          let p = 0;
+          for (let i = 0; i < imgData.length; i += 4) {
+            const r = imgData[i];
+            const g = imgData[i + 1];
+            const b = imgData[i + 2];
+            const rgb565 = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+            out[p++] = rgb565 & 0xFF;         // Little-endian LSB
+            out[p++] = (rgb565 >> 8) & 0xFF;  // Little-endian MSB
+          }
+          resolve(out);
+        };
+        img.onerror = () => resolve(new Uint8Array(totalBytes));
+        img.src = imgSrc;
+      });
+    }
+
+    // Audio Transcoder: Audio Blob -> 16-bit Mono 16,000 Hz PCM WAV with clean normalization & gentle limiting
+    async function transcodeAudioToWav(audioBlob) {
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      const audioCtx = new AudioCtxClass();
+      const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      audioCtx.close();
+
+      // 16 kHz Mono sample rate: crisp audio fidelity without high-frequency aliasing or hiss
+      const targetSampleRate = 16000;
+      const totalRenderSamples = Math.ceil(decodedBuffer.duration * targetSampleRate);
+      const offlineCtx = new OfflineAudioContext(1, totalRenderSamples, targetSampleRate);
+      const src = offlineCtx.createBufferSource();
+      src.buffer = decodedBuffer;
+      src.connect(offlineCtx.destination);
+      src.start(0);
+
+      const renderedBuffer = await offlineCtx.startRendering();
+      const channelData = renderedBuffer.getChannelData(0);
+
+      // Find peak amplitude to normalize cleanly without raising the background noise floor
+      let peak = 0;
+      for (let i = 0; i < channelData.length; i++) {
+        const absVal = Math.abs(channelData[i]);
+        if (absVal > peak) peak = absVal;
+      }
+      const gain = peak > 0.01 ? Math.min(1.15, 0.95 / peak) : 1.0;
+
+      const numSamples = channelData.length;
+      const dataSize = numSamples * 2;
+      const buffer = new ArrayBuffer(44 + dataSize);
+      const view = new DataView(buffer);
+
+      function writeString(offset, str) {
+        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+      }
+
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + dataSize, true);
+      writeString(8, 'WAVE');
+
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);             // Subchunk1Size (16 for PCM)
+      view.setUint16(20, 1, true);              // AudioFormat (1 = PCM)
+      view.setUint16(22, 1, true);              // NumChannels (1 = Mono)
+      view.setUint32(24, targetSampleRate, true);// SampleRate (16000)
+      view.setUint32(28, targetSampleRate * 2, true); // ByteRate (16000 * 1 * 2 = 32000)
+      view.setUint16(32, 2, true);              // BlockAlign (1 * 16/8)
+      view.setUint16(34, 16, true);             // BitsPerSample (16)
+
+      writeString(36, 'data');
+      view.setUint32(40, dataSize, true);
+
+      // Gentle, clean limiting: avoids raising quiet noise floor to eliminate hiss
+      let offset = 44;
+      for (let i = 0; i < numSamples; i++) {
+        let s = channelData[i] * gain;
+        // Transparent soft-limiting only when exceeding 0.95
+        if (s > 0.95) s = 0.95 + 0.05 * Math.tanh((s - 0.95) * 5);
+        else if (s < -0.95) s = -0.95 + 0.05 * Math.tanh((s + 0.95) * 5);
+        s = Math.max(-1, Math.min(1, s));
+        const val = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        view.setInt16(offset, val, true);
+        offset += 2;
+      }
+
+      return new Uint8Array(buffer);
+    }
+
+    // Full Library Synchronization Routine
+    async function startLibrarySync() {
+      if (!connectedDeviceInfo || !activeSerialPort) {
+        const ok = await connectSerialDevice();
+        if (!ok) return;
+      }
+
+      if (!libraryData.length) {
+        showCustomAlert('Library Empty', 'Please import songs into Guahh Tunes first by dragging and dropping audio files.');
+        return;
+      }
+
+      if (!connectedDeviceInfo || connectedDeviceInfo.storage !== 'SD') {
+        showCustomAlert(
+          'MicroSD Card Required',
+          'No MicroSD card was detected on your Cardputer.\n\nMusic files can only be uploaded to a MicroSD card to prevent filling internal device memory.\n\nPlease insert a FAT32 MicroSD card into your Cardputer and reconnect.'
+        );
+        return;
+      }
+
+      isSyncingToDevice = true;
+      if (deviceSyncBtn) deviceSyncBtn.disabled = true;
+      if (deviceBtnDisconnect) deviceBtnDisconnect.disabled = true;
+      if (deviceBtnRestore) deviceBtnRestore.disabled = true;
+      if (deviceStatusText) {
+        deviceStatusText.textContent = 'Syncing...';
+        deviceStatusText.style.color = '#000000';
+      }
+      deviceProgressSection.style.display = 'flex';
+
+      function updateProgress(step, total, msg, details) {
+        const pct = Math.min(100, Math.round((step / Math.max(1, total)) * 100));
+        deviceProgressPct.textContent = `${pct}%`;
+        deviceProgressFill.style.width = `${pct}%`;
+        deviceProgressMsg.textContent = msg;
+        deviceProgressDetails.textContent = details || '';
+      }
+
+      try {
+        const storagePrefix = '/guahh';
+        const skipExisting = deviceSyncSkipExisting ? deviceSyncSkipExisting.checked : true;
+        let existingTracks = new Set();
+        let existingCovers = new Set();
+
+        if (skipExisting) {
+          updateProgress(0, 1, 'Checking Cardputer...', 'Communicating with soundOS...');
+          const existing = await queryDeviceExistingTracks();
+          existingTracks = existing.tracks;
+          existingCovers = existing.covers;
+        }
+
+        const isSelective = deviceSyncModeSelective && deviceSyncModeSelective.checked;
+        const selectedTrackIds = isSelective ? getSelectedSongIds() : null;
+
+        if (isSelective && (!selectedTrackIds || selectedTrackIds.size === 0)) {
+          showCustomAlert('No Songs Selected', 'Please select at least one song to sync to your device.');
+          return;
+        }
+
+        const allTracksToSync = [];
+        for (const alb of libraryData) {
+          for (const trk of (alb.tracks || [])) {
+            if (!isSelective || selectedTrackIds.has(trk.id)) {
+              allTracksToSync.push({ track: trk, album: alb });
+            }
+          }
+        }
+
+        const candidateAlbums = isSelective
+          ? libraryData.filter(alb => (alb.tracks || []).some(trk => selectedTrackIds.has(trk.id)))
+          : libraryData;
+
+        const coversToSync = skipExisting
+          ? candidateAlbums.filter(alb => !existingCovers.has(alb.id))
+          : candidateAlbums;
+
+        const tracksToSync = skipExisting
+          ? allTracksToSync.filter(item => !existingTracks.has(item.track.id))
+          : allTracksToSync;
+        const skippedTracksCount = allTracksToSync.length - tracksToSync.length;
+        const totalItems = 1 + coversToSync.length + tracksToSync.length;
+        let currentStep = 0;
+
+        console.log(`[Sync] Total: ${allTracksToSync.length} tracks. On Device: ${existingTracks.size}. To Upload: ${tracksToSync.length}. Skipping: ${skippedTracksCount}`);
+
+        if (tracksToSync.length === 0 && coversToSync.length === 0) {
+          updateProgress(1, 1, 'All Songs Already Synced!', `All ${allTracksToSync.length} tracks already exist on soundOS.`);
+          showToast(`All ${allTracksToSync.length} tracks are already on ${connectedDeviceInfo?.name || 'soundOS'}.`);
+          deviceProgressMsg.textContent = 'Already Up To Date';
+          deviceProgressDetails.textContent = `All ${allTracksToSync.length} songs are already on device (0 new tracks to sync).`;
+          if (deviceStatusText) {
+            deviceStatusText.textContent = 'Synced & Ready';
+            deviceStatusText.style.color = '#000000';
+          }
+          return;
+        }
+        await sendSerialText('GUAHH_SYNC_START\n');
+        await waitForDeviceResponse('GUAHH_READY', 6000);
+
+        await sendSerialText(`GUAHH_SET_TOTAL:${totalItems}\n`);
+        await waitForDeviceResponse('GUAHH_OK', 4000);
+
+        // 1. Build and send manifest
+        // In full library sync mode, manifest has entire libraryData.
+        // In selective mode, manifest includes all selected tracks PLUS any existing tracks on device so previous songs aren't lost!
+        currentStep++;
+        updateProgress(currentStep, totalItems, 'Sending Library Catalog...', 'Updating library manifest...');
+        const catalogTrackIds = new Set(allTracksToSync.map(item => item.track.id));
+        if (skipExisting) {
+          existingTracks.forEach(id => catalogTrackIds.add(id));
+        }
+
+        let manifest = '';
+        for (const alb of libraryData) {
+          const matchingTracks = isSelective
+            ? (alb.tracks || []).filter(trk => catalogTrackIds.has(trk.id))
+            : (alb.tracks || []);
+          if (!matchingTracks.length) continue;
+
+          const coverPath = `${storagePrefix}/covers/${alb.id}.raw`;
+          manifest += `ALBUM|${alb.id}|${alb.title}|${alb.artist}|${coverPath}\n`;
+          matchingTracks.sort((a, b) => (a.trackNum || 0) - (b.trackNum || 0));
+          for (let i = 0; i < matchingTracks.length; i++) {
+            const trk = matchingTracks[i];
+            const trackPath = `${storagePrefix}/music/${trk.id}.wav`;
+            const num = trk.trackNum || (i + 1);
+            manifest += `TRACK|${trk.id}|${trk.title}|${trk.duration || '3:00'}|${trackPath}|${num}\n`;
+          }
+        }
+        for (const pl of playlistsData) {
+          if (!pl.tracks || !pl.tracks.length) continue;
+          const matchingPlTracks = isSelective
+            ? pl.tracks.filter(trk => catalogTrackIds.has(trk.id))
+            : pl.tracks;
+          if (!matchingPlTracks.length) continue;
+          manifest += `PLAYLIST|${pl.id}|${pl.name}\n`;
+          for (let i = 0; i < matchingPlTracks.length; i++) {
+            const trk = matchingPlTracks[i];
+            const trackPath = `${storagePrefix}/music/${trk.id}.wav`;
+            const num = trk.trackNum || (i + 1);
+            manifest += `PLTRACK|${trk.id}|${trk.title}|${trk.duration || '3:00'}|${trackPath}|${num}\n`;
+          }
+        }
+        const manifestBytes = new TextEncoder().encode(manifest);
+        await sendSerialText(`GUAHH_CATALOG:${manifestBytes.length}\n`);
+        await waitForDeviceResponse('GUAHH_READY_DATA', 8000);
+        await sendSerialBytesWithAck(manifestBytes, 1024);
+
+        // 2. Send Album Covers (116x118 RGB565 full right-pane, only if not already on device)
+        for (let i = 0; i < coversToSync.length; i++) {
+          const alb = coversToSync[i];
+          currentStep++;
+          updateProgress(currentStep, totalItems, `Syncing Artwork (${i + 1}/${coversToSync.length})`, alb.title);
+          const rawCover = await convertCoverToRGB565(alb.coverUrl);
+          await sendSerialText(`GUAHH_COVER:${alb.id}:${rawCover.length}\n`);
+          await waitForDeviceResponse('GUAHH_READY_DATA', 8000);
+          await sendSerialBytesWithAck(rawCover, 1024);
+          await new Promise(r => setTimeout(r, 20)); // Inter-file SD FAT sync delay
+        }
+
+        // 3. Transcode and Send Audio Tracks (only tracks not yet on device)
+        async function prepareTrackWav(item) {
+          let audioBlob = item.track.audioBlob;
+          if (!audioBlob && item.track.audioSrc) {
+            const res = await fetch(item.track.audioSrc);
+            audioBlob = await res.blob();
+          }
+          return await transcodeAudioToWav(audioBlob);
+        }
+
+        if (tracksToSync.length > 0) {
+          let nextTrackPromise = prepareTrackWav(tracksToSync[0]);
+
+          for (let i = 0; i < tracksToSync.length; i++) {
+            const { track: trk } = tracksToSync[i];
+            currentStep++;
+            updateProgress(currentStep, totalItems, `Preparing Track (${i + 1}/${tracksToSync.length})`, trk.title);
+
+            const wavBytes = await nextTrackPromise;
+
+            // Pipeline next track transcode in background while USB transfer is ongoing
+            if (i + 1 < tracksToSync.length) {
+              nextTrackPromise = prepareTrackWav(tracksToSync[i + 1]);
+            } else {
+              nextTrackPromise = null;
+            }
+
+            updateProgress(currentStep, totalItems, `Transferring Track (${i + 1}/${tracksToSync.length})`, `${trk.title} (${formatByteSize(wavBytes.length)})`);
+
+            await sendSerialText(`GUAHH_TRACK:${trk.id}:${wavBytes.length}\n`);
+            await waitForDeviceResponse('GUAHH_READY_DATA', 8000);
+            await sendSerialBytesWithAck(wavBytes, 1024, (sent, total) => {
+              const pct = Math.round((sent / total) * 100);
+              deviceProgressDetails.textContent = `${trk.title} (${pct}% - ${formatByteSize(sent)} / ${formatByteSize(total)})`;
+            });
+            await new Promise(r => setTimeout(r, 20)); // Inter-file SD FAT sync delay
+          }
+        }
+
+        // 4. Finalize Sync
+        updateProgress(totalItems, totalItems, 'Finalizing sync...', 'Reloading Cardputer library...');
+        await sendSerialText('GUAHH_SYNC_END\n');
+        await waitForDeviceResponse('GUAHH_DONE', 12000);
+
+        deviceProgressMsg.textContent = 'Sync Complete!';
+        const syncSummary = skippedTracksCount > 0
+          ? `Transferred ${tracksToSync.length} new songs (${skippedTracksCount} already on Cardputer kept).`
+          : `Successfully synced ${libraryData.length} albums and ${allTracksToSync.length} songs.`;
+        deviceProgressDetails.textContent = syncSummary;
+        if (deviceStatusText) deviceStatusText.textContent = 'Synced & Ready';
+        if (deviceExistingInfo) deviceExistingInfo.textContent = `${allTracksToSync.length} songs on Cardputer`;
+
+        showToast(`Sync complete! ${connectedDeviceInfo?.name || 'soundOS'} is ready.`);
+      } catch (err) {
+        console.error('Device sync error:', err);
+        deviceProgressMsg.textContent = 'Sync Interrupted';
+        deviceProgressDetails.textContent = err.message || 'Error communicating with Cardputer.';
+        if (deviceStatusText) deviceStatusText.textContent = 'Sync Failed';
+        showCustomAlert('Sync Failed', `Could not complete synchronization:\n${err.message || 'Unknown USB communication error'}`);
+      } finally {
+        isSyncingToDevice = false;
+        if (deviceSyncBtn) deviceSyncBtn.disabled = false;
+        if (deviceBtnDisconnect) deviceBtnDisconnect.disabled = false;
+        if (deviceBtnRestore) deviceBtnRestore.disabled = false;
+      }
+    }
+
+    // Restore Device (Erase All Music & Library)
+    async function restoreSerialDevice() {
+      if (isSyncingToDevice) {
+        showToast('Operation in progress. Please wait.');
+        return;
+      }
+      if (!connectedDeviceInfo || !activeSerialPort) {
+        const ok = await connectSerialDevice();
+        if (!ok) return;
+      }
+
+      const confirmed = await showCustomConfirm(
+        'Restore Cardputer?',
+        'This will permanently erase all songs, albums, artwork, and library data from your Cardputer storage.\n\nAre you sure you want to proceed?',
+        'Erase All Music'
+      );
+      if (!confirmed) return;
+
+      isSyncingToDevice = true;
+      if (deviceSyncBtn) deviceSyncBtn.disabled = true;
+      if (deviceBtnDisconnect) deviceBtnDisconnect.disabled = true;
+      if (deviceBtnRestore) deviceBtnRestore.disabled = true;
+
+      if (deviceStatusText) deviceStatusText.textContent = 'Restoring...';
+      deviceProgressSection.style.display = 'flex';
+      deviceProgressMsg.textContent = 'Restoring Device...';
+      deviceProgressDetails.textContent = 'Erasing all music files and artwork from Cardputer...';
+      deviceProgressPct.textContent = '50%';
+      deviceProgressFill.style.width = '50%';
+
+      try {
+        showToast('Restoring Cardputer (erasing all music)...');
+        await sendSerialText('GUAHH_RESTORE\n');
+        await waitForDeviceResponse('GUAHH_RESTORE_OK', 20000);
+
+        // Ping device again to update free storage
+        await new Promise(r => setTimeout(r, 400));
+        await sendSerialText('GUAHH_PING\n');
+        const pong = await waitForDeviceResponse('GUAHH_PONG', 6000).catch(() => null);
+        if (pong) {
+          const fMatch = pong.match(/FREE:([0-9]+)/i);
+          if (fMatch) connectedDeviceInfo.freeBytes = parseInt(fMatch[1], 10) || 0;
+        }
+
+        deviceProgressPct.textContent = '100%';
+        deviceProgressFill.style.width = '100%';
+        deviceProgressMsg.textContent = 'Restore Complete';
+        deviceProgressDetails.textContent = 'All music and library data have been wiped from device.';
+        if (deviceStatusText) deviceStatusText.textContent = 'Restored & Empty';
+        syncStatSpace.textContent = connectedDeviceInfo.freeBytes ? formatByteSize(connectedDeviceInfo.freeBytes) : 'Device Ready';
+
+        showToast('Cardputer restored: All music erased.');
+      } catch (err) {
+        console.error('Device restore error:', err);
+        deviceProgressMsg.textContent = 'Restore Failed';
+        deviceProgressDetails.textContent = err.message || 'Error communicating with Cardputer.';
+        if (deviceStatusText) deviceStatusText.textContent = 'Restore Error';
+        showCustomAlert('Restore Failed', `Could not restore Cardputer:\n${err.message || 'USB communication error'}`);
+      } finally {
+        isSyncingToDevice = false;
+        if (deviceSyncBtn) deviceSyncBtn.disabled = false;
+        if (deviceBtnDisconnect) deviceBtnDisconnect.disabled = false;
+        if (deviceBtnRestore) deviceBtnRestore.disabled = false;
+      }
+    }
+
+    // Wire Up Devices Menu & Actions
+    $('menu-devices-choose')?.addEventListener('click', () => {
+      closeAllMenuDropdowns();
+      connectSerialDevice();
+    });
+
+    $('menu-devices-sync')?.addEventListener('click', () => {
+      closeAllMenuDropdowns();
+      if (!activeSerialPort || !connectedDeviceInfo) {
+        showToast('Please choose and connect a device first');
+        return;
+      }
+      navigateToDevicePage();
+    });
+
+    deviceSyncBtn?.addEventListener('click', () => {
+      startLibrarySync();
     });
 
     /* =================================================================
@@ -3731,7 +5212,9 @@
       }
 
       if (activeCoverflowIndex < 0 || activeCoverflowIndex >= libraryData.length) {
-        const curAlbId = currentAlbumMeta?.id || currentQueue[currentTrackIndex]?.albumId;
+        const curTrack = currentQueue[currentTrackIndex];
+        const curAlb = curTrack ? libraryData.find(a => (curTrack.albumId && a.id === curTrack.albumId) || a.tracks?.some(t => t.id === curTrack.id)) : null;
+        const curAlbId = curAlb?.id || currentAlbumMeta?.id;
         const foundIdx = libraryData.findIndex(a => a.id === curAlbId);
         activeCoverflowIndex = foundIdx !== -1 ? foundIdx : 0;
       }
@@ -3814,7 +5297,7 @@
         const trackNumDisplay = track.trackNum || (trkIdx + 1);
 
         tableHtml += `
-          <div class="itunes-table-row ${zebraClass} ${isCurrent ? 'active-playing' : ''}"
+          <div class="itunes-table-row ${zebraClass} ${isCurrent ? 'active-playing selected' : ''}"
                data-track-id="${track.id}"
                data-track-idx="${trkIdx}">
             <div class="col-num">${isCurrent ? (isPlaying ? '▶' : '❙❙') : trackNumDisplay}</div>
@@ -3867,9 +5350,34 @@
       coverflowScrubber.value = activeCoverflowIndex;
 
       const stageWidth = coverflowStage ? coverflowStage.clientWidth : window.innerWidth;
-      const spacing = stageWidth < 800 ? 46 : (stageWidth < 1100 ? 56 : 66);
-      const centerGap = stageWidth < 800 ? 142 : (stageWidth < 1100 ? 175 : 205);
-      const zDrop = stageWidth < 800 ? 165 : 195;
+      const cardElem = cards[0];
+      const cardWidth = cardElem ? cardElem.offsetWidth : 280;
+
+      let spacing, centerGap, zDrop, baseRot;
+
+      if (stageWidth < 700) {
+        // Compact desktop window: keep stack tightened so covers don't spread out too far apart
+        spacing = Math.max(22, Math.round(cardWidth * 0.12));
+        centerGap = Math.round(cardWidth * 0.48);
+        zDrop = Math.round(cardWidth * 0.58);
+        baseRot = 60;
+      } else if (stageWidth < 1024) {
+        // Medium desktop window
+        spacing = Math.max(38, Math.round(cardWidth * 0.16));
+        centerGap = Math.round(cardWidth * 0.54);
+        zDrop = 175;
+        baseRot = 58;
+      } else if (stageWidth < 1280) {
+        spacing = 56;
+        centerGap = 175;
+        zDrop = 190;
+        baseRot = 56;
+      } else {
+        spacing = 66;
+        centerGap = 205;
+        zDrop = 195;
+        baseRot = 56;
+      }
 
       cards.forEach((card, i) => {
         const diff = i - activeCoverflowIndex;
@@ -3893,19 +5401,19 @@
         } else {
           // Side Cover: full resolution, non-selected covers further away get a little darker
           card.classList.remove('is-center');
-          const darkOpacity = Math.min(0.72, 0.04 + dist * 0.095);
+          const darkOpacity = Math.min(0.68, 0.04 + dist * 0.09);
           darkOverlays.forEach(ov => ov.style.opacity = String(darkOpacity));
 
           if (diff < 0) {
             const offsetX = diff * spacing - centerGap;
             const offsetZ = -zDrop - (dist * 4);
-            const rot = Math.min(68, 56 + dist * 2);
+            const rot = Math.min(70, baseRot + dist * 1.8);
             card.style.transform = `translate3d(${offsetX}px, 0px, ${offsetZ}px) rotateY(${rot}deg) scale(0.86)`;
             card.style.zIndex = String(100 - dist);
           } else {
             const offsetX = diff * spacing + centerGap;
             const offsetZ = -zDrop - (dist * 4);
-            const rot = -Math.min(68, 56 + dist * 2);
+            const rot = -Math.min(70, baseRot + dist * 1.8);
             card.style.transform = `translate3d(${offsetX}px, 0px, ${offsetZ}px) rotateY(${rot}deg) scale(0.86)`;
             card.style.zIndex = String(100 - dist);
           }
@@ -3992,7 +5500,9 @@
         if (!isDraggingCoverflow) return;
         const deltaX = e.clientX - coverflowDragStartX;
         if (Math.abs(deltaX) > 6) coverflowHasMovedDuringDrag = true;
-        const steps = -Math.round(deltaX / 68);
+        const stageW = coverflowStage ? coverflowStage.clientWidth : window.innerWidth;
+        const dragStepSize = stageW < 700 ? 46 : (stageW < 1000 ? 56 : 68);
+        const steps = -Math.round(deltaX / dragStepSize);
         const newIndex = Math.max(0, Math.min(libraryData.length - 1, coverflowDragStartIndex + steps));
         if (newIndex !== activeCoverflowIndex) {
           selectCoverflowAlbum(newIndex);
@@ -4320,7 +5830,12 @@
 
     function loadTrack(track, albumMeta) {
       if (!track) return;
-      const meta = albumMeta || currentAlbumMeta;
+      const resolvedAlbum = (albumMeta?.id && libraryData.find(a => a.id === albumMeta.id)) ||
+                            libraryData.find(a => (track.albumId && a.id === track.albumId) || a.tracks?.some(t => t.id === track.id)) ||
+                            albumMeta ||
+                            currentAlbumMeta;
+      currentAlbumMeta = resolvedAlbum;
+      const meta = currentAlbumMeta;
       audioEl.src = track.audioSrc;
       audioEl.play().then(() => { isPlaying = true; updatePlayStateUI(); updateMediaSession(track, meta); }).catch(() => {});
 
@@ -4342,10 +5857,10 @@
       if (repeatMode === 'one') { audioEl.currentTime = 0; audioEl.play(); return; }
       if (currentTrackIndex < currentQueue.length - 1) {
         currentTrackIndex++;
-        loadTrack(currentQueue[currentTrackIndex], currentAlbumMeta);
+        loadTrack(currentQueue[currentTrackIndex]);
       } else if (repeatMode === 'all') {
         currentTrackIndex = 0;
-        loadTrack(currentQueue[currentTrackIndex], currentAlbumMeta);
+        loadTrack(currentQueue[currentTrackIndex]);
       } else {
         isPlaying = false;
         updatePlayStateUI();
@@ -4358,7 +5873,7 @@
       if (audioEl.currentTime > 3 || currentTrackIndex === 0) audioEl.currentTime = 0;
       else {
         currentTrackIndex--;
-        loadTrack(currentQueue[currentTrackIndex], currentAlbumMeta);
+        loadTrack(currentQueue[currentTrackIndex]);
       }
       updateActiveTrackUI();
     }
