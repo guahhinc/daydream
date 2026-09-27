@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>daydream</title>
   
-  <!-- Roboto & Roboto Mono Fonts -->
+  <!-- Roboto & Roboto Mono Fonts (Thin / Light 100 & 300) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400&family=Roboto+Mono:wght@100;300;400&display=swap" rel="stylesheet">
 
   <!-- Synchronous QR Generator -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -22,13 +22,15 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Roboto', sans-serif;
+      font-family: 'Roboto', sans-serif !important;
+      font-weight: 300 !important;
       text-transform: lowercase;
       -webkit-font-smoothing: antialiased;
     }
 
     .mono {
-      font-family: 'Roboto Mono', monospace;
+      font-family: 'Roboto Mono', monospace !important;
+      font-weight: 300 !important;
     }
 
     body {
@@ -41,7 +43,7 @@
       padding: 20px 16px;
     }
 
-    /* Left-Aligned Big Text Navigation */
+    /* Left-Aligned Big Text Navigation (Thin, No Bold) */
     .nav-header {
       width: 100%;
       max-width: 480px;
@@ -56,7 +58,6 @@
       background: transparent;
       border: none;
       font-size: 1.85rem;
-      font-weight: 700;
       color: #4a4a4a;
       cursor: pointer;
       padding: 0;
@@ -181,7 +182,6 @@
       padding: 9px 8px;
       font-size: 0.98rem;
       line-height: 1.2;
-      font-weight: 700;
       border: 1px solid #ffffff;
       background: #ffffff;
       color: #000000;
@@ -276,7 +276,7 @@
   <!-- ================= SEND MODE ================= -->
   <div class="view-panel active" id="sendPanel">
     <div class="file-zone" onclick="document.getElementById('fileInput').click()">
-      <div style="font-weight: 700; margin-bottom: 4px;">drop file here or click to browse</div>
+      <div style="margin-bottom: 4px;">drop file here or click to browse</div>
       <div style="font-size: 0.72rem; color: #666666;">supports all formats up to 3mb</div>
       <input type="file" id="fileInput" class="file-input" onchange="onFileChosen(event)" />
     </div>
@@ -284,15 +284,15 @@
     <!-- Combined Options & File Info Box -->
     <div class="box" id="optionsBox">
       <div class="field-row" id="fileInfoRow" style="display: none; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 1px solid #1a1a1a;">
-        <span id="txName" style="color: #ffffff; font-weight: 700;">-</span>
+        <span id="txName" style="color: #ffffff;">-</span>
         <span id="txSize" class="mono" style="color: #ffffff;">-</span>
       </div>
 
       <div class="field-row">
         <label for="compressSelect">compression</label>
         <select id="compressSelect" onchange="recomputeFile()">
-          <option value="super" selected>super deflate</option>
-          <option value="deflate">deflate</option>
+          <option value="deflate" selected>deflate</option>
+          <option value="super">super deflate</option>
           <option value="none">none (raw)</option>
         </select>
       </div>
@@ -362,7 +362,7 @@
     </div>
 
     <div class="result-box" id="rxSuccessBox">
-      <div style="font-weight: 700;" id="rxResultTitle">transfer complete</div>
+      <div id="rxResultTitle">transfer complete</div>
       <div id="rxFileName" style="font-size: 0.8rem; color: #888888;">-</div>
       <div id="rxPreview"></div>
       <div class="btn-group">
@@ -380,7 +380,7 @@
 
   <script>
     /* ========================================================
-       CORE & LEGACY UTILITIES
+       CORE UTILITIES
     ======================================================== */
     function formatBytes(bytes) {
       if (!bytes || bytes === 0) return '0 b';
@@ -432,7 +432,6 @@
       return u8;
     }
 
-    // Legacy File Reader fallback for Safari < 14 and older Android browsers
     function readFileBuffer(file) {
       return new Promise(function(resolve, reject) {
         if (file.arrayBuffer) {
@@ -450,7 +449,6 @@
       });
     }
 
-    // Smart Image Compression (scales large 3MB phone photos down to crisp ~80-120KB)
     function smartCompressImage(file, maxDim, quality) {
       return new Promise(function(resolve) {
         var img = new Image();
@@ -491,7 +489,6 @@
       });
     }
 
-    // Pako Deflate with Level 9 Super Deflate
     async function compressPayload(u8, mode) {
       if (mode === 'none') return { data: u8, comp: false };
       var level = (mode === 'super') ? 9 : 6;
@@ -521,7 +518,6 @@
       return { data: u8, comp: false };
     }
 
-    // Universal Decompressor
     async function decompressPayload(u8, isComp) {
       if (!isComp) return u8;
 
@@ -558,7 +554,7 @@
     }
 
     /* ========================================================
-       SENDER LOGIC (AUTO-ADAPTIVE >400KB & SUPER DEFLATE)
+       SENDER LOGIC (DEFLATE DEFAULT & 0.8s FINAL HANG)
     ======================================================== */
     var rawFileData = null;
     var selectedFileObj = null;
@@ -583,7 +579,6 @@
       activeFileType = file.type || 'application/octet-stream';
       rawFileData = await readFileBuffer(file);
 
-      // Adaptive scaling for files > 400KB
       if (rawFileData.length > 400 * 1024) {
         var adaptedChunk = rawFileData.length > 1024 * 1024 ? 340 : 260;
         var adaptedFps = rawFileData.length > 1024 * 1024 ? 12 : 10;
@@ -611,7 +606,6 @@
       activeFileName = selectedFileObj.name;
       activeFileType = selectedFileObj.type || 'application/octet-stream';
 
-      // Super Deflate: losslessly scale & compress photos down 95% + apply level 9 deflate
       if (compSetting === 'super' && selectedFileObj.type && selectedFileObj.type.indexOf('image/') === 0) {
         var optimized = await smartCompressImage(selectedFileObj, 1600, 0.76);
         if (optimized) {
@@ -625,7 +619,6 @@
       var workingPayload = compResult.data;
       var wasCompressed = compResult.comp;
 
-      // Show File Name and Effective Size directly in options box
       document.getElementById('fileInfoRow').style.display = 'flex';
       document.getElementById('txName').textContent = activeFileName.toLowerCase();
       document.getElementById('txSize').textContent = (workingPayload.length < selectedFileObj.size)
@@ -681,10 +674,6 @@
       document.getElementById('fpsNum').textContent = val;
       document.getElementById('txRate').textContent = val + ' fps';
       updateTxStats();
-      if (isBroadcasting) {
-        clearInterval(broadcastTimer);
-        broadcastTimer = setInterval(tickBroadcast, 1000 / currentFps);
-      }
     }
 
     function handleStartStreamClick() {
@@ -699,7 +688,7 @@
         isBroadcasting = true;
         btn.textContent = 'pause stream';
         document.getElementById('txStatus').textContent = 'streaming';
-        broadcastTimer = setInterval(tickBroadcast, 1000 / currentFps);
+        broadcastStep();
         return;
       }
 
@@ -726,7 +715,7 @@
           btn.disabled = false;
           btn.textContent = 'pause stream';
           document.getElementById('txStatus').textContent = 'streaming';
-          broadcastTimer = setInterval(tickBroadcast, 1000 / currentFps);
+          broadcastStep();
         }
       }, 1000);
     }
@@ -734,7 +723,8 @@
     function pauseBroadcast() {
       isBroadcasting = false;
       if (broadcastTimer) {
-        clearInterval(broadcastTimer);
+        clearTimeout(broadcastTimer);
+        broadcastTimer = null;
       }
       var btn = document.getElementById('btnToggleTx');
       if (packetSchedule.length > 0) {
@@ -743,16 +733,26 @@
       }
     }
 
-    function tickBroadcast() {
-      if (packetSchedule.length === 0) return;
-      scheduleCursor++;
-      if (scheduleCursor >= packetSchedule.length) {
+    /* Broadcast Step with 0.8s hang on final frame */
+    function broadcastStep() {
+      if (!isBroadcasting || packetSchedule.length === 0) return;
+
+      drawFrameToCanvas(packetSchedule[scheduleCursor], 'qrCanvas');
+      updateTxStats();
+
+      var isLastFrame = (scheduleCursor >= packetSchedule.length - 1);
+      var delay = 1000 / currentFps;
+
+      if (isLastFrame) {
+        delay = 800;
         scheduleCursor = 0;
         loopCounter++;
         constructSchedule(loopCounter % 2 === 0);
+      } else {
+        scheduleCursor++;
       }
-      drawFrameToCanvas(packetSchedule[scheduleCursor], 'qrCanvas');
-      updateTxStats();
+
+      broadcastTimer = setTimeout(broadcastStep, delay);
     }
 
     function drawFrameToCanvas(content, canvasId) {
@@ -807,32 +807,39 @@
       document.getElementById('txTimeLeft').textContent = 'time left: ' + formatTime(remainingSec);
     }
 
+    /* Reset button: keeps file, rewinds to Loop 1, Frame 0 */
     function resetTx() {
       pauseBroadcast();
       if (countdownTimer) {
         clearInterval(countdownTimer);
         countdownTimer = null;
       }
-      broadcastTimer = null;
-      rawFileData = null;
-      selectedFileObj = null;
-      packetSchedule = [];
-      document.getElementById('fileInput').value = '';
-      document.getElementById('fileInfoRow').style.display = 'none';
-      document.getElementById('btnToggleTx').disabled = true;
-      document.getElementById('btnToggleTx').textContent = 'start stream';
-      document.getElementById('txProgressBar').style.width = '0%';
-      document.getElementById('txFrameCount').textContent = '0 / 0';
-      document.getElementById('txTimeLeft').textContent = 'time left: --';
-      document.getElementById('txStatus').textContent = 'idle';
-      var canvas = document.getElementById('qrCanvas');
-      var ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      loopCounter = 1;
+      scheduleCursor = 0;
+
+      if (packetSchedule.length > 0) {
+        constructSchedule(false);
+        drawFrameToCanvas(packetSchedule[0], 'qrCanvas');
+        var btn = document.getElementById('btnToggleTx');
+        btn.disabled = false;
+        btn.textContent = 'start stream';
+        document.getElementById('txStatus').textContent = 'ready';
+        updateTxStats();
+      } else {
+        document.getElementById('txProgressBar').style.width = '0%';
+        document.getElementById('txFrameCount').textContent = '0 / 0';
+        document.getElementById('txTimeLeft').textContent = 'time left: --';
+        document.getElementById('txStatus').textContent = 'idle';
+        var canvas = document.getElementById('qrCanvas');
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
     }
 
     /* ========================================================
-       RECEIVER LOGIC (CAMERA ROLL SAVE & ESTIMATED UNFINISHED)
+       RECEIVER LOGIC (FILTERED UNFINISHED DOWNLOADS)
     ======================================================== */
     var videoStream = null;
     var cameraMode = 'environment';
@@ -905,7 +912,9 @@
         document.getElementById('btnFlip').disabled = false;
         document.getElementById('rxStatus').textContent = 'tracking optical stream...';
 
-        scanTick();
+        if (!scanLoopId) {
+          scanLoopId = requestAnimationFrame(scanTick);
+        }
       } catch (err) {
         alert('camera access error: ' + err.message);
         document.getElementById('rxStatus').textContent = 'camera error';
@@ -934,12 +943,17 @@
     }
 
     function resetRx() {
+      if (scanLoopId) {
+        cancelAnimationFrame(scanLoopId);
+        scanLoopId = null;
+      }
+
+      rxDone = false;
       rxFileId = null;
       rxMeta = null;
       rxChunks = [];
       rxTotalExpected = 0;
       rxReceivedCount = 0;
-      rxDone = false;
       currentReadyBlob = null;
       currentReadyFileName = '';
       chunkHits.clear();
@@ -951,18 +965,19 @@
       document.getElementById('rxProgressBar').style.width = '0%';
       document.getElementById('rxChunkCount').textContent = 'chunks: 0 / 0';
       document.getElementById('rxMissingCount').textContent = 'missing: 0';
+      document.getElementById('targetBox').style.borderColor = 'rgba(255, 255, 255, 0.4)';
       document.getElementById('rxStatus').textContent = videoStream ? 'tracking optical stream...' : 'camera inactive';
 
       drawHeatmap();
 
-      if (videoStream && !scanLoopId) {
+      if (videoStream) {
         scanLoopId = requestAnimationFrame(scanTick);
       }
     }
 
     async function scanTick() {
       var video = document.getElementById('video');
-      if (video.readyState >= video.HAVE_CURRENT_DATA && !rxDone) {
+      if (video && video.readyState >= video.HAVE_CURRENT_DATA && !rxDone) {
         var detectedRaw = null;
         var vw = video.videoWidth;
         var vh = video.videoHeight;
@@ -999,6 +1014,8 @@
 
       if (!rxDone && videoStream) {
         scanLoopId = requestAnimationFrame(scanTick);
+      } else {
+        scanLoopId = null;
       }
     }
 
@@ -1048,6 +1065,7 @@
           name: decodeURIComponent(parts[7] || 'file')
         };
         document.getElementById('rxStatus').textContent = 'streaming: ' + rxMeta.name.toLowerCase();
+        updateRxStats();
       }
 
       if (type === 'ab') {
@@ -1076,6 +1094,14 @@
       }, 60);
     }
 
+    /* Validates if the file format supports unfinished image estimation */
+    function isUnfinishedSupported() {
+      if (!rxMeta) return false;
+      var mime = (rxMeta.mime || '').toLowerCase();
+      var name = (rxMeta.name || '').toLowerCase();
+      return mime.indexOf('image/') === 0 || /\.(jpe?g|png|webp|bmp|gif)$/i.test(name);
+    }
+
     function updateRxStats() {
       var pct = Math.floor((rxReceivedCount / (rxTotalExpected || 1)) * 100);
       document.getElementById('rxProgressPct').textContent = pct + '%';
@@ -1083,8 +1109,9 @@
       document.getElementById('rxChunkCount').textContent = 'chunks: ' + rxReceivedCount + ' / ' + rxTotalExpected;
       document.getElementById('rxMissingCount').textContent = 'missing: ' + (rxTotalExpected - rxReceivedCount);
 
+      // Blocked on unsupported types like text, PDFs, archives, and binaries
       var partialBtn = document.getElementById('btnDownloadPartial');
-      if (pct >= 70 && !rxDone) {
+      if (pct >= 70 && !rxDone && isUnfinishedSupported()) {
         partialBtn.style.display = 'block';
         partialBtn.textContent = 'download unfinished (' + pct + '%)';
       } else {
@@ -1115,7 +1142,6 @@
       }
     }
 
-    /* Synthesize & Reconstruct Unfinished Image on Canvas */
     async function reconstructImageCanvas(blob) {
       return new Promise(function(resolve) {
         var img = new Image();
@@ -1139,9 +1165,8 @@
       });
     }
 
-    /* Stitches unfinished chunks with estimated padding & forms an image */
     async function downloadUnfinished() {
-      if (rxReceivedCount === 0 || !rxTotalExpected) return;
+      if (rxReceivedCount === 0 || !rxTotalExpected || !isUnfinishedSupported()) return;
 
       var sampleLen = 0;
       for (var i = 1; i <= rxTotalExpected; i++) {
@@ -1161,12 +1186,10 @@
           merged.set(rxChunks[j], offset);
           offset += rxChunks[j].length;
         } else {
-          // In JPEG entropy streams, 0x00 bytes decode to neutral gray blocks
           offset += sampleLen;
         }
       }
 
-      // Append JPEG End-Of-Image marker (FF D9) so decoders can cleanly finalize
       if (offset + 2 <= totalLen) {
         merged[offset] = 0xFF;
         merged[offset + 1] = 0xD9;
@@ -1187,12 +1210,7 @@
       var filename = (rxMeta && rxMeta.name) ? 'partial_' + rxMeta.name : 'partial_image.jpg';
 
       var initialBlob = new Blob([finalBytes], { type: mime });
-      var completedBlob = initialBlob;
-
-      // If it is an image, re-synthesize cleanly via Canvas
-      if (mime.indexOf('image/') === 0) {
-        completedBlob = await reconstructImageCanvas(initialBlob);
-      }
+      var completedBlob = await reconstructImageCanvas(initialBlob);
 
       currentReadyBlob = completedBlob;
       currentReadyFileName = filename;
@@ -1203,6 +1221,11 @@
 
     async function assembleAndComplete() {
       rxDone = true;
+      if (scanLoopId) {
+        cancelAnimationFrame(scanLoopId);
+        scanLoopId = null;
+      }
+
       document.getElementById('rxStatus').textContent = 'verifying payload...';
       document.getElementById('btnDownloadPartial').style.display = 'none';
 
@@ -1277,7 +1300,7 @@
       document.getElementById('rxSuccessBox').style.display = 'flex';
     }
 
-    /* Direct Camera Roll Saving via Web Share API */
+    /* Web Share API for Mobile Camera Roll Saving */
     async function handleSaveAction() {
       if (!currentReadyBlob) return;
 
@@ -1285,7 +1308,6 @@
       var mime = currentReadyBlob.type || 'image/jpeg';
       var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-      // Web Share API triggers native "Save Image" / "Save to Photos" on mobile
       if (isMobile && navigator.canShare) {
         try {
           var testFile = new File([currentReadyBlob], filename, { type: mime });
@@ -1301,7 +1323,6 @@
         }
       }
 
-      // Standard desktop download anchor fallback
       var url = URL.createObjectURL(currentReadyBlob);
       var a = document.createElement('a');
       a.href = url;
