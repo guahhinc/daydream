@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>airbeam // optical transfer</title>
+  
+  <!-- Roboto & Roboto Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Synchronous QR Generator -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+  <!-- Pure JS QR Scanner -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      text-transform: lowercase;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .mono {
+      font-family: 'Roboto Mono', monospace;
+    }
+
+    body {
+      background-color: #000000;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+    }
+
+    header {
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #1a1a1a;
+      padding-bottom: 12px;
+    }
+
+    .title {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .subtitle {
+      font-size: 0.75rem;
+      color: #707070;
+      margin-top: 2px;
+    }
+
+    /* Tabs */
+    .tab-bar {
+      width: 100%;
+      max-width: 480px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid #222222;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      background: #000000;
+      color: #707070;
+      border: none;
+      padding: 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: #000000;
+    }
+
+    .view-panel {
+      width: 100%;
+      max-width: 480px;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .view-panel.active {
+      display: flex;
+    }
+
+    .box {
+      border: 1px solid #222222;
+      background: #000000;
+      padding: 14px;
+    }
+
+    .file-zone {
+      border: 1px dashed #333333;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .file-zone:hover {
+      border-color: #ffffff;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .field-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: #888888;
+      margin-bottom: 8px;
+    }
+
+    .field-row:last-child {
+      margin-bottom: 0;
+    }
+
+    select, input[type="range"] {
+      background: #000000;
+      color: #ffffff;
+      border: 1px solid #333333;
+      padding: 4px 6px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    .stage {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000000;
+      border: 1px solid #222222;
+      padding: 16px;
+    }
+
+    #qrCanvas {
+      width: 290px;
+      height: 290px;
+      display: block;
+      background: #ffffff;
+    }
+
+    .metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.8rem;
+    }
+
+    .metric-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: #1a1a1a;
+      overflow: hidden;
+      margin: 4px 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #ffffff;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 1px solid #ffffff;
+      background: #ffffff;
+      color: #000000;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+    }
+
+    .btn-outline {
+      background: #000000;
+      color: #ffffff;
+      border: 1px solid #282828;
+    }
+
+    .btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+
+    /* Receiver view */
+    .camera-box {
+      width: 100%;
+      aspect-ratio: 1;
+      position: relative;
+      background: #000000;
+      border: 1px solid #222222;
+      overflow: hidden;
+    }
+
+    #video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .target-box {
+      position: absolute;
+      top: 15%;
+      left: 15%;
+      width: 70%;
+      height: 70%;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      pointer-events: none;
+    }
+
+    #heatmapCanvas {
+      width: 100%;
+      height: 32px;
+      background: #080808;
+      border: 1px solid #1a1a1a;
+      display: block;
+      margin-top: 6px;
+    }
+
+    .result-box {
+      border: 1px solid #ffffff;
+      padding: 14px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Fullscreen Stream Overlay */
+    #fullscreenOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000000;
+      z-index: 9999;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    #fullscreenOverlay.active {
+      display: flex;
+    }
+
+    .fs-canvas-container {
+      background: #ffffff;
+      padding: 8px;
+      border: 1px solid #333333;
+    }
+
+    #fsQrCanvas {
+      width: 320px;
+      height: 320px;
+      display: block;
+      background: #ffffff;
+    }
+
+    .fs-metrics {
+      width: 100%;
+      max-width: 336px;
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.8rem;
+    }
+
+    .fs-exit-btn {
+      margin-top: 16px;
+      max-width: 336px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title">airbeam // optical transceiver</div>
+    <div class="subtitle">zero network air-gapped optical file transmission</div>
+  </header>
+
+  <!-- Mode Selector -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabSend" onclick="setMode('send')">send</button>
+    <button class="tab-btn" id="tabRecv" onclick="setMode('recv')">receive</button>
+  </div>
+
+  <!-- ================= SEND MODE ================= -->
+  <div class="view-panel active" id="sendPanel">
+    <div class="file-zone" onclick="document.getElementById('fileInput').click()">
+      <div style="font-weight: 700; margin-bottom: 4px;">drop file here or click to browse</div>
+      <div style="font-size: 0.72rem; color: #666666;">supports all formats up to 3mb</div>
+      <input type="file" id="fileInput" class="file-input" onchange="onFileChosen(event)" />
+    </div>
+
+    <div class="box" id="sendInfoBox" style="display: none;">
+      <div class="field-row">
+        <span id="txName" style="color: #ffffff; font-weight: 700;">-</span>
+        <span id="txSize" class="mono">-</span>
+      </div>
+      <div class="field-row" style="margin-top: 4px;">
+        <span>compression</span>
+        <span id="txCompressState" class="mono">-</span>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="field-row">
+        <label for="chunkSizeSelect">chunk payload size</label>
+        <select id="chunkSizeSelect" onchange="recomputeFile()">
+          <option value="260">260 bytes (easy decode)</option>
+          <option value="380" selected>380 bytes (balanced)</option>
+          <option value="540">540 bytes (dense)</option>
+        </select>
+      </div>
+      <div class="field-row" style="margin-top: 10px;">
+        <label for="fpsInput">burst speed: <span id="fpsNum" class="mono">14</span> fps</label>
+        <input type="range" id="fpsInput" min="4" max="24" value="14" oninput="onSpeedChange(this.value)" />
+      </div>
+    </div>
+
+    <div class="stage">
+      <canvas id="qrCanvas" width="300" height="300"></canvas>
+    </div>
+
+    <div class="box metrics">
+      <div class="metric-line">
+        <span id="txStatus">status: idle</span>
+        <span id="txFrameCount" class="mono">0 / 0</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="txProgressBar"></div>
+      </div>
+      <div class="metric-line" style="color: #666666; font-size: 0.75rem;">
+        <span id="txLoopCount" class="mono">loop: 0</span>
+        <span id="txRate" class="mono">0 kb/s</span>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn" id="btnStartStream" onclick="initiateFullscreenStream()" disabled>start stream</button>
+      <button class="btn btn-outline" onclick="resetTx()">reset</button>
+    </div>
+  </div>
+
+  <!-- ================= RECEIVE MODE ================= -->
+  <div class="view-panel" id="recvPanel">
+    <div class="camera-box">
+      <video id="video" playsinline muted autoplay></video>
+      <div class="target-box"></div>
+    </div>
+
+    <div class="box metrics">
+      <div class="metric-line">
+        <span id="rxStatus">camera inactive</span>
+        <span id="rxProgressPct" class="mono">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="rxProgressBar"></div>
+      </div>
+      <div class="metric-line" style="color: #666666; font-size: 0.75rem;">
+        <span id="rxChunkCount" class="mono">chunks: 0 / 0</span>
+        <span id="rxMissingCount" class="mono">missing: 0</span>
+      </div>
+      <canvas id="heatmapCanvas"></canvas>
+    </div>
+
+    <div class="result-box" id="rxSuccessBox">
+      <div style="font-weight: 700;">transfer complete</div>
+      <div id="rxFileName" style="font-size: 0.8rem; color: #888888;">-</div>
+      <a class="btn" id="rxDownloadBtn" href="#" download="">save file</a>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn" id="btnCamToggle" onclick="startCamera()">start camera</button>
+      <button class="btn btn-outline" id="btnFlip" onclick="flipCamera()" disabled>switch camera</button>
+    </div>
+  </div>
+
+  <!-- ================= FULLSCREEN STREAM OVERLAY ================= -->
+  <div id="fullscreenOverlay">
+    <div class="fs-canvas-container">
+      <canvas id="fsQrCanvas" width="340" height="340"></canvas>
+    </div>
+
+    <div class="fs-metrics">
+      <div class="metric-line">
+        <span id="fsStatus" style="font-weight: 700;">starting in 2s...</span>
+        <span id="fsFrameCount" class="mono">frame 0 / 0</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="fsProgressBar"></div>
+      </div>
+      <div class="metric-line" style="color: #666666; font-size: 0.75rem;">
+        <span id="fsLoopCount" class="mono">loop: 1</span>
+        <span id="fsRate" class="mono">14 fps</span>
+      </div>
+    </div>
+
+    <button class="btn btn-outline fs-exit-btn" onclick="exitFullscreenStream()">exit stream</button>
+  </div>
+
+  <script>
+    /* ========================================================
+       CORE UTILITIES
+    ======================================================== */
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 b';
+      const k = 1024;
+      const units = ['b', 'kb', 'mb', 'gb'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + units[i];
+    }
+
+    function crc32(u8) {
+      let table = [];
+      for (let i = 0; i < 256; i++) {
+        let c = i;
+        for (let k = 0; k < 8; k++) {
+          c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+        }
+        table[i] = c;
+      }
+      let crc = 0 ^ (-1);
+      for (let i = 0; i < u8.length; i++) {
+        crc = (crc >>> 8) ^ table[(crc ^ u8[i]) & 0xFF];
+      }
+      return (crc ^ (-1)) >>> 0;
+    }
+
+    function u8ToBase64(u8) {
+      let s = '';
+      const step = 8192;
+      for (let i = 0; i < u8.length; i += step) {
+        s += String.fromCharCode.apply(null, u8.subarray(i, Math.min(i + step, u8.length)));
+      }
+      return btoa(s);
+    }
+
+    function base64ToU8(b64) {
+      const s = atob(b64);
+      const u8 = new Uint8Array(s.length);
+      for (let i = 0; i < s.length; i++) {
+        u8[i] = s.charCodeAt(i);
+      }
+      return u8;
+    }
+
+    function setMode(mode) {
+      document.getElementById('sendPanel').classList.toggle('active', mode === 'send');
+      document.getElementById('recvPanel').classList.toggle('active', mode === 'recv');
+      document.getElementById('tabSend').classList.toggle('active', mode === 'send');
+      document.getElementById('tabRecv').classList.toggle('active', mode === 'recv');
+
+      if (mode === 'recv') {
+        exitFullscreenStream();
+      } else {
+        stopCamera();
+      }
+    }
+
+    /* ========================================================
+       SENDER LOGIC
+    ======================================================== */
+    let rawFileData = null;
+    let selectedFileObj = null;
+    let packetSchedule = [];
+    let scheduleCursor = 0;
+    let isBroadcasting = false;
+    let broadcastTimer = null;
+    let countdownTimer = null;
+    let currentFps = 14;
+    let loopCounter = 1;
+
+    async function onFileChosen(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      selectedFileObj = file;
+      rawFileData = new Uint8Array(await file.arrayBuffer());
+      await buildPackets();
+    }
+
+    async function buildPackets() {
+      if (!rawFileData || !selectedFileObj) return;
+
+      document.getElementById('sendInfoBox').style.display = 'block';
+      document.getElementById('txName').textContent = selectedFileObj.name.toLowerCase();
+      document.getElementById('txSize').textContent = formatBytes(selectedFileObj.size);
+
+      // Deflate Compression via Streams
+      let workingPayload = rawFileData;
+      let wasCompressed = false;
+      try {
+        if (typeof CompressionStream !== 'undefined') {
+          const cs = new CompressionStream('deflate');
+          const res = new Response(new Blob([rawFileData]).stream().pipeThrough(cs));
+          const compBuf = new Uint8Array(await res.arrayBuffer());
+          if (compBuf.length < rawFileData.length) {
+            workingPayload = compBuf;
+            wasCompressed = true;
+          }
+        }
+      } catch (err) {
+        console.warn('compression skipped:', err);
+      }
+
+      document.getElementById('txCompressState').textContent = wasCompressed 
+        ? `${formatBytes(workingPayload.length)} (deflate)` 
+        : 'raw';
+
+      const chunkSize = parseInt(document.getElementById('chunkSizeSelect').value) || 380;
+      const totalChunks = Math.ceil(workingPayload.length / chunkSize);
+      const fileId = Math.random().toString(36).substring(2, 6);
+      const fileCrc = crc32(rawFileData);
+
+      // Metadata Packet: ab0|id|total|size|comp(0/1)|crc|mime|name
+      const metaPacket = `ab0|${fileId}|${totalChunks}|${selectedFileObj.size}|${wasCompressed ? 1 : 0}|${fileCrc}|${encodeURIComponent(selectedFileObj.type || 'application/octet-stream')}|${encodeURIComponent(selectedFileObj.name)}`;
+
+      // Data Packets: ab|id|index|total|base64
+      const dataPackets = [];
+      for (let i = 0; i < totalChunks; i++) {
+        const slice = workingPayload.subarray(i * chunkSize, (i + 1) * chunkSize);
+        dataPackets.push(`ab|${fileId}|${i + 1}|${totalChunks}|${u8ToBase64(slice)}`);
+      }
+
+      // Schedule assembly: interleave metadata every 12 chunks
+      packetSchedule = [];
+      packetSchedule.push(metaPacket);
+      for (let i = 0; i < dataPackets.length; i++) {
+        packetSchedule.push(dataPackets[i]);
+        if ((i + 1) % 12 === 0 && i !== dataPackets.length - 1) {
+          packetSchedule.push(metaPacket);
+        }
+      }
+
+      scheduleCursor = 0;
+      loopCounter = 1;
+
+      // Draw initial preview frame
+      drawFrameToCanvas(packetSchedule[0], 'qrCanvas');
+      updateTxStats();
+
+      // Enable start stream button (waiting for user interaction)
+      const btn = document.getElementById('btnStartStream');
+      btn.disabled = false;
+      btn.textContent = 'start stream';
+      document.getElementById('txStatus').textContent = 'status: ready to stream';
+    }
+
+    function recomputeFile() {
+      if (rawFileData) buildPackets();
+    }
+
+    function onSpeedChange(val) {
+      currentFps = parseInt(val);
+      document.getElementById('fpsNum').textContent = val;
+      document.getElementById('fsRate').textContent = `${val} fps`;
+      if (isBroadcasting) {
+        clearInterval(broadcastTimer);
+        broadcastTimer = setInterval(tickBroadcast, 1000 / currentFps);
+      }
+    }
+
+    /* Fullscreen + 2-second countdown sequence */
+    async function initiateFullscreenStream() {
+      if (!packetSchedule || packetSchedule.length === 0) return;
+
+      const overlay = document.getElementById('fullscreenOverlay');
+      overlay.classList.add('active');
+
+      // Request browser fullscreen (with fallback for Safari/iOS)
+      try {
+        if (overlay.requestFullscreen) {
+          await overlay.requestFullscreen();
+        } else if (overlay.webkitRequestFullscreen) {
+          await overlay.webkitRequestFullscreen();
+        }
+      } catch (e) {
+        console.warn('native fullscreen blocked or unsupported:', e);
+      }
+
+      scheduleCursor = 0;
+      loopCounter = 1;
+
+      // Show handshake frame 0 immediately so camera can detect file details
+      drawFrameToCanvas(packetSchedule[0], 'fsQrCanvas');
+      updateFullscreenStats();
+
+      const fsStatus = document.getElementById('fsStatus');
+      let countdown = 2;
+      fsStatus.textContent = `starting in ${countdown}s...`;
+
+      clearInterval(countdownTimer);
+      countdownTimer = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          fsStatus.textContent = `starting in ${countdown}s...`;
+        } else {
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+          fsStatus.textContent = 'streaming';
+          startBroadcastLoop();
+        }
+      }, 1000);
+    }
+
+    function startBroadcastLoop() {
+      isBroadcasting = true;
+      clearInterval(broadcastTimer);
+      broadcastTimer = setInterval(tickBroadcast, 1000 / currentFps);
+    }
+
+    function tickBroadcast() {
+      if (packetSchedule.length === 0) return;
+      scheduleCursor++;
+      if (scheduleCursor >= packetSchedule.length) {
+        scheduleCursor = 0;
+        loopCounter++;
+      }
+      drawFrameToCanvas(packetSchedule[scheduleCursor], 'fsQrCanvas');
+      updateFullscreenStats();
+    }
+
+    function updateFullscreenStats() {
+      const total = packetSchedule.length;
+      document.getElementById('fsFrameCount').textContent = `frame ${scheduleCursor + 1} / ${total}`;
+      const pct = Math.floor(((scheduleCursor + 1) / total) * 100);
+      document.getElementById('fsProgressBar').style.width = pct + '%';
+      document.getElementById('fsLoopCount').textContent = `loop: ${loopCounter}`;
+      document.getElementById('fsRate').textContent = `${currentFps} fps`;
+    }
+
+    function exitFullscreenStream() {
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+      if (broadcastTimer) {
+        clearInterval(broadcastTimer);
+        broadcastTimer = null;
+      }
+      isBroadcasting = false;
+
+      const overlay = document.getElementById('fullscreenOverlay');
+      overlay.classList.remove('active');
+
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+
+      document.getElementById('txStatus').textContent = 'status: idle';
+      updateTxStats();
+    }
+
+    // Handle escape key or native swipe-to-exit fullscreen
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && document.getElementById('fullscreenOverlay').classList.contains('active')) {
+        exitFullscreenStream();
+      }
+    });
+    document.addEventListener('webkitfullscreenchange', () => {
+      if (!document.webkitFullscreenElement && document.getElementById('fullscreenOverlay').classList.contains('active')) {
+        exitFullscreenStream();
+      }
+    });
+
+    /* Synchronous canvas QR drawer */
+    function drawFrameToCanvas(content, canvasId) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+
+      try {
+        const qr = qrcode(0, 'L');
+        qr.addData(content);
+        qr.make();
+        const modCount = qr.getModuleCount();
+        const cellSize = Math.floor(width / modCount);
+        const margin = Math.floor((width - cellSize * modCount) / 2);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, width);
+        ctx.fillStyle = '#000000';
+
+        for (let r = 0; r < modCount; r++) {
+          for (let c = 0; c < modCount; c++) {
+            if (qr.isDark(r, c)) {
+              ctx.fillRect(margin + c * cellSize, margin + r * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('qr draw error:', err);
+      }
+    }
+
+    function updateTxStats() {
+      const total = packetSchedule.length || 1;
+      document.getElementById('txFrameCount').textContent = `${scheduleCursor + 1} / ${total}`;
+      const pct = Math.floor(((scheduleCursor + 1) / total) * 100);
+      document.getElementById('txProgressBar').style.width = pct + '%';
+      document.getElementById('txLoopCount').textContent = `loop: ${loopCounter}`;
+      document.getElementById('txRate').textContent = `${currentFps} fps`;
+    }
+
+    function resetTx() {
+      exitFullscreenStream();
+      rawFileData = null;
+      selectedFileObj = null;
+      packetSchedule = [];
+      document.getElementById('fileInput').value = '';
+      document.getElementById('sendInfoBox').style.display = 'none';
+      document.getElementById('btnStartStream').disabled = true;
+      document.getElementById('txProgressBar').style.width = '0%';
+      document.getElementById('txFrameCount').textContent = '0 / 0';
+      document.getElementById('txStatus').textContent = 'status: idle';
+      const canvas = document.getElementById('qrCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    /* ========================================================
+       RECEIVER LOGIC (CAMERA & DETECTOR)
+    ======================================================== */
+    let videoStream = null;
+    let cameraMode = 'environment';
+    let scanLoopId = null;
+    let nativeDetector = null;
+
+    let rxFileId = null;
+    let rxMeta = null;
+    let rxChunks = [];
+    let rxTotalExpected = 0;
+    let rxReceivedCount = 0;
+    let rxDone = false;
+
+    const downCanvas = document.createElement('canvas');
+    const downCtx = downCanvas.getContext('2d', { willReadFrequently: true });
+
+    async function checkNativeDetector() {
+      if ('BarcodeDetector' in window) {
+        try {
+          const supported = await BarcodeDetector.getSupportedFormats();
+          if (supported.includes('qr_code')) {
+            nativeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+          }
+        } catch (e) {
+          nativeDetector = null;
+        }
+      }
+    }
+    checkNativeDetector();
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: cameraMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        });
+
+        videoStream = stream;
+        const video = document.getElementById('video');
+        video.srcObject = stream;
+        video.setAttribute('playsinline', 'true');
+        await video.play();
+
+        document.getElementById('btnCamToggle').textContent = 'stop camera';
+        document.getElementById('btnCamToggle').onclick = stopCamera;
+        document.getElementById('btnFlip').disabled = false;
+        document.getElementById('rxStatus').textContent = 'tracking optical stream...';
+
+        scanTick();
+      } catch (err) {
+        alert('camera access error: ' + err.message);
+        document.getElementById('rxStatus').textContent = 'camera error';
+      }
+    }
+
+    function stopCamera() {
+      if (videoStream) {
+        videoStream.getTracks().forEach(t => t.stop());
+        videoStream = null;
+      }
+      if (scanLoopId) cancelAnimationFrame(scanLoopId);
+      document.getElementById('btnCamToggle').textContent = 'start camera';
+      document.getElementById('btnCamToggle').onclick = startCamera;
+      document.getElementById('btnFlip').disabled = true;
+      document.getElementById('rxStatus').textContent = 'camera inactive';
+    }
+
+    function flipCamera() {
+      cameraMode = cameraMode === 'environment' ? 'user' : 'environment';
+      stopCamera();
+      startCamera();
+    }
+
+    async function scanTick() {
+      const video = document.getElementById('video');
+      if (video.readyState >= video.HAVE_CURRENT_DATA && !rxDone) {
+        let detectedRaw = null;
+
+        // Native hardware decode
+        if (nativeDetector) {
+          try {
+            const barcodes = await nativeDetector.detect(video);
+            if (barcodes.length > 0) {
+              detectedRaw = barcodes[0].rawValue;
+            }
+          } catch (e) {}
+        }
+
+        // jsQR fallback
+        if (!detectedRaw && window.jsQR) {
+          const w = 480;
+          const h = Math.round((video.videoHeight / video.videoWidth) * w) || 360;
+          downCanvas.width = w;
+          downCanvas.height = h;
+          downCtx.drawImage(video, 0, 0, w, h);
+          const img = downCtx.getImageData(0, 0, w, h);
+          const res = jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
+          if (res && res.data) {
+            detectedRaw = res.data;
+          }
+        }
+
+        if (detectedRaw) {
+          parsePacket(detectedRaw);
+        }
+      }
+
+      if (!rxDone && videoStream) {
+        scanLoopId = requestAnimationFrame(scanTick);
+      }
+    }
+
+    function parsePacket(str) {
+      if (!str.startsWith('ab|') && !str.startsWith('ab0|')) return;
+      const parts = str.split('|');
+      const type = parts[0];
+      const fId = parts[1];
+
+      // New transmission detected
+      if (rxFileId !== fId) {
+        rxFileId = fId;
+        rxTotalExpected = parseInt(parts[2]);
+        rxChunks = new Array(rxTotalExpected + 1).fill(null);
+        rxReceivedCount = 0;
+        rxMeta = null;
+        rxDone = false;
+        document.getElementById('rxSuccessBox').style.display = 'none';
+        updateRxStats();
+        drawHeatmap();
+      }
+
+      // Metadata frame
+      if (type === 'ab0' && !rxMeta) {
+        rxMeta = {
+          total: parseInt(parts[2]),
+          size: parseInt(parts[3]),
+          comp: parts[4] === '1',
+          crc: parseInt(parts[5]),
+          mime: decodeURIComponent(parts[6] || 'application/octet-stream'),
+          name: decodeURIComponent(parts[7] || 'file')
+        };
+        document.getElementById('rxStatus').textContent = `streaming: ${rxMeta.name.toLowerCase()}`;
+      }
+
+      // Chunk frame
+      if (type === 'ab') {
+        const idx = parseInt(parts[2]);
+        if (idx >= 1 && idx <= rxTotalExpected && !rxChunks[idx]) {
+          rxChunks[idx] = base64ToU8(parts[4]);
+          rxReceivedCount++;
+          updateRxStats();
+          drawHeatmap();
+
+          if (rxReceivedCount >= rxTotalExpected && rxMeta && !rxDone) {
+            assembleAndComplete();
+          }
+        }
+      }
+    }
+
+    function updateRxStats() {
+      const pct = Math.floor((rxReceivedCount / (rxTotalExpected || 1)) * 100);
+      document.getElementById('rxProgressPct').textContent = pct + '%';
+      document.getElementById('rxProgressBar').style.width = pct + '%';
+      document.getElementById('rxChunkCount').textContent = `chunks: ${rxReceivedCount} / ${rxTotalExpected}`;
+      document.getElementById('rxMissingCount').textContent = `missing: ${rxTotalExpected - rxReceivedCount}`;
+    }
+
+    function drawHeatmap() {
+      const canvas = document.getElementById('heatmapCanvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width = canvas.clientWidth;
+      const h = canvas.height = canvas.clientHeight;
+      ctx.fillStyle = '#080808';
+      ctx.fillRect(0, 0, w, h);
+
+      if (rxTotalExpected <= 0) return;
+
+      const cols = Math.min(rxTotalExpected, 80);
+      const rows = Math.ceil(rxTotalExpected / cols);
+      const cellW = w / cols;
+      const cellH = h / rows;
+
+      for (let i = 1; i <= rxTotalExpected; i++) {
+        const col = (i - 1) % cols;
+        const row = Math.floor((i - 1) / cols);
+        ctx.fillStyle = rxChunks[i] ? '#ffffff' : '#1a1a1a';
+        ctx.fillRect(col * cellW, row * cellH, cellW - 0.5, cellH - 0.5);
+      }
+    }
+
+    async function assembleAndComplete() {
+      rxDone = true;
+      document.getElementById('rxStatus').textContent = 'verifying payload...';
+
+      let totalLen = 0;
+      for (let i = 1; i <= rxTotalExpected; i++) {
+        totalLen += rxChunks[i].length;
+      }
+
+      const merged = new Uint8Array(totalLen);
+      let offset = 0;
+      for (let i = 1; i <= rxTotalExpected; i++) {
+        merged.set(rxChunks[i], offset);
+        offset += rxChunks[i].length;
+      }
+
+      let finalBytes = merged;
+      if (rxMeta.comp) {
+        try {
+          const ds = new DecompressionStream('deflate');
+          const res = new Response(new Blob([merged]).stream().pipeThrough(ds));
+          finalBytes = new Uint8Array(await res.arrayBuffer());
+        } catch (e) {
+          console.error('decompression failed', e);
+        }
+      }
+
+      const calculatedCrc = crc32(finalBytes);
+      const isVerified = (calculatedCrc === rxMeta.crc);
+
+      const blob = new Blob([finalBytes], { type: rxMeta.mime });
+      const url = URL.createObjectURL(blob);
+
+      const downloadBtn = document.getElementById('rxDownloadBtn');
+      downloadBtn.href = url;
+      downloadBtn.download = rxMeta.name;
+      downloadBtn.textContent = `save ${rxMeta.name.toLowerCase()}`;
+
+      document.getElementById('rxFileName').textContent = `${rxMeta.name.toLowerCase()} (${formatBytes(finalBytes.length)}) ${isVerified ? '• crc verified' : '• crc mismatch'}`;
+      document.getElementById('rxSuccessBox').style.display = 'flex';
+      document.getElementById('rxStatus').textContent = 'complete';
+      if (navigator.vibrate) navigator.vibrate(80);
+    }
+  </script>
+</body>
+</html>
