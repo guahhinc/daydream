@@ -126,9 +126,9 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #000000;
+      background: #ffffff;
       border: 1px solid #222222;
-      padding: 16px;
+      padding: 18px;
     }
 
     #qrCanvas {
@@ -218,12 +218,13 @@
 
     .target-box {
       position: absolute;
-      top: 15%;
-      left: 15%;
-      width: 70%;
-      height: 70%;
+      top: 12.5%;
+      left: 12.5%;
+      width: 75%;
+      height: 75%;
       border: 1px solid rgba(255, 255, 255, 0.4);
       pointer-events: none;
+      transition: border-color 0.05s ease;
     }
 
     #heatmapCanvas {
@@ -289,14 +290,14 @@
       <div class="field-row" style="margin-top: 10px;">
         <label for="chunkSizeSelect">chunk payload size</label>
         <select id="chunkSizeSelect" onchange="recomputeFile()">
-          <option value="260" selected>260 bytes (easy decode)</option>
-          <option value="380">380 bytes (balanced)</option>
-          <option value="540">540 bytes (dense)</option>
+          <option value="180" selected>180 bytes (high reliability)</option>
+          <option value="260">260 bytes (balanced)</option>
+          <option value="380">380 bytes (dense)</option>
         </select>
       </div>
       <div class="field-row" style="margin-top: 10px;">
-        <label for="fpsInput">burst speed: <span id="fpsNum" class="mono">12</span> fps</label>
-        <input type="range" id="fpsInput" min="4" max="24" value="12" oninput="onSpeedChange(this.value)" />
+        <label for="fpsInput">burst speed: <span id="fpsNum" class="mono">8</span> fps</label>
+        <input type="range" id="fpsInput" min="4" max="20" value="8" oninput="onSpeedChange(this.value)" />
       </div>
     </div>
 
@@ -314,7 +315,7 @@
       </div>
       <div class="metric-line" style="color: #666666; font-size: 0.75rem;">
         <span id="txLoopCount" class="mono">loop: 0</span>
-        <span id="txRate" class="mono">12 fps</span>
+        <span id="txRate" class="mono">8 fps</span>
       </div>
     </div>
 
@@ -328,7 +329,7 @@
   <div class="view-panel" id="recvPanel">
     <div class="camera-box">
       <video id="video" playsinline muted autoplay></video>
-      <div class="target-box"></div>
+      <div class="target-box" id="targetBox"></div>
     </div>
 
     <div class="box metrics">
@@ -428,7 +429,7 @@
     let isBroadcasting = false;
     let broadcastTimer = null;
     let countdownTimer = null;
-    let currentFps = 12;
+    let currentFps = 8;
     let loopCounter = 1;
 
     async function onFileChosen(e) {
@@ -457,7 +458,7 @@
       let workingPayload = rawFileData;
       let wasCompressed = false;
 
-      // Deflate compression (default)
+      // Deflate compression
       if (compSetting === 'deflate') {
         try {
           if (typeof CompressionStream !== 'undefined') {
@@ -478,7 +479,7 @@
         ? `${formatBytes(workingPayload.length)} (deflate)` 
         : 'raw';
 
-      const chunkSize = parseInt(document.getElementById('chunkSizeSelect').value) || 260;
+      const chunkSize = parseInt(document.getElementById('chunkSizeSelect').value) || 180;
       const totalChunks = Math.ceil(workingPayload.length / chunkSize);
       const fileId = Math.random().toString(36).substring(2, 6);
       const fileCrc = crc32(rawFileData);
@@ -493,12 +494,12 @@
         dataPackets.push(`ab|${fileId}|${i + 1}|${totalChunks}|${u8ToBase64(slice)}`);
       }
 
-      // Schedule assembly: interleave metadata every 12 chunks
+      // Interleave metadata every 10 frames for fast handshake
       packetSchedule = [];
       packetSchedule.push(metaPacket);
       for (let i = 0; i < dataPackets.length; i++) {
         packetSchedule.push(dataPackets[i]);
-        if ((i + 1) % 12 === 0 && i !== dataPackets.length - 1) {
+        if ((i + 1) % 10 === 0 && i !== dataPackets.length - 1) {
           packetSchedule.push(metaPacket);
         }
       }
@@ -506,11 +507,9 @@
       scheduleCursor = 0;
       loopCounter = 1;
 
-      // Draw initial preview frame
       drawFrameToCanvas(packetSchedule[0], 'qrCanvas');
       updateTxStats();
 
-      // Enable start stream button (waits for click)
       const btn = document.getElementById('btnToggleTx');
       btn.disabled = false;
       btn.textContent = 'start stream';
@@ -531,7 +530,6 @@
       }
     }
 
-    /* Start Stream with 2-second countdown */
     function handleStartStreamClick() {
       const btn = document.getElementById('btnToggleTx');
 
@@ -541,7 +539,6 @@
       }
 
       if (broadcastTimer) {
-        // Resume from paused state immediately
         isBroadcasting = true;
         btn.textContent = 'pause stream';
         document.getElementById('txStatus').textContent = 'status: streaming';
@@ -549,7 +546,6 @@
         return;
       }
 
-      // Initial start: wait 2 seconds while displaying metadata frame
       scheduleCursor = 0;
       loopCounter = 1;
       drawFrameToCanvas(packetSchedule[0], 'qrCanvas');
@@ -599,7 +595,7 @@
       updateTxStats();
     }
 
-    /* Synchronous canvas QR drawer */
+    /* Upgraded: Error Correction Level 'M' (15%) + Consistent Quiet Zone */
     function drawFrameToCanvas(content, canvasId) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
@@ -607,11 +603,11 @@
       const width = canvas.width;
 
       try {
-        const qr = qrcode(0, 'L');
+        const qr = qrcode(0, 'M');
         qr.addData(content);
         qr.make();
         const modCount = qr.getModuleCount();
-        const cellSize = Math.floor(width / modCount);
+        const cellSize = Math.floor((width - 16) / modCount);
         const margin = Math.floor((width - cellSize * modCount) / 2);
 
         ctx.fillStyle = '#ffffff';
@@ -658,12 +654,12 @@
       document.getElementById('txStatus').textContent = 'status: idle';
       const canvas = document.getElementById('qrCanvas');
       const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#000000';
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
     /* ========================================================
-       RECEIVER LOGIC (CAMERA & DETECTOR)
+       RECEIVER LOGIC (HIGH-RESOLUTION RETICLE CROP)
     ======================================================== */
     let videoStream = null;
     let cameraMode = 'environment';
@@ -677,8 +673,9 @@
     let rxReceivedCount = 0;
     let rxDone = false;
 
-    const downCanvas = document.createElement('canvas');
-    const downCtx = downCanvas.getContext('2d', { willReadFrequently: true });
+    // Viewfinder cropped sampling canvas
+    const cropCanvas = document.createElement('canvas');
+    const cropCtx = cropCanvas.getContext('2d', { willReadFrequently: true });
 
     async function checkNativeDetector() {
       if ('BarcodeDetector' in window) {
@@ -697,7 +694,12 @@
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: cameraMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+          video: { 
+            facingMode: cameraMode, 
+            width: { ideal: 1280 }, 
+            height: { ideal: 720 },
+            frameRate: { ideal: 30, min: 30 }
+          },
           audio: false
         });
 
@@ -737,37 +739,47 @@
       startCamera();
     }
 
+    /* Center-Cropped Scanning Engine */
     async function scanTick() {
       const video = document.getElementById('video');
       if (video.readyState >= video.HAVE_CURRENT_DATA && !rxDone) {
         let detectedRaw = null;
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
 
-        // Native hardware decode
-        if (nativeDetector) {
-          try {
-            const barcodes = await nativeDetector.detect(video);
-            if (barcodes.length > 0) {
-              detectedRaw = barcodes[0].rawValue;
-            }
-          } catch (e) {}
-        }
+        if (vw > 0 && vh > 0) {
+          // Crop strictly to the reticle view (center 75%)
+          const cropSize = Math.floor(Math.min(vw, vh) * 0.75);
+          const sx = Math.floor((vw - cropSize) / 2);
+          const sy = Math.floor((vh - cropSize) / 2);
+          const targetDim = 380; // High module clarity for decoder
 
-        // jsQR fallback
-        if (!detectedRaw && window.jsQR) {
-          const w = 480;
-          const h = Math.round((video.videoHeight / video.videoWidth) * w) || 360;
-          downCanvas.width = w;
-          downCanvas.height = h;
-          downCtx.drawImage(video, 0, 0, w, h);
-          const img = downCtx.getImageData(0, 0, w, h);
-          const res = jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
-          if (res && res.data) {
-            detectedRaw = res.data;
+          cropCanvas.width = targetDim;
+          cropCanvas.height = targetDim;
+          cropCtx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, targetDim, targetDim);
+
+          // 1. Try Hardware-Accelerated BarcodeDetector on the crop
+          if (nativeDetector) {
+            try {
+              const barcodes = await nativeDetector.detect(cropCanvas);
+              if (barcodes.length > 0) {
+                detectedRaw = barcodes[0].rawValue;
+              }
+            } catch (e) {}
           }
-        }
 
-        if (detectedRaw) {
-          parsePacket(detectedRaw);
+          // 2. High-performance jsQR on the focused crop
+          if (!detectedRaw && window.jsQR) {
+            const img = cropCtx.getImageData(0, 0, targetDim, targetDim);
+            const res = jsQR(img.data, targetDim, targetDim, { inversionAttempts: 'dontInvert' });
+            if (res && res.data) {
+              detectedRaw = res.data;
+            }
+          }
+
+          if (detectedRaw) {
+            parsePacket(detectedRaw);
+          }
         }
       }
 
@@ -782,7 +794,7 @@
       const type = parts[0];
       const fId = parts[1];
 
-      // New transmission detected
+      // New file incoming
       if (rxFileId !== fId) {
         rxFileId = fId;
         rxTotalExpected = parseInt(parts[2]);
@@ -807,9 +819,10 @@
           name: decodeURIComponent(parts[7] || 'file')
         };
         document.getElementById('rxStatus').textContent = `streaming: ${rxMeta.name.toLowerCase()}`;
+        pulseReticle();
       }
 
-      // Chunk frame
+      // Data chunk frame
       if (type === 'ab') {
         const idx = parseInt(parts[2]);
         if (idx >= 1 && idx <= rxTotalExpected && !rxChunks[idx]) {
@@ -817,12 +830,21 @@
           rxReceivedCount++;
           updateRxStats();
           drawHeatmap();
+          pulseReticle();
 
           if (rxReceivedCount >= rxTotalExpected && rxMeta && !rxDone) {
             assembleAndComplete();
           }
         }
       }
+    }
+
+    function pulseReticle() {
+      const box = document.getElementById('targetBox');
+      box.style.borderColor = '#ffffff';
+      setTimeout(() => {
+        box.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+      }, 70);
     }
 
     function updateRxStats() {
@@ -889,7 +911,6 @@
       const blob = new Blob([finalBytes], { type: rxMeta.mime });
       const url = URL.createObjectURL(blob);
 
-      // Render End-of-Transfer Preview
       const previewContainer = document.getElementById('rxPreview');
       previewContainer.innerHTML = '';
       const mime = (rxMeta.mime || '').toLowerCase();
