@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>daydream</title>
   
-  <!-- Roboto & Roboto Mono Fonts (Thin / Light 100 & 300) -->
+  <!-- Roboto Font (Regular 400) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400&family=Roboto+Mono:wght@100;300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
 
   <!-- Synchronous QR Generator -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <!-- Pure JS QR Scanner -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-  <!-- Pako Deflate/Inflate (Legacy Browser Support + Super Deflate Level 9) -->
+  <!-- Pako Deflate/Inflate -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 
   <style>
@@ -23,14 +23,9 @@
       margin: 0;
       padding: 0;
       font-family: 'Roboto', sans-serif !important;
-      font-weight: 300 !important;
+      font-weight: 400 !important;
       text-transform: lowercase;
       -webkit-font-smoothing: antialiased;
-    }
-
-    .mono {
-      font-family: 'Roboto Mono', monospace !important;
-      font-weight: 300 !important;
     }
 
     body {
@@ -43,7 +38,7 @@
       padding: 20px 16px;
     }
 
-    /* Left-Aligned Big Text Navigation (Thin, No Bold) */
+    /* Left-Aligned Big Text Navigation */
     .nav-header {
       width: 100%;
       max-width: 480px;
@@ -249,6 +244,24 @@
       gap: 10px;
     }
 
+    /* Live Video Stream Viewport */
+    #rxLiveBox {
+      border: 1px solid #333333;
+      padding: 14px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #rxLiveCanvas {
+      width: 100%;
+      max-height: 240px;
+      object-fit: contain;
+      background: #000000;
+      border: 1px solid #222222;
+      display: block;
+    }
+
     #rxPreview {
       width: 100%;
       display: flex;
@@ -277,7 +290,7 @@
   <div class="view-panel active" id="sendPanel">
     <div class="file-zone" onclick="document.getElementById('fileInput').click()">
       <div style="margin-bottom: 4px;">drop file here or click to browse</div>
-      <div style="font-size: 0.72rem; color: #666666;">supports all formats up to 3mb</div>
+      <div style="font-size: 0.72rem; color: #666666;">supports all formats and video up to 3mb</div>
       <input type="file" id="fileInput" class="file-input" onchange="onFileChosen(event)" />
     </div>
 
@@ -285,7 +298,7 @@
     <div class="box" id="optionsBox">
       <div class="field-row" id="fileInfoRow" style="display: none; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 1px solid #1a1a1a;">
         <span id="txName" style="color: #ffffff;">-</span>
-        <span id="txSize" class="mono" style="color: #ffffff;">-</span>
+        <span id="txSize" style="color: #ffffff;">-</span>
       </div>
 
       <div class="field-row">
@@ -293,7 +306,7 @@
         <select id="compressSelect" onchange="recomputeFile()">
           <option value="deflate" selected>deflate</option>
           <option value="super">super deflate</option>
-          <option value="none">none (raw)</option>
+          <option value="none" id="optRaw">none (raw)</option>
         </select>
       </div>
       <div class="field-row" style="margin-top: 10px;">
@@ -306,8 +319,12 @@
         </select>
       </div>
       <div class="field-row" style="margin-top: 10px;">
-        <label for="fpsInput">burst speed: <span id="fpsNum" class="mono">10</span> fps</label>
+        <label for="fpsInput">burst speed: <span id="fpsNum">10</span> fps</label>
         <input type="range" id="fpsInput" min="4" max="20" value="10" oninput="onSpeedChange(this.value)" />
+      </div>
+      <div class="field-row" style="margin-top: 10px;">
+        <label for="corruptInput">corruption: <span id="corruptNum">0</span>%</label>
+        <input type="range" id="corruptInput" min="0" max="50" value="0" oninput="onCorruptChange(this.value)" />
       </div>
     </div>
 
@@ -318,15 +335,15 @@
     <div class="box metrics">
       <div class="metric-line">
         <span id="txStatus">idle</span>
-        <span id="txFrameCount" class="mono">0 / 0</span>
+        <span id="txFrameCount">0 / 0</span>
       </div>
       <div class="progress-track">
         <div class="progress-fill" id="txProgressBar"></div>
       </div>
       <div class="metric-line" style="color: #666666; font-size: 0.75rem;">
-        <span id="txLoopCount" class="mono">loop: 0</span>
-        <span id="txTimeLeft" class="mono">time left: --</span>
-        <span id="txRate" class="mono">10 fps</span>
+        <span id="txLoopCount">loop: 0</span>
+        <span id="txTimeLeft">time left: --</span>
+        <span id="txRate">10 fps</span>
       </div>
     </div>
 
@@ -346,14 +363,14 @@
     <div class="box metrics">
       <div class="metric-line">
         <span id="rxStatus">camera inactive</span>
-        <span id="rxProgressPct" class="mono">0%</span>
+        <span id="rxProgressPct">0%</span>
       </div>
       <div class="progress-track">
         <div class="progress-fill" id="rxProgressBar"></div>
       </div>
       <div class="metric-line" style="color: #666666; font-size: 0.75rem;">
-        <span id="rxChunkCount" class="mono">chunks: 0 / 0</span>
-        <span id="rxMissingCount" class="mono">missing: 0</span>
+        <span id="rxChunkCount">chunks: 0 / 0</span>
+        <span id="rxMissingCount">missing: 0</span>
       </div>
       <canvas id="heatmapCanvas"></canvas>
       <button class="btn btn-outline" id="btnDownloadPartial" onclick="downloadUnfinished()" style="display: none; margin-top: 10px; width: 100%;">
@@ -361,6 +378,24 @@
       </button>
     </div>
 
+    <!-- Live Stream Video Viewer -->
+    <div class="box" id="rxLiveBox">
+      <div class="field-row">
+        <span id="rxLiveTitle" style="color: #ffffff;">live stream</span>
+        <span id="rxLiveState" style="color: #888888;">streaming...</span>
+      </div>
+      <canvas id="rxLiveCanvas" width="240" height="180"></canvas>
+      <div class="field-row" style="margin-top: 4px; font-size: 0.75rem; color: #666666;">
+        <span id="rxLiveFrames">frame 0 / 0</span>
+        <span id="rxLiveLoopTag">live camera stream</span>
+      </div>
+      <div class="btn-group" style="margin-top: 6px;">
+        <button class="btn btn-outline" id="btnToggleLoopPlay" onclick="toggleLoopPlayback()">loop replay</button>
+        <button class="btn btn-outline" onclick="resetRx()">reset</button>
+      </div>
+    </div>
+
+    <!-- Standard File Success Card -->
     <div class="result-box" id="rxSuccessBox">
       <div id="rxResultTitle">transfer complete</div>
       <div id="rxFileName" style="font-size: 0.8rem; color: #888888;">-</div>
@@ -446,6 +481,77 @@
           reader.onerror = reject;
           reader.readAsArrayBuffer(file);
         }
+      });
+    }
+
+    /* Video Frame Extractor for Optical Live Streaming */
+    function extractVideoOpticalFrames(file, maxFrames, targetFps, quality) {
+      return new Promise(function(resolve) {
+        var video = document.createElement('video');
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        var url = URL.createObjectURL(file);
+        video.src = url;
+
+        var timeout = setTimeout(function() {
+          URL.revokeObjectURL(url);
+          resolve(null);
+        }, 12000);
+
+        video.onloadedmetadata = function() {
+          var duration = video.duration || 3;
+          var totalFrames = Math.min(Math.floor(duration * targetFps), maxFrames);
+          if (totalFrames < 4) totalFrames = 4;
+
+          var w = video.videoWidth || 240;
+          var h = video.videoHeight || 180;
+          var maxDim = 200;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+
+          var canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          var ctx = canvas.getContext('2d');
+
+          var frames = [];
+          var frameIdx = 0;
+          var timeStep = duration / totalFrames;
+
+          function seekNext() {
+            if (frameIdx >= totalFrames) {
+              clearTimeout(timeout);
+              URL.revokeObjectURL(url);
+              resolve({ frames: frames, width: w, height: h, duration: duration });
+              return;
+            }
+            video.currentTime = frameIdx * timeStep;
+          }
+
+          video.onseeked = function() {
+            ctx.drawImage(video, 0, 0, w, h);
+            var dataUrl = canvas.toDataURL('image/jpeg', quality);
+            frames.push(dataUrl.split(',')[1]);
+            frameIdx++;
+            seekNext();
+          };
+
+          seekNext();
+        };
+
+        video.onerror = function() {
+          clearTimeout(timeout);
+          URL.revokeObjectURL(url);
+          resolve(null);
+        };
       });
     }
 
@@ -554,12 +660,13 @@
     }
 
     /* ========================================================
-       SENDER LOGIC (DEFLATE DEFAULT & 0.8s FINAL HANG)
+       SENDER LOGIC (CORRUPTION SLIDER & VIDEO STREAMING)
     ======================================================== */
     var rawFileData = null;
     var selectedFileObj = null;
     var activeFileName = '';
     var activeFileType = '';
+    var isVideoFile = false;
     var baseMetaPacket = null;
     var baseDataPackets = [];
     var packetSchedule = [];
@@ -569,6 +676,31 @@
     var countdownTimer = null;
     var currentFps = 10;
     var loopCounter = 1;
+    var corruptionPct = 0;
+
+    function onCorruptChange(val) {
+      corruptionPct = parseInt(val);
+      document.getElementById('corruptNum').textContent = val;
+    }
+
+    /* Injects controllable bit/byte mutations for glitch testing */
+    function applyCorruption(dataStr, pct) {
+      if (!pct || pct <= 0) return dataStr;
+      var parts = dataStr.split('|');
+      if (parts.length < 5) return dataStr;
+      var payload = parts[4];
+      if (!payload || payload.length < 10) return dataStr;
+
+      var chars = payload.split('');
+      var flips = Math.max(1, Math.floor(chars.length * (pct / 100) * 0.12));
+      var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+      for (var i = 0; i < flips; i++) {
+        var idx = Math.floor(Math.random() * chars.length);
+        chars[idx] = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+      }
+      parts[4] = chars.join('');
+      return parts.join('|');
+    }
 
     async function onFileChosen(e) {
       var file = e.target.files[0];
@@ -577,6 +709,22 @@
       selectedFileObj = file;
       activeFileName = file.name;
       activeFileType = file.type || 'application/octet-stream';
+      isVideoFile = (activeFileType.indexOf('video/') === 0) || /\.(mp4|webm|mov|m4v|ogv|avi)$/i.test(activeFileName);
+
+      var optRaw = document.getElementById('optRaw');
+
+      // Video can NOT be raw - grey it out & default to deflate
+      if (isVideoFile) {
+        optRaw.disabled = true;
+        optRaw.textContent = 'none (disabled for video)';
+        if (document.getElementById('compressSelect').value === 'none') {
+          document.getElementById('compressSelect').value = 'deflate';
+        }
+      } else {
+        optRaw.disabled = false;
+        optRaw.textContent = 'none (raw)';
+      }
+
       rawFileData = await readFileBuffer(file);
 
       if (rawFileData.length > 400 * 1024) {
@@ -602,40 +750,63 @@
       }
 
       var compSetting = document.getElementById('compressSelect').value;
-      var inputPayload = rawFileData;
       activeFileName = selectedFileObj.name;
       activeFileType = selectedFileObj.type || 'application/octet-stream';
+      baseDataPackets = [];
 
-      if (compSetting === 'super' && selectedFileObj.type && selectedFileObj.type.indexOf('image/') === 0) {
-        var optimized = await smartCompressImage(selectedFileObj, 1600, 0.76);
-        if (optimized) {
-          inputPayload = optimized.data;
-          activeFileName = optimized.name;
-          activeFileType = optimized.type;
+      var fileId = Math.random().toString(36).substring(2, 6);
+
+      if (isVideoFile) {
+        document.getElementById('txStatus').textContent = 'processing video...';
+        // Extract optical live streaming frames (sample 36 frames at 8 fps)
+        var vidResult = await extractVideoOpticalFrames(selectedFileObj, 38, 8, 0.48);
+        if (vidResult && vidResult.frames.length > 0) {
+          var frames = vidResult.frames;
+          var totalFrames = frames.length;
+          baseMetaPacket = 'ab0|' + fileId + '|' + totalFrames + '|' + selectedFileObj.size + '|0|0|video/mp4|' + encodeURIComponent(activeFileName);
+          for (var f = 0; f < totalFrames; f++) {
+            baseDataPackets.push('ab|' + fileId + '|' + (f + 1) + '|' + totalFrames + '|' + frames[f]);
+          }
+
+          document.getElementById('fileInfoRow').style.display = 'flex';
+          document.getElementById('txName').textContent = activeFileName.toLowerCase();
+          document.getElementById('txSize').textContent = totalFrames + ' stream frames';
         }
       }
 
-      var compResult = await compressPayload(inputPayload, compSetting);
-      var workingPayload = compResult.data;
-      var wasCompressed = compResult.comp;
+      // Non-video fallback or standard files
+      if (baseDataPackets.length === 0) {
+        var inputPayload = rawFileData;
 
-      document.getElementById('fileInfoRow').style.display = 'flex';
-      document.getElementById('txName').textContent = activeFileName.toLowerCase();
-      document.getElementById('txSize').textContent = (workingPayload.length < selectedFileObj.size)
-        ? formatBytes(selectedFileObj.size) + ' -> ' + formatBytes(workingPayload.length)
-        : formatBytes(selectedFileObj.size);
+        if (compSetting === 'super' && selectedFileObj.type && selectedFileObj.type.indexOf('image/') === 0) {
+          var optimized = await smartCompressImage(selectedFileObj, 1600, 0.76);
+          if (optimized) {
+            inputPayload = optimized.data;
+            activeFileName = optimized.name;
+            activeFileType = optimized.type;
+          }
+        }
 
-      var chunkSize = parseInt(document.getElementById('chunkSizeSelect').value) || 260;
-      var totalChunks = Math.ceil(workingPayload.length / chunkSize);
-      var fileId = Math.random().toString(36).substring(2, 6);
-      var fileCrc = crc32(workingPayload);
+        var compResult = await compressPayload(inputPayload, compSetting);
+        var workingPayload = compResult.data;
+        var wasCompressed = compResult.comp;
 
-      baseMetaPacket = 'ab0|' + fileId + '|' + totalChunks + '|' + workingPayload.length + '|' + (wasCompressed ? 1 : 0) + '|' + fileCrc + '|' + encodeURIComponent(activeFileType) + '|' + encodeURIComponent(activeFileName);
+        document.getElementById('fileInfoRow').style.display = 'flex';
+        document.getElementById('txName').textContent = activeFileName.toLowerCase();
+        document.getElementById('txSize').textContent = (workingPayload.length < selectedFileObj.size)
+          ? formatBytes(selectedFileObj.size) + ' -> ' + formatBytes(workingPayload.length)
+          : formatBytes(selectedFileObj.size);
 
-      baseDataPackets = [];
-      for (var i = 0; i < totalChunks; i++) {
-        var slice = workingPayload.subarray(i * chunkSize, (i + 1) * chunkSize);
-        baseDataPackets.push('ab|' + fileId + '|' + (i + 1) + '|' + totalChunks + '|' + u8ToBase64(slice));
+        var chunkSize = parseInt(document.getElementById('chunkSizeSelect').value) || 260;
+        var totalChunks = Math.ceil(workingPayload.length / chunkSize);
+        var fileCrc = crc32(workingPayload);
+
+        baseMetaPacket = 'ab0|' + fileId + '|' + totalChunks + '|' + workingPayload.length + '|' + (wasCompressed ? 1 : 0) + '|' + fileCrc + '|' + encodeURIComponent(activeFileType) + '|' + encodeURIComponent(activeFileName);
+
+        for (var i = 0; i < totalChunks; i++) {
+          var slice = workingPayload.subarray(i * chunkSize, (i + 1) * chunkSize);
+          baseDataPackets.push('ab|' + fileId + '|' + (i + 1) + '|' + totalChunks + '|' + u8ToBase64(slice));
+        }
       }
 
       loopCounter = 1;
@@ -733,18 +904,22 @@
       }
     }
 
-    /* Broadcast Step with 0.8s hang on final frame */
     function broadcastStep() {
       if (!isBroadcasting || packetSchedule.length === 0) return;
 
-      drawFrameToCanvas(packetSchedule[scheduleCursor], 'qrCanvas');
+      var currentPacket = packetSchedule[scheduleCursor];
+      if (corruptionPct > 0) {
+        currentPacket = applyCorruption(currentPacket, corruptionPct);
+      }
+
+      drawFrameToCanvas(currentPacket, 'qrCanvas');
       updateTxStats();
 
       var isLastFrame = (scheduleCursor >= packetSchedule.length - 1);
       var delay = 1000 / currentFps;
 
       if (isLastFrame) {
-        delay = 800;
+        delay = 800; // 0.8s hang on last frame
         scheduleCursor = 0;
         loopCounter++;
         constructSchedule(loopCounter % 2 === 0);
@@ -807,7 +982,6 @@
       document.getElementById('txTimeLeft').textContent = 'time left: ' + formatTime(remainingSec);
     }
 
-    /* Reset button: keeps file, rewinds to Loop 1, Frame 0 */
     function resetTx() {
       pauseBroadcast();
       if (countdownTimer) {
@@ -839,7 +1013,7 @@
     }
 
     /* ========================================================
-       RECEIVER LOGIC (FILTERED UNFINISHED DOWNLOADS)
+       RECEIVER LOGIC (LIVE OPTICAL VIDEO STREAMING)
     ======================================================== */
     var videoStream = null;
     var cameraMode = 'environment';
@@ -854,6 +1028,12 @@
     var rxDone = false;
     var currentReadyBlob = null;
     var currentReadyFileName = '';
+
+    // Live video frame buffer
+    var rxVideoFrames = [];
+    var isLiveVideoActive = false;
+    var loopPlaybackTimer = null;
+    var isLooping = false;
 
     var chunkHits = new Map();
 
@@ -947,11 +1127,18 @@
         cancelAnimationFrame(scanLoopId);
         scanLoopId = null;
       }
+      if (loopPlaybackTimer) {
+        clearInterval(loopPlaybackTimer);
+        loopPlaybackTimer = null;
+      }
 
       rxDone = false;
       rxFileId = null;
       rxMeta = null;
       rxChunks = [];
+      rxVideoFrames = [];
+      isLiveVideoActive = false;
+      isLooping = false;
       rxTotalExpected = 0;
       rxReceivedCount = 0;
       currentReadyBlob = null;
@@ -959,6 +1146,7 @@
       chunkHits.clear();
 
       document.getElementById('rxSuccessBox').style.display = 'none';
+      document.getElementById('rxLiveBox').style.display = 'none';
       document.getElementById('rxPreview').innerHTML = '';
       document.getElementById('btnDownloadPartial').style.display = 'none';
       document.getElementById('rxProgressPct').textContent = '0%';
@@ -1019,6 +1207,55 @@
       }
     }
 
+    /* Live Stream Video Painting */
+    function renderLiveFrame(base64Data, idx) {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.getElementById('rxLiveCanvas');
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+      img.src = 'data:image/jpeg;base64,' + base64Data;
+      rxVideoFrames[idx] = 'data:image/jpeg;base64,' + base64Data;
+      document.getElementById('rxLiveFrames').textContent = 'frame ' + idx + ' / ' + rxTotalExpected;
+      document.getElementById('rxLiveState').textContent = 'streaming live';
+    }
+
+    function toggleLoopPlayback() {
+      if (isLooping) {
+        clearInterval(loopPlaybackTimer);
+        loopPlaybackTimer = null;
+        isLooping = false;
+        document.getElementById('btnToggleLoopPlay').textContent = 'loop replay';
+        document.getElementById('rxLiveState').textContent = 'paused';
+        return;
+      }
+
+      var available = [];
+      for (var i = 1; i <= rxTotalExpected; i++) {
+        if (rxVideoFrames[i]) available.push(rxVideoFrames[i]);
+      }
+      if (available.length === 0) return;
+
+      isLooping = true;
+      document.getElementById('btnToggleLoopPlay').textContent = 'pause replay';
+      document.getElementById('rxLiveState').textContent = 'playing loop';
+
+      var cursor = 0;
+      var canvas = document.getElementById('rxLiveCanvas');
+      var ctx = canvas.getContext('2d');
+
+      clearInterval(loopPlaybackTimer);
+      loopPlaybackTimer = setInterval(function() {
+        var img = new Image();
+        img.onload = function() {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = available[cursor];
+        cursor = (cursor + 1) % available.length;
+      }, 100);
+    }
+
     function parsePacket(str) {
       if (!str || (!str.startsWith('ab|') && !str.startsWith('ab0|'))) return;
       var parts = str.split('|');
@@ -1032,11 +1269,14 @@
         rxFileId = fId;
         rxTotalExpected = total;
         rxChunks = new Array(total + 1).fill(null);
+        rxVideoFrames = new Array(total + 1).fill(null);
         rxReceivedCount = 0;
         rxMeta = null;
         rxDone = false;
+        isLiveVideoActive = false;
         chunkHits.clear();
         document.getElementById('rxSuccessBox').style.display = 'none';
+        document.getElementById('rxLiveBox').style.display = 'none';
         document.getElementById('rxPreview').innerHTML = '';
         document.getElementById('btnDownloadPartial').style.display = 'none';
         updateRxStats();
@@ -1055,6 +1295,7 @@
 
       if (hits >= 2) return;
 
+      // Metadata Packet
       if (type === 'ab0' && !rxMeta) {
         rxMeta = {
           total: parseInt(parts[2]),
@@ -1064,12 +1305,33 @@
           mime: decodeURIComponent(parts[6] || 'application/octet-stream'),
           name: decodeURIComponent(parts[7] || 'file')
         };
-        document.getElementById('rxStatus').textContent = 'streaming: ' + rxMeta.name.toLowerCase();
+
+        // When receiver realizes it is video: activate live stream viewer!
+        if (rxMeta.mime.indexOf('video/') === 0) {
+          isLiveVideoActive = true;
+          document.getElementById('rxLiveBox').style.display = 'flex';
+          document.getElementById('rxLiveTitle').textContent = rxMeta.name.toLowerCase();
+          document.getElementById('rxStatus').textContent = 'live streaming video...';
+        } else {
+          document.getElementById('rxStatus').textContent = 'streaming: ' + rxMeta.name.toLowerCase();
+        }
+
         updateRxStats();
       }
 
+      // Data Packet
       if (type === 'ab') {
         var idx = parseInt(parts[2]);
+
+        // Live stream video directly to canvas as chunks arrive
+        if (isLiveVideoActive || (rxMeta && rxMeta.mime.indexOf('video/') === 0)) {
+          if (!isLiveVideoActive) {
+            isLiveVideoActive = true;
+            document.getElementById('rxLiveBox').style.display = 'flex';
+          }
+          renderLiveFrame(parts[4], idx);
+        }
+
         if (idx >= 1 && idx <= rxTotalExpected && !rxChunks[idx]) {
           rxChunks[idx] = base64ToU8(parts[4]);
           rxReceivedCount++;
@@ -1077,7 +1339,13 @@
           drawHeatmap();
 
           if (rxReceivedCount >= rxTotalExpected && rxMeta && !rxDone) {
-            assembleAndComplete();
+            if (isLiveVideoActive) {
+              document.getElementById('rxLiveState').textContent = 'stream fully buffered';
+              document.getElementById('rxStatus').textContent = 'video stream complete';
+              toggleLoopPlayback();
+            } else {
+              assembleAndComplete();
+            }
           }
         }
       }
@@ -1094,7 +1362,6 @@
       }, 60);
     }
 
-    /* Validates if the file format supports unfinished image estimation */
     function isUnfinishedSupported() {
       if (!rxMeta) return false;
       var mime = (rxMeta.mime || '').toLowerCase();
@@ -1109,9 +1376,8 @@
       document.getElementById('rxChunkCount').textContent = 'chunks: ' + rxReceivedCount + ' / ' + rxTotalExpected;
       document.getElementById('rxMissingCount').textContent = 'missing: ' + (rxTotalExpected - rxReceivedCount);
 
-      // Blocked on unsupported types like text, PDFs, archives, and binaries
       var partialBtn = document.getElementById('btnDownloadPartial');
-      if (pct >= 70 && !rxDone && isUnfinishedSupported()) {
+      if (pct >= 70 && !rxDone && isUnfinishedSupported() && !isLiveVideoActive) {
         partialBtn.style.display = 'block';
         partialBtn.textContent = 'download unfinished (' + pct + '%)';
       } else {
@@ -1284,28 +1550,17 @@
         audio.src = url;
         audio.style.width = '100%';
         previewContainer.appendChild(audio);
-      } else if (mime.indexOf('video/') === 0) {
-        var videoEl = document.createElement('video');
-        videoEl.controls = true;
-        videoEl.playsInline = true;
-        videoEl.src = url;
-        videoEl.style.maxWidth = '100%';
-        videoEl.style.maxHeight = '200px';
-        videoEl.style.border = '1px solid #222222';
-        videoEl.style.display = 'block';
-        previewContainer.appendChild(videoEl);
       }
 
       document.getElementById('rxFileName').textContent = filename.toLowerCase() + ' (' + formatBytes(blob.size) + ') ' + (isVerified ? '• crc verified' : '');
       document.getElementById('rxSuccessBox').style.display = 'flex';
     }
 
-    /* Web Share API for Mobile Camera Roll Saving */
     async function handleSaveAction() {
       if (!currentReadyBlob) return;
 
-      var filename = currentReadyFileName || 'downloaded_photo.jpg';
-      var mime = currentReadyBlob.type || 'image/jpeg';
+      var filename = currentReadyFileName || 'downloaded_file';
+      var mime = currentReadyBlob.type || 'application/octet-stream';
       var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
       if (isMobile && navigator.canShare) {
