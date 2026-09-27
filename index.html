@@ -14,7 +14,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <!-- Pure JS QR Scanner -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-  <!-- Pako Deflate/Inflate (Universal Legacy Support & Level 9 Super Deflate) -->
+  <!-- Pako Deflate/Inflate (Legacy Browser Support + Super Deflate Level 9) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 
   <style>
@@ -41,7 +41,7 @@
       padding: 20px 16px;
     }
 
-    /* Left-Aligned Big Text Navigation (No Tabs) */
+    /* Left-Aligned Big Text Navigation */
     .nav-header {
       width: 100%;
       max-width: 480px;
@@ -252,8 +252,16 @@
     #rxPreview {
       width: 100%;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
       background: #000000;
+    }
+
+    .preview-tip {
+      font-size: 0.72rem;
+      color: #666666;
+      margin-top: 4px;
+      text-align: center;
     }
   </style>
 </head>
@@ -273,7 +281,7 @@
       <input type="file" id="fileInput" class="file-input" onchange="onFileChosen(event)" />
     </div>
 
-    <!-- Combined Options & File Details Box -->
+    <!-- Combined Options & File Info Box -->
     <div class="box" id="optionsBox">
       <div class="field-row" id="fileInfoRow" style="display: none; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 1px solid #1a1a1a;">
         <span id="txName" style="color: #ffffff; font-weight: 700;">-</span>
@@ -283,22 +291,23 @@
       <div class="field-row">
         <label for="compressSelect">compression</label>
         <select id="compressSelect" onchange="recomputeFile()">
-          <option value="deflate" selected>deflate</option>
-          <option value="super">super deflate</option>
+          <option value="super" selected>super deflate</option>
+          <option value="deflate">deflate</option>
           <option value="none">none (raw)</option>
         </select>
       </div>
       <div class="field-row" style="margin-top: 10px;">
         <label for="chunkSizeSelect">chunk payload size</label>
         <select id="chunkSizeSelect" onchange="recomputeFile()">
-          <option value="180" selected>180 bytes (high reliability)</option>
-          <option value="260">260 bytes (balanced)</option>
-          <option value="380">380 bytes (dense)</option>
+          <option value="180">180 bytes (high reliability)</option>
+          <option value="260" selected>260 bytes (balanced)</option>
+          <option value="340">340 bytes (fast)</option>
+          <option value="420">420 bytes (maximum density)</option>
         </select>
       </div>
       <div class="field-row" style="margin-top: 10px;">
-        <label for="fpsInput">burst speed: <span id="fpsNum" class="mono">8</span> fps</label>
-        <input type="range" id="fpsInput" min="4" max="20" value="8" oninput="onSpeedChange(this.value)" />
+        <label for="fpsInput">burst speed: <span id="fpsNum" class="mono">10</span> fps</label>
+        <input type="range" id="fpsInput" min="4" max="20" value="10" oninput="onSpeedChange(this.value)" />
       </div>
     </div>
 
@@ -317,7 +326,7 @@
       <div class="metric-line" style="color: #666666; font-size: 0.75rem;">
         <span id="txLoopCount" class="mono">loop: 0</span>
         <span id="txTimeLeft" class="mono">time left: --</span>
-        <span id="txRate" class="mono">8 fps</span>
+        <span id="txRate" class="mono">10 fps</span>
       </div>
     </div>
 
@@ -353,11 +362,11 @@
     </div>
 
     <div class="result-box" id="rxSuccessBox">
-      <div style="font-weight: 700;">transfer complete</div>
+      <div style="font-weight: 700;" id="rxResultTitle">transfer complete</div>
       <div id="rxFileName" style="font-size: 0.8rem; color: #888888;">-</div>
       <div id="rxPreview"></div>
       <div class="btn-group">
-        <a class="btn" id="rxDownloadBtn" href="#" download="">save file</a>
+        <button class="btn" id="rxSaveBtn" onclick="handleSaveAction()">save to camera roll</button>
         <button class="btn btn-outline" onclick="resetRx()">reset</button>
       </div>
     </div>
@@ -423,7 +432,7 @@
       return u8;
     }
 
-    // Legacy File Reader fallback for Safari < 14 and older browsers
+    // Legacy File Reader fallback for Safari < 14 and older Android browsers
     function readFileBuffer(file) {
       return new Promise(function(resolve, reject) {
         if (file.arrayBuffer) {
@@ -441,14 +450,55 @@
       });
     }
 
-    // Cross-browser Deflate (Pako + Stream Fallback + Level 9 Super Deflate)
+    // Smart Image Compression (scales large 3MB phone photos down to crisp ~80-120KB)
+    function smartCompressImage(file, maxDim, quality) {
+      return new Promise(function(resolve) {
+        var img = new Image();
+        var url = URL.createObjectURL(file);
+        img.onload = function() {
+          URL.revokeObjectURL(url);
+          var w = img.naturalWidth || img.width;
+          var h = img.naturalHeight || img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob(function(blob) {
+            if (!blob) {
+              resolve(null);
+              return;
+            }
+            readFileBuffer(blob).then(function(u8) {
+              resolve({ data: u8, name: file.name.replace(/\.[^.]+$/, '.jpg'), type: 'image/jpeg' });
+            }).catch(function() { resolve(null); });
+          }, 'image/jpeg', quality);
+        };
+        img.onerror = function() {
+          URL.revokeObjectURL(url);
+          resolve(null);
+        };
+        img.src = url;
+      });
+    }
+
+    // Pako Deflate with Level 9 Super Deflate
     async function compressPayload(u8, mode) {
       if (mode === 'none') return { data: u8, comp: false };
       var level = (mode === 'super') ? 9 : 6;
 
       if (typeof pako !== 'undefined') {
         try {
-          var comp = pako.deflate(u8, { level: level });
+          var comp = pako.deflate(u8, { level: level, memLevel: 9, windowBits: 15 });
           if (comp.length < u8.length) {
             return { data: comp, comp: true };
           }
@@ -471,7 +521,7 @@
       return { data: u8, comp: false };
     }
 
-    // Cross-browser Decompression (Pako + Stream Fallback)
+    // Universal Decompressor
     async function decompressPayload(u8, isComp) {
       if (!isComp) return u8;
 
@@ -508,10 +558,12 @@
     }
 
     /* ========================================================
-       SENDER LOGIC (AUTO-ADAPTIVE >400KB & CLEAN TIMING)
+       SENDER LOGIC (AUTO-ADAPTIVE >400KB & SUPER DEFLATE)
     ======================================================== */
     var rawFileData = null;
     var selectedFileObj = null;
+    var activeFileName = '';
+    var activeFileType = '';
     var baseMetaPacket = null;
     var baseDataPackets = [];
     var packetSchedule = [];
@@ -519,7 +571,7 @@
     var isBroadcasting = false;
     var broadcastTimer = null;
     var countdownTimer = null;
-    var currentFps = 8;
+    var currentFps = 10;
     var loopCounter = 1;
 
     async function onFileChosen(e) {
@@ -527,11 +579,13 @@
       if (!file) return;
 
       selectedFileObj = file;
+      activeFileName = file.name;
+      activeFileType = file.type || 'application/octet-stream';
       rawFileData = await readFileBuffer(file);
 
-      // Adapt dynamically to large files above 400KB
+      // Adaptive scaling for files > 400KB
       if (rawFileData.length > 400 * 1024) {
-        var adaptedChunk = rawFileData.length > 1024 * 1024 ? 380 : 260;
+        var adaptedChunk = rawFileData.length > 1024 * 1024 ? 340 : 260;
         var adaptedFps = rawFileData.length > 1024 * 1024 ? 12 : 10;
         document.getElementById('chunkSizeSelect').value = String(adaptedChunk);
         document.getElementById('fpsInput').value = String(adaptedFps);
@@ -553,23 +607,37 @@
       }
 
       var compSetting = document.getElementById('compressSelect').value;
-      var compResult = await compressPayload(rawFileData, compSetting);
+      var inputPayload = rawFileData;
+      activeFileName = selectedFileObj.name;
+      activeFileType = selectedFileObj.type || 'application/octet-stream';
+
+      // Super Deflate: losslessly scale & compress photos down 95% + apply level 9 deflate
+      if (compSetting === 'super' && selectedFileObj.type && selectedFileObj.type.indexOf('image/') === 0) {
+        var optimized = await smartCompressImage(selectedFileObj, 1600, 0.76);
+        if (optimized) {
+          inputPayload = optimized.data;
+          activeFileName = optimized.name;
+          activeFileType = optimized.type;
+        }
+      }
+
+      var compResult = await compressPayload(inputPayload, compSetting);
       var workingPayload = compResult.data;
       var wasCompressed = compResult.comp;
 
-      // Integrated file and size readout with compression effect
+      // Show File Name and Effective Size directly in options box
       document.getElementById('fileInfoRow').style.display = 'flex';
-      document.getElementById('txName').textContent = selectedFileObj.name.toLowerCase();
-      document.getElementById('txSize').textContent = wasCompressed 
+      document.getElementById('txName').textContent = activeFileName.toLowerCase();
+      document.getElementById('txSize').textContent = (workingPayload.length < selectedFileObj.size)
         ? formatBytes(selectedFileObj.size) + ' -> ' + formatBytes(workingPayload.length)
         : formatBytes(selectedFileObj.size);
 
-      var chunkSize = parseInt(document.getElementById('chunkSizeSelect').value) || 180;
+      var chunkSize = parseInt(document.getElementById('chunkSizeSelect').value) || 260;
       var totalChunks = Math.ceil(workingPayload.length / chunkSize);
       var fileId = Math.random().toString(36).substring(2, 6);
-      var fileCrc = crc32(rawFileData);
+      var fileCrc = crc32(workingPayload);
 
-      baseMetaPacket = 'ab0|' + fileId + '|' + totalChunks + '|' + selectedFileObj.size + '|' + (wasCompressed ? 1 : 0) + '|' + fileCrc + '|' + encodeURIComponent(selectedFileObj.type || 'application/octet-stream') + '|' + encodeURIComponent(selectedFileObj.name);
+      baseMetaPacket = 'ab0|' + fileId + '|' + totalChunks + '|' + workingPayload.length + '|' + (wasCompressed ? 1 : 0) + '|' + fileCrc + '|' + encodeURIComponent(activeFileType) + '|' + encodeURIComponent(activeFileName);
 
       baseDataPackets = [];
       for (var i = 0; i < totalChunks; i++) {
@@ -764,7 +832,7 @@
     }
 
     /* ========================================================
-       RECEIVER LOGIC (PARTIAL DOWNLOAD & BUFFER ASSEMBLY)
+       RECEIVER LOGIC (CAMERA ROLL SAVE & ESTIMATED UNFINISHED)
     ======================================================== */
     var videoStream = null;
     var cameraMode = 'environment';
@@ -777,6 +845,8 @@
     var rxTotalExpected = 0;
     var rxReceivedCount = 0;
     var rxDone = false;
+    var currentReadyBlob = null;
+    var currentReadyFileName = '';
 
     var chunkHits = new Map();
 
@@ -799,7 +869,6 @@
     }
     checkNativeDetector();
 
-    // Universal Legacy getUserMedia Wrapper
     function openMediaStream(constraints) {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         return navigator.mediaDevices.getUserMedia(constraints);
@@ -871,6 +940,8 @@
       rxTotalExpected = 0;
       rxReceivedCount = 0;
       rxDone = false;
+      currentReadyBlob = null;
+      currentReadyFileName = '';
       chunkHits.clear();
 
       document.getElementById('rxSuccessBox').style.display = 'none';
@@ -1012,7 +1083,6 @@
       document.getElementById('rxChunkCount').textContent = 'chunks: ' + rxReceivedCount + ' / ' + rxTotalExpected;
       document.getElementById('rxMissingCount').textContent = 'missing: ' + (rxTotalExpected - rxReceivedCount);
 
-      // Download Unfinished trigger when above 70%
       var partialBtn = document.getElementById('btnDownloadPartial');
       if (pct >= 70 && !rxDone) {
         partialBtn.style.display = 'block';
@@ -1045,7 +1115,31 @@
       }
     }
 
-    /* Download partial file stitched with zero-padding for missing blocks */
+    /* Synthesize & Reconstruct Unfinished Image on Canvas */
+    async function reconstructImageCanvas(blob) {
+      return new Promise(function(resolve) {
+        var img = new Image();
+        var url = URL.createObjectURL(blob);
+        img.onload = function() {
+          URL.revokeObjectURL(url);
+          var canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob(function(repairedBlob) {
+            resolve(repairedBlob || blob);
+          }, 'image/jpeg', 0.85);
+        };
+        img.onerror = function() {
+          URL.revokeObjectURL(url);
+          resolve(blob);
+        };
+        img.src = url;
+      });
+    }
+
+    /* Stitches unfinished chunks with estimated padding & forms an image */
     async function downloadUnfinished() {
       if (rxReceivedCount === 0 || !rxTotalExpected) return;
 
@@ -1056,7 +1150,7 @@
           break;
         }
       }
-      if (sampleLen === 0) sampleLen = 180;
+      if (sampleLen === 0) sampleLen = 260;
 
       var totalLen = rxTotalExpected * sampleLen;
       var merged = new Uint8Array(totalLen);
@@ -1067,14 +1161,21 @@
           merged.set(rxChunks[j], offset);
           offset += rxChunks[j].length;
         } else {
-          offset += sampleLen; // Zero-pad missing chunks
+          // In JPEG entropy streams, 0x00 bytes decode to neutral gray blocks
+          offset += sampleLen;
         }
       }
 
-      var finalBytes = merged.subarray(0, offset);
-      var isComp = rxMeta && rxMeta.comp;
+      // Append JPEG End-Of-Image marker (FF D9) so decoders can cleanly finalize
+      if (offset + 2 <= totalLen) {
+        merged[offset] = 0xFF;
+        merged[offset + 1] = 0xD9;
+        offset += 2;
+      }
 
-      if (isComp) {
+      var finalBytes = merged.subarray(0, offset);
+
+      if (rxMeta && rxMeta.comp) {
         try {
           finalBytes = await decompressPayload(finalBytes, true);
         } catch (e) {
@@ -1082,18 +1183,22 @@
         }
       }
 
-      var mime = (rxMeta && rxMeta.mime) ? rxMeta.mime : 'application/octet-stream';
-      var filename = (rxMeta && rxMeta.name) ? 'partial_' + rxMeta.name : 'partial_download';
+      var mime = (rxMeta && rxMeta.mime) ? rxMeta.mime : 'image/jpeg';
+      var filename = (rxMeta && rxMeta.name) ? 'partial_' + rxMeta.name : 'partial_image.jpg';
 
-      var blob = new Blob([finalBytes], { type: mime });
-      var url = URL.createObjectURL(blob);
+      var initialBlob = new Blob([finalBytes], { type: mime });
+      var completedBlob = initialBlob;
 
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      // If it is an image, re-synthesize cleanly via Canvas
+      if (mime.indexOf('image/') === 0) {
+        completedBlob = await reconstructImageCanvas(initialBlob);
+      }
+
+      currentReadyBlob = completedBlob;
+      currentReadyFileName = filename;
+
+      showSuccessCard(completedBlob, filename, false);
+      await handleSaveAction();
     }
 
     async function assembleAndComplete() {
@@ -1118,28 +1223,45 @@
       var isVerified = (calculatedCrc === rxMeta.crc);
 
       var blob = new Blob([finalBytes], { type: rxMeta.mime });
-      var url = URL.createObjectURL(blob);
+      currentReadyBlob = blob;
+      currentReadyFileName = rxMeta.name;
 
+      showSuccessCard(blob, rxMeta.name, isVerified);
+      document.getElementById('rxStatus').textContent = 'complete';
+      if (navigator.vibrate) navigator.vibrate(80);
+    }
+
+    function showSuccessCard(blob, filename, isVerified) {
+      var url = URL.createObjectURL(blob);
       var previewContainer = document.getElementById('rxPreview');
       previewContainer.innerHTML = '';
-      var mime = (rxMeta.mime || '').toLowerCase();
+      var mime = (blob.type || (rxMeta ? rxMeta.mime : '')).toLowerCase();
 
-      if (mime.startsWith('image/')) {
+      var isImage = mime.indexOf('image/') === 0;
+      var saveBtn = document.getElementById('rxSaveBtn');
+      saveBtn.textContent = isImage ? 'save to camera roll' : 'save file';
+
+      if (isImage) {
         var img = document.createElement('img');
         img.src = url;
         img.style.maxWidth = '100%';
-        img.style.maxHeight = '200px';
+        img.style.maxHeight = '220px';
         img.style.objectFit = 'contain';
         img.style.border = '1px solid #222222';
         img.style.display = 'block';
         previewContainer.appendChild(img);
-      } else if (mime.startsWith('audio/')) {
+
+        var tip = document.createElement('div');
+        tip.className = 'preview-tip';
+        tip.textContent = 'tap & hold image to save directly to photos';
+        previewContainer.appendChild(tip);
+      } else if (mime.indexOf('audio/') === 0) {
         var audio = document.createElement('audio');
         audio.controls = true;
         audio.src = url;
         audio.style.width = '100%';
         previewContainer.appendChild(audio);
-      } else if (mime.startsWith('video/')) {
+      } else if (mime.indexOf('video/') === 0) {
         var videoEl = document.createElement('video');
         videoEl.controls = true;
         videoEl.playsInline = true;
@@ -1149,34 +1271,44 @@
         videoEl.style.border = '1px solid #222222';
         videoEl.style.display = 'block';
         previewContainer.appendChild(videoEl);
-      } else if (mime.startsWith('text/') || mime.includes('json') || mime.includes('javascript') || mime.includes('xml')) {
-        try {
-          var textSnippet = new TextDecoder('utf-8').decode(finalBytes.subarray(0, 1500));
-          var pre = document.createElement('pre');
-          pre.className = 'mono';
-          pre.style.maxHeight = '120px';
-          pre.style.overflowY = 'auto';
-          pre.style.fontSize = '0.72rem';
-          pre.style.background = '#0a0a0a';
-          pre.style.border = '1px solid #222222';
-          pre.style.padding = '8px';
-          pre.style.width = '100%';
-          pre.style.whiteSpace = 'pre-wrap';
-          pre.style.wordBreak = 'break-all';
-          pre.textContent = textSnippet + (finalBytes.length > 1500 ? '\n... [truncated]' : '');
-          previewContainer.appendChild(pre);
-        } catch (e) {}
       }
 
-      var downloadBtn = document.getElementById('rxDownloadBtn');
-      downloadBtn.href = url;
-      downloadBtn.download = rxMeta.name;
-      downloadBtn.textContent = 'save ' + rxMeta.name.toLowerCase();
-
-      document.getElementById('rxFileName').textContent = rxMeta.name.toLowerCase() + ' (' + formatBytes(finalBytes.length) + ') ' + (isVerified ? '• crc verified' : '• crc mismatch');
+      document.getElementById('rxFileName').textContent = filename.toLowerCase() + ' (' + formatBytes(blob.size) + ') ' + (isVerified ? '• crc verified' : '');
       document.getElementById('rxSuccessBox').style.display = 'flex';
-      document.getElementById('rxStatus').textContent = 'complete';
-      if (navigator.vibrate) navigator.vibrate(80);
+    }
+
+    /* Direct Camera Roll Saving via Web Share API */
+    async function handleSaveAction() {
+      if (!currentReadyBlob) return;
+
+      var filename = currentReadyFileName || 'downloaded_photo.jpg';
+      var mime = currentReadyBlob.type || 'image/jpeg';
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      // Web Share API triggers native "Save Image" / "Save to Photos" on mobile
+      if (isMobile && navigator.canShare) {
+        try {
+          var testFile = new File([currentReadyBlob], filename, { type: mime });
+          if (navigator.canShare({ files: [testFile] })) {
+            await navigator.share({
+              files: [testFile],
+              title: filename
+            });
+            return;
+          }
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      // Standard desktop download anchor fallback
+      var url = URL.createObjectURL(currentReadyBlob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   </script>
 </body>
