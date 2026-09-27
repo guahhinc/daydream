@@ -39,20 +39,6 @@
       padding: 16px;
     }
 
-    header {
-      width: 100%;
-      max-width: 480px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid #1a1a1a;
-      padding-bottom: 12px;
-    }
-
-    .title {
-      font-size: 1rem;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-    }
-
     /* Tabs */
     .tab-bar {
       width: 100%;
@@ -67,8 +53,9 @@
       background: #000000;
       color: #707070;
       border: none;
-      padding: 12px;
-      font-size: 0.82rem;
+      padding: 9px 8px;
+      font-size: 0.98rem;
+      line-height: 1.2;
       font-weight: 700;
       cursor: pointer;
       text-align: center;
@@ -185,8 +172,10 @@
 
     .btn {
       flex: 1;
-      padding: 12px;
-      font-size: 0.82rem;
+      min-width: 0;
+      padding: 9px 8px;
+      font-size: 0.98rem;
+      line-height: 1.2;
       font-weight: 700;
       border: 1px solid #ffffff;
       background: #ffffff;
@@ -195,6 +184,9 @@
       text-align: center;
       text-decoration: none;
       display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .btn-outline {
@@ -261,10 +253,6 @@
 </head>
 <body>
 
-  <header>
-    <div class="title">daydream</div>
-  </header>
-
   <!-- Mode Selector -->
   <div class="tab-bar">
     <button class="tab-btn active" id="tabSend" onclick="setMode('send')">send</button>
@@ -286,7 +274,7 @@
       </div>
       <div class="field-row" style="margin-top: 4px;">
         <span>mode</span>
-        <span id="txCompressState" class="mono">raw</span>
+        <span id="txCompressState" class="mono">deflate</span>
       </div>
     </div>
 
@@ -294,21 +282,21 @@
       <div class="field-row">
         <label for="compressSelect">compression</label>
         <select id="compressSelect" onchange="recomputeFile()">
-          <option value="none" selected>none (raw)</option>
-          <option value="deflate">deflate (optional)</option>
+          <option value="deflate" selected>deflate</option>
+          <option value="none">none (raw)</option>
         </select>
       </div>
       <div class="field-row" style="margin-top: 10px;">
         <label for="chunkSizeSelect">chunk payload size</label>
         <select id="chunkSizeSelect" onchange="recomputeFile()">
-          <option value="260">260 bytes (easy decode)</option>
-          <option value="380" selected>380 bytes (balanced)</option>
+          <option value="260" selected>260 bytes (easy decode)</option>
+          <option value="380">380 bytes (balanced)</option>
           <option value="540">540 bytes (dense)</option>
         </select>
       </div>
       <div class="field-row" style="margin-top: 10px;">
-        <label for="fpsInput">burst speed: <span id="fpsNum" class="mono">10</span> fps</label>
-        <input type="range" id="fpsInput" min="4" max="24" value="10" oninput="onSpeedChange(this.value)" />
+        <label for="fpsInput">burst speed: <span id="fpsNum" class="mono">12</span> fps</label>
+        <input type="range" id="fpsInput" min="4" max="24" value="12" oninput="onSpeedChange(this.value)" />
       </div>
     </div>
 
@@ -326,7 +314,7 @@
       </div>
       <div class="metric-line" style="color: #666666; font-size: 0.75rem;">
         <span id="txLoopCount" class="mono">loop: 0</span>
-        <span id="txRate" class="mono">10 fps</span>
+        <span id="txRate" class="mono">12 fps</span>
       </div>
     </div>
 
@@ -440,7 +428,7 @@
     let isBroadcasting = false;
     let broadcastTimer = null;
     let countdownTimer = null;
-    let currentFps = 10;
+    let currentFps = 12;
     let loopCounter = 1;
 
     async function onFileChosen(e) {
@@ -469,15 +457,14 @@
       let workingPayload = rawFileData;
       let wasCompressed = false;
 
-      // Only attempt compression if explicitly enabled
+      // Deflate compression (default)
       if (compSetting === 'deflate') {
         try {
           if (typeof CompressionStream !== 'undefined') {
             const cs = new CompressionStream('deflate');
             const res = new Response(new Blob([rawFileData]).stream().pipeThrough(cs));
             const compBuf = new Uint8Array(await res.arrayBuffer());
-            // Only apply if it saves >10%
-            if (compBuf.length < rawFileData.length * 0.9) {
+            if (compBuf.length < rawFileData.length) {
               workingPayload = compBuf;
               wasCompressed = true;
             }
@@ -491,7 +478,7 @@
         ? `${formatBytes(workingPayload.length)} (deflate)` 
         : 'raw';
 
-      const chunkSize = parseInt(document.getElementById('chunkSizeSelect').value) || 380;
+      const chunkSize = parseInt(document.getElementById('chunkSizeSelect').value) || 260;
       const totalChunks = Math.ceil(workingPayload.length / chunkSize);
       const fileId = Math.random().toString(36).substring(2, 6);
       const fileCrc = crc32(rawFileData);
