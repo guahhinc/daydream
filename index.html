@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>airbeam // optical transfer</title>
+  <title>daydream</title>
   
   <!-- Roboto & Roboto Mono Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,12 +51,6 @@
       font-size: 1rem;
       font-weight: 700;
       letter-spacing: -0.3px;
-    }
-
-    .subtitle {
-      font-size: 0.75rem;
-      color: #707070;
-      margin-top: 2px;
     }
 
     /* Tabs */
@@ -254,61 +248,21 @@
       padding: 14px;
       display: none;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
 
-    /* Fullscreen Stream Overlay */
-    #fullscreenOverlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: #000000;
-      z-index: 9999;
-      flex-direction: column;
+    #rxPreview {
+      width: 100%;
+      display: flex;
       justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    #fullscreenOverlay.active {
-      display: flex;
-    }
-
-    .fs-canvas-container {
-      background: #ffffff;
-      padding: 8px;
-      border: 1px solid #333333;
-    }
-
-    #fsQrCanvas {
-      width: 320px;
-      height: 320px;
-      display: block;
-      background: #ffffff;
-    }
-
-    .fs-metrics {
-      width: 100%;
-      max-width: 336px;
-      margin-top: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 0.8rem;
-    }
-
-    .fs-exit-btn {
-      margin-top: 16px;
-      max-width: 336px;
-      width: 100%;
+      background: #000000;
     }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="title">airbeam // optical transceiver</div>
-    <div class="subtitle">zero network air-gapped optical file transmission</div>
+    <div class="title">daydream</div>
   </header>
 
   <!-- Mode Selector -->
@@ -331,13 +285,20 @@
         <span id="txSize" class="mono">-</span>
       </div>
       <div class="field-row" style="margin-top: 4px;">
-        <span>compression</span>
-        <span id="txCompressState" class="mono">-</span>
+        <span>mode</span>
+        <span id="txCompressState" class="mono">raw</span>
       </div>
     </div>
 
     <div class="box">
       <div class="field-row">
+        <label for="compressSelect">compression</label>
+        <select id="compressSelect" onchange="recomputeFile()">
+          <option value="none" selected>none (raw)</option>
+          <option value="deflate">deflate (optional)</option>
+        </select>
+      </div>
+      <div class="field-row" style="margin-top: 10px;">
         <label for="chunkSizeSelect">chunk payload size</label>
         <select id="chunkSizeSelect" onchange="recomputeFile()">
           <option value="260">260 bytes (easy decode)</option>
@@ -346,8 +307,8 @@
         </select>
       </div>
       <div class="field-row" style="margin-top: 10px;">
-        <label for="fpsInput">burst speed: <span id="fpsNum" class="mono">14</span> fps</label>
-        <input type="range" id="fpsInput" min="4" max="24" value="14" oninput="onSpeedChange(this.value)" />
+        <label for="fpsInput">burst speed: <span id="fpsNum" class="mono">10</span> fps</label>
+        <input type="range" id="fpsInput" min="4" max="24" value="10" oninput="onSpeedChange(this.value)" />
       </div>
     </div>
 
@@ -365,12 +326,12 @@
       </div>
       <div class="metric-line" style="color: #666666; font-size: 0.75rem;">
         <span id="txLoopCount" class="mono">loop: 0</span>
-        <span id="txRate" class="mono">0 kb/s</span>
+        <span id="txRate" class="mono">10 fps</span>
       </div>
     </div>
 
     <div class="btn-group">
-      <button class="btn" id="btnStartStream" onclick="initiateFullscreenStream()" disabled>start stream</button>
+      <button class="btn" id="btnToggleTx" onclick="handleStartStreamClick()" disabled>start stream</button>
       <button class="btn btn-outline" onclick="resetTx()">reset</button>
     </div>
   </div>
@@ -400,6 +361,7 @@
     <div class="result-box" id="rxSuccessBox">
       <div style="font-weight: 700;">transfer complete</div>
       <div id="rxFileName" style="font-size: 0.8rem; color: #888888;">-</div>
+      <div id="rxPreview"></div>
       <a class="btn" id="rxDownloadBtn" href="#" download="">save file</a>
     </div>
 
@@ -407,29 +369,6 @@
       <button class="btn" id="btnCamToggle" onclick="startCamera()">start camera</button>
       <button class="btn btn-outline" id="btnFlip" onclick="flipCamera()" disabled>switch camera</button>
     </div>
-  </div>
-
-  <!-- ================= FULLSCREEN STREAM OVERLAY ================= -->
-  <div id="fullscreenOverlay">
-    <div class="fs-canvas-container">
-      <canvas id="fsQrCanvas" width="340" height="340"></canvas>
-    </div>
-
-    <div class="fs-metrics">
-      <div class="metric-line">
-        <span id="fsStatus" style="font-weight: 700;">starting in 2s...</span>
-        <span id="fsFrameCount" class="mono">frame 0 / 0</span>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill" id="fsProgressBar"></div>
-      </div>
-      <div class="metric-line" style="color: #666666; font-size: 0.75rem;">
-        <span id="fsLoopCount" class="mono">loop: 1</span>
-        <span id="fsRate" class="mono">14 fps</span>
-      </div>
-    </div>
-
-    <button class="btn btn-outline fs-exit-btn" onclick="exitFullscreenStream()">exit stream</button>
   </div>
 
   <script>
@@ -485,7 +424,7 @@
       document.getElementById('tabRecv').classList.toggle('active', mode === 'recv');
 
       if (mode === 'recv') {
-        exitFullscreenStream();
+        pauseBroadcast();
       } else {
         stopCamera();
       }
@@ -501,7 +440,7 @@
     let isBroadcasting = false;
     let broadcastTimer = null;
     let countdownTimer = null;
-    let currentFps = 14;
+    let currentFps = 10;
     let loopCounter = 1;
 
     async function onFileChosen(e) {
@@ -516,25 +455,36 @@
     async function buildPackets() {
       if (!rawFileData || !selectedFileObj) return;
 
+      pauseBroadcast();
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+
       document.getElementById('sendInfoBox').style.display = 'block';
       document.getElementById('txName').textContent = selectedFileObj.name.toLowerCase();
       document.getElementById('txSize').textContent = formatBytes(selectedFileObj.size);
 
-      // Deflate Compression via Streams
+      const compSetting = document.getElementById('compressSelect').value;
       let workingPayload = rawFileData;
       let wasCompressed = false;
-      try {
-        if (typeof CompressionStream !== 'undefined') {
-          const cs = new CompressionStream('deflate');
-          const res = new Response(new Blob([rawFileData]).stream().pipeThrough(cs));
-          const compBuf = new Uint8Array(await res.arrayBuffer());
-          if (compBuf.length < rawFileData.length) {
-            workingPayload = compBuf;
-            wasCompressed = true;
+
+      // Only attempt compression if explicitly enabled
+      if (compSetting === 'deflate') {
+        try {
+          if (typeof CompressionStream !== 'undefined') {
+            const cs = new CompressionStream('deflate');
+            const res = new Response(new Blob([rawFileData]).stream().pipeThrough(cs));
+            const compBuf = new Uint8Array(await res.arrayBuffer());
+            // Only apply if it saves >10%
+            if (compBuf.length < rawFileData.length * 0.9) {
+              workingPayload = compBuf;
+              wasCompressed = true;
+            }
           }
+        } catch (err) {
+          console.warn('compression skipped:', err);
         }
-      } catch (err) {
-        console.warn('compression skipped:', err);
       }
 
       document.getElementById('txCompressState').textContent = wasCompressed 
@@ -573,11 +523,11 @@
       drawFrameToCanvas(packetSchedule[0], 'qrCanvas');
       updateTxStats();
 
-      // Enable start stream button (waiting for user interaction)
-      const btn = document.getElementById('btnStartStream');
+      // Enable start stream button (waits for click)
+      const btn = document.getElementById('btnToggleTx');
       btn.disabled = false;
       btn.textContent = 'start stream';
-      document.getElementById('txStatus').textContent = 'status: ready to stream';
+      document.getElementById('txStatus').textContent = 'status: ready';
     }
 
     function recomputeFile() {
@@ -587,60 +537,68 @@
     function onSpeedChange(val) {
       currentFps = parseInt(val);
       document.getElementById('fpsNum').textContent = val;
-      document.getElementById('fsRate').textContent = `${val} fps`;
+      document.getElementById('txRate').textContent = `${val} fps`;
       if (isBroadcasting) {
         clearInterval(broadcastTimer);
         broadcastTimer = setInterval(tickBroadcast, 1000 / currentFps);
       }
     }
 
-    /* Fullscreen + 2-second countdown sequence */
-    async function initiateFullscreenStream() {
-      if (!packetSchedule || packetSchedule.length === 0) return;
+    /* Start Stream with 2-second countdown */
+    function handleStartStreamClick() {
+      const btn = document.getElementById('btnToggleTx');
 
-      const overlay = document.getElementById('fullscreenOverlay');
-      overlay.classList.add('active');
-
-      // Request browser fullscreen (with fallback for Safari/iOS)
-      try {
-        if (overlay.requestFullscreen) {
-          await overlay.requestFullscreen();
-        } else if (overlay.webkitRequestFullscreen) {
-          await overlay.webkitRequestFullscreen();
-        }
-      } catch (e) {
-        console.warn('native fullscreen blocked or unsupported:', e);
+      if (isBroadcasting) {
+        pauseBroadcast();
+        return;
       }
 
+      if (broadcastTimer) {
+        // Resume from paused state immediately
+        isBroadcasting = true;
+        btn.textContent = 'pause stream';
+        document.getElementById('txStatus').textContent = 'status: streaming';
+        broadcastTimer = setInterval(tickBroadcast, 1000 / currentFps);
+        return;
+      }
+
+      // Initial start: wait 2 seconds while displaying metadata frame
       scheduleCursor = 0;
       loopCounter = 1;
+      drawFrameToCanvas(packetSchedule[0], 'qrCanvas');
+      updateTxStats();
 
-      // Show handshake frame 0 immediately so camera can detect file details
-      drawFrameToCanvas(packetSchedule[0], 'fsQrCanvas');
-      updateFullscreenStats();
-
-      const fsStatus = document.getElementById('fsStatus');
+      btn.disabled = true;
       let countdown = 2;
-      fsStatus.textContent = `starting in ${countdown}s...`;
+      document.getElementById('txStatus').textContent = `status: starting in ${countdown}s...`;
 
       clearInterval(countdownTimer);
       countdownTimer = setInterval(() => {
         countdown--;
         if (countdown > 0) {
-          fsStatus.textContent = `starting in ${countdown}s...`;
+          document.getElementById('txStatus').textContent = `status: starting in ${countdown}s...`;
         } else {
           clearInterval(countdownTimer);
           countdownTimer = null;
-          fsStatus.textContent = 'streaming';
-          startBroadcastLoop();
+          isBroadcasting = true;
+          btn.disabled = false;
+          btn.textContent = 'pause stream';
+          document.getElementById('txStatus').textContent = 'status: streaming';
+          broadcastTimer = setInterval(tickBroadcast, 1000 / currentFps);
         }
       }, 1000);
     }
 
-    function startBroadcastLoop() {
-      isBroadcasting = true;
-      clearInterval(broadcastTimer);
-      broadcastTimer = setInterval(tickBroadcast, 1000 / currentFps);
+    function pauseBroadcast() {
+      isBroadcasting = false;
+      if (broadcastTimer) {
+        clearInterval(broadcastTimer);
+      }
+      const btn = document.getElementById('btnToggleTx');
+      if (packetSchedule.length > 0) {
+        btn.textContent = 'resume stream';
+        document.getElementById('txStatus').textContent = 'status: paused';
+      }
     }
 
     function tickBroadcast() {
@@ -650,56 +608,9 @@
         scheduleCursor = 0;
         loopCounter++;
       }
-      drawFrameToCanvas(packetSchedule[scheduleCursor], 'fsQrCanvas');
-      updateFullscreenStats();
-    }
-
-    function updateFullscreenStats() {
-      const total = packetSchedule.length;
-      document.getElementById('fsFrameCount').textContent = `frame ${scheduleCursor + 1} / ${total}`;
-      const pct = Math.floor(((scheduleCursor + 1) / total) * 100);
-      document.getElementById('fsProgressBar').style.width = pct + '%';
-      document.getElementById('fsLoopCount').textContent = `loop: ${loopCounter}`;
-      document.getElementById('fsRate').textContent = `${currentFps} fps`;
-    }
-
-    function exitFullscreenStream() {
-      if (countdownTimer) {
-        clearInterval(countdownTimer);
-        countdownTimer = null;
-      }
-      if (broadcastTimer) {
-        clearInterval(broadcastTimer);
-        broadcastTimer = null;
-      }
-      isBroadcasting = false;
-
-      const overlay = document.getElementById('fullscreenOverlay');
-      overlay.classList.remove('active');
-
-      if (document.fullscreenElement || document.webkitFullscreenElement) {
-        if (document.exitFullscreen) {
-          document.exitFullscreen().catch(() => {});
-        } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-        }
-      }
-
-      document.getElementById('txStatus').textContent = 'status: idle';
+      drawFrameToCanvas(packetSchedule[scheduleCursor], 'qrCanvas');
       updateTxStats();
     }
-
-    // Handle escape key or native swipe-to-exit fullscreen
-    document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElement && document.getElementById('fullscreenOverlay').classList.contains('active')) {
-        exitFullscreenStream();
-      }
-    });
-    document.addEventListener('webkitfullscreenchange', () => {
-      if (!document.webkitFullscreenElement && document.getElementById('fullscreenOverlay').classList.contains('active')) {
-        exitFullscreenStream();
-      }
-    });
 
     /* Synchronous canvas QR drawer */
     function drawFrameToCanvas(content, canvasId) {
@@ -742,13 +653,19 @@
     }
 
     function resetTx() {
-      exitFullscreenStream();
+      pauseBroadcast();
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+      broadcastTimer = null;
       rawFileData = null;
       selectedFileObj = null;
       packetSchedule = [];
       document.getElementById('fileInput').value = '';
       document.getElementById('sendInfoBox').style.display = 'none';
-      document.getElementById('btnStartStream').disabled = true;
+      document.getElementById('btnToggleTx').disabled = true;
+      document.getElementById('btnToggleTx').textContent = 'start stream';
       document.getElementById('txProgressBar').style.width = '0%';
       document.getElementById('txFrameCount').textContent = '0 / 0';
       document.getElementById('txStatus').textContent = 'status: idle';
@@ -887,6 +804,7 @@
         rxMeta = null;
         rxDone = false;
         document.getElementById('rxSuccessBox').style.display = 'none';
+        document.getElementById('rxPreview').innerHTML = '';
         updateRxStats();
         drawHeatmap();
       }
@@ -983,6 +901,55 @@
 
       const blob = new Blob([finalBytes], { type: rxMeta.mime });
       const url = URL.createObjectURL(blob);
+
+      // Render End-of-Transfer Preview
+      const previewContainer = document.getElementById('rxPreview');
+      previewContainer.innerHTML = '';
+      const mime = (rxMeta.mime || '').toLowerCase();
+
+      if (mime.startsWith('image/')) {
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '200px';
+        img.style.objectFit = 'contain';
+        img.style.border = '1px solid #222222';
+        img.style.display = 'block';
+        previewContainer.appendChild(img);
+      } else if (mime.startsWith('audio/')) {
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.src = url;
+        audio.style.width = '100%';
+        previewContainer.appendChild(audio);
+      } else if (mime.startsWith('video/')) {
+        const videoEl = document.createElement('video');
+        videoEl.controls = true;
+        videoEl.playsInline = true;
+        videoEl.src = url;
+        videoEl.style.maxWidth = '100%';
+        videoEl.style.maxHeight = '200px';
+        videoEl.style.border = '1px solid #222222';
+        videoEl.style.display = 'block';
+        previewContainer.appendChild(videoEl);
+      } else if (mime.startsWith('text/') || mime.includes('json') || mime.includes('javascript') || mime.includes('xml')) {
+        try {
+          const textSnippet = new TextDecoder('utf-8').decode(finalBytes.subarray(0, 1500));
+          const pre = document.createElement('pre');
+          pre.className = 'mono';
+          pre.style.maxHeight = '120px';
+          pre.style.overflowY = 'auto';
+          pre.style.fontSize = '0.72rem';
+          pre.style.background = '#0a0a0a';
+          pre.style.border = '1px solid #222222';
+          pre.style.padding = '8px';
+          pre.style.width = '100%';
+          pre.style.whiteSpace = 'pre-wrap';
+          pre.style.wordBreak = 'break-all';
+          pre.textContent = textSnippet + (finalBytes.length > 1500 ? '\n... [truncated]' : '');
+          previewContainer.appendChild(pre);
+        } catch (e) {}
+      }
 
       const downloadBtn = document.getElementById('rxDownloadBtn');
       downloadBtn.href = url;
