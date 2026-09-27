@@ -286,16 +286,16 @@
       <div class="field-row">
         <label for="compressSelect">compression</label>
         <select id="compressSelect" onchange="recomputeFile()">
-          <option value="deflate" selected>deflate</option>
-          <option value="super">super deflate</option>
+          <option value="super" selected>super deflate</option>
+          <option value="deflate">deflate</option>
           <option value="none" id="optRaw">none (raw)</option>
         </select>
       </div>
       <div class="field-row" style="margin-top: 10px;">
         <label for="chunkSizeSelect">chunk payload size</label>
         <select id="chunkSizeSelect" onchange="recomputeFile()">
-          <option value="180">180 bytes (high reliability)</option>
-          <option value="260" selected>260 bytes (balanced)</option>
+          <option value="180" selected>180 bytes (high reliability)</option>
+          <option value="260">260 bytes (balanced)</option>
           <option value="340">340 bytes (fast)</option>
           <option value="420">420 bytes (maximum density)</option>
         </select>
@@ -303,10 +303,6 @@
       <div class="field-row" style="margin-top: 10px;">
         <label for="fpsInput">burst speed: <span id="fpsNum">10</span> fps</label>
         <input type="range" id="fpsInput" min="4" max="20" value="10" oninput="onSpeedChange(this.value)" />
-      </div>
-      <div class="field-row" style="margin-top: 10px;">
-        <label for="corruptInput">corruption: <span id="corruptNum">0</span>%</label>
-        <input type="range" id="corruptInput" min="0" max="50" value="0" oninput="onCorruptChange(this.value)" />
       </div>
     </div>
 
@@ -379,7 +375,7 @@
 
   <script>
     /* ========================================================
-       CORE UTILITIES & SAFE GLITCH ENGINE
+       CORE UTILITIES
     ======================================================== */
     function formatBytes(bytes) {
       if (!bytes || bytes === 0) return '0 b';
@@ -431,7 +427,6 @@
       return u8;
     }
 
-    /* Validates if the file format is plain text or code */
     function isTextOrCodeFile(file) {
       if (!file) return false;
       var type = (file.type || '').toLowerCase();
@@ -456,31 +451,6 @@
       return false;
     }
 
-    /* Safe Image Glitcher: Corrupts entropy scan data without breaking JPEG headers/markers */
-    function glitchImageBytesSafely(u8, pct) {
-      if (!pct || pct <= 0) return u8;
-      var copy = new Uint8Array(u8);
-
-      var startIdx = 600;
-      for (var i = 0; i < copy.length - 4; i++) {
-        if (copy[i] === 0xFF && copy[i + 1] === 0xDA) {
-          startIdx = i + 4;
-          break;
-        }
-      }
-
-      var endIdx = copy.length - 4;
-      var scanLen = endIdx - startIdx;
-      if (scanLen <= 10) return copy;
-
-      var corruptOps = Math.max(1, Math.floor(scanLen * (pct / 100) * 0.025));
-      for (var j = 0; j < corruptOps; j++) {
-        var target = startIdx + Math.floor(Math.random() * scanLen);
-        copy[target] = Math.floor(Math.random() * 254) + 1;
-      }
-      return copy;
-    }
-
     function readFileBuffer(file) {
       return new Promise(function(resolve, reject) {
         if (file.arrayBuffer) {
@@ -498,7 +468,6 @@
       });
     }
 
-    /* High-Performance Image Optimization: Slashes file sizes so deflate works instantly */
     function smartCompressImage(file, maxDim, quality) {
       return new Promise(function(resolve) {
         var img = new Image();
@@ -604,7 +573,7 @@
     }
 
     /* ========================================================
-       SENDER LOGIC (DEFLATE FIXED & RAW CONSTRAINTS)
+       SENDER LOGIC
     ======================================================== */
     var rawFileData = null;
     var selectedFileObj = null;
@@ -619,13 +588,6 @@
     var countdownTimer = null;
     var currentFps = 10;
     var loopCounter = 1;
-    var corruptionPct = 0;
-
-    function onCorruptChange(val) {
-      corruptionPct = parseInt(val);
-      document.getElementById('corruptNum').textContent = val;
-      if (rawFileData) recomputeFile();
-    }
 
     async function onFileChosen(e) {
       var file = e.target.files[0];
@@ -643,7 +605,7 @@
         optRaw.disabled = true;
         optRaw.textContent = 'none (text/code only)';
         if (document.getElementById('compressSelect').value === 'none') {
-          document.getElementById('compressSelect').value = 'deflate';
+          document.getElementById('compressSelect').value = 'super';
         }
       } else {
         optRaw.disabled = false;
@@ -651,17 +613,6 @@
       }
 
       rawFileData = await readFileBuffer(file);
-
-      if (rawFileData.length > 400 * 1024) {
-        var adaptedChunk = rawFileData.length > 1024 * 1024 ? 340 : 260;
-        var adaptedFps = rawFileData.length > 1024 * 1024 ? 12 : 10;
-        document.getElementById('chunkSizeSelect').value = String(adaptedChunk);
-        document.getElementById('fpsInput').value = String(adaptedFps);
-        currentFps = adaptedFps;
-        document.getElementById('fpsNum').textContent = String(adaptedFps);
-        document.getElementById('txRate').textContent = adaptedFps + ' fps';
-      }
-
       await buildPackets();
     }
 
@@ -682,7 +633,6 @@
       var fileId = Math.random().toString(36).substring(2, 6);
       var inputPayload = rawFileData;
 
-      // Deflate & Super Deflate now actively optimize images to drastically lower chunks
       var isImage = (selectedFileObj.type && selectedFileObj.type.indexOf('image/') === 0) ||
                     /\.(jpe?g|png|webp|bmp|gif)$/i.test(selectedFileObj.name);
 
@@ -697,11 +647,6 @@
         }
       }
 
-      // Safe glitching for images
-      if (isImage && corruptionPct > 0) {
-        inputPayload = glitchImageBytesSafely(inputPayload, corruptionPct);
-      }
-
       var compResult = await compressPayload(inputPayload, compSetting);
       var workingPayload = compResult.data;
       var wasCompressed = compResult.comp;
@@ -712,7 +657,7 @@
         ? formatBytes(selectedFileObj.size) + ' -> ' + formatBytes(workingPayload.length)
         : formatBytes(selectedFileObj.size);
 
-      var chunkSize = parseInt(document.getElementById('chunkSizeSelect').value) || 260;
+      var chunkSize = parseInt(document.getElementById('chunkSizeSelect').value) || 180;
       var totalChunks = Math.ceil(workingPayload.length / chunkSize);
       var fileCrc = crc32(workingPayload);
 
@@ -840,6 +785,7 @@
       broadcastTimer = setTimeout(broadcastStep, delay);
     }
 
+    /* Batched Path Canvas Draw */
     function drawFrameToCanvas(content, canvasId) {
       var canvas = document.getElementById(canvasId);
       if (!canvas) return;
@@ -925,7 +871,7 @@
     }
 
     /* ========================================================
-       RECEIVER LOGIC (ZERO-LAG & UNFINISHED PAST 90%)
+       RECEIVER LOGIC
     ======================================================== */
     var videoStream = null;
     var cameraMode = 'environment';
@@ -1208,6 +1154,7 @@
       }
     }
 
+    /* Batched Path Heatmap Draw */
     function drawHeatmap() {
       var canvas = document.getElementById('heatmapCanvas');
       var ctx = canvas.getContext('2d');
@@ -1259,7 +1206,6 @@
       });
     }
 
-    /* Unfinished reconstruction: only past 90% */
     async function downloadUnfinished() {
       var pct = Math.floor((rxReceivedCount / (rxTotalExpected || 1)) * 100);
       if (pct < 90 || rxReceivedCount === 0 || !rxTotalExpected || !isUnfinishedSupported()) return;
@@ -1271,7 +1217,7 @@
           break;
         }
       }
-      if (sampleLen === 0) sampleLen = 260;
+      if (sampleLen === 0) sampleLen = 180;
 
       var totalLen = rxTotalExpected * sampleLen;
       var merged = new Uint8Array(totalLen);
@@ -1380,16 +1326,6 @@
         audio.src = url;
         audio.style.width = '100%';
         previewContainer.appendChild(audio);
-      } else if (mime.indexOf('video/') === 0) {
-        var videoEl = document.createElement('video');
-        videoEl.controls = true;
-        videoEl.playsInline = true;
-        videoEl.src = url;
-        videoEl.style.maxWidth = '100%';
-        videoEl.style.maxHeight = '200px';
-        videoEl.style.border = '1px solid #222222';
-        videoEl.style.display = 'block';
-        previewContainer.appendChild(videoEl);
       } else if (mime.startsWith('text/') || mime.includes('json') || mime.includes('javascript') || mime.includes('xml')) {
         try {
           var textSnippet = new TextDecoder('utf-8').decode(finalBytes.subarray(0, 1500));
@@ -1408,10 +1344,11 @@
         } catch (e) {}
       }
 
-      document.getElementById('rxFileName').textContent = filename.toLowerCase() + ' (' + formatBytes(blob.size) + ') ' + (isVerified ? '• crc verified' : '• glitched');
+      document.getElementById('rxFileName').textContent = filename.toLowerCase() + ' (' + formatBytes(blob.size) + ') ' + (isVerified ? '• crc verified' : '');
       document.getElementById('rxSuccessBox').style.display = 'flex';
     }
 
+    /* Web Share API for Direct Mobile Camera Roll Saving */
     async function handleSaveAction() {
       if (!currentReadyBlob) return;
 
