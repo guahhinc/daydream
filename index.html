@@ -415,7 +415,7 @@
 
   <script>
     /* ========================================================
-       CORE UTILITIES
+       CORE UTILITIES & RGB332 OPTICAL VIDEO CODEC
     ======================================================== */
     function formatBytes(bytes) {
       if (!bytes || bytes === 0) return '0 b';
@@ -467,6 +467,36 @@
       return u8;
     }
 
+    /* Ultra-Compact RGB332 Pixel Codec (1 byte per pixel, deflates to ~240 bytes) */
+    function rgbaToRgb332(imgData) {
+      var data = imgData.data;
+      var len = imgData.width * imgData.height;
+      var out = new Uint8Array(len);
+      for (var i = 0; i < len; i++) {
+        var p = i * 4;
+        var r = data[p] >> 5;     // 3 bits
+        var g = data[p + 1] >> 5; // 3 bits
+        var b = data[p + 2] >> 6; // 2 bits
+        out[i] = (r << 5) | (g << 2) | b;
+      }
+      return out;
+    }
+
+    function rgb332ToRgba(u8, width, height) {
+      var imgData = new ImageData(width, height);
+      var data = imgData.data;
+      var len = u8.length;
+      for (var i = 0; i < len; i++) {
+        var val = u8[i];
+        var p = i * 4;
+        data[p] = Math.round(((val >> 5) & 0x07) * 255 / 7);
+        data[p + 1] = Math.round(((val >> 2) & 0x07) * 255 / 7);
+        data[p + 2] = Math.round((val & 0x03) * 255 / 3);
+        data[p + 3] = 255;
+      }
+      return imgData;
+    }
+
     function readFileBuffer(file) {
       return new Promise(function(resolve, reject) {
         if (file.arrayBuffer) {
@@ -484,8 +514,8 @@
       });
     }
 
-    /* Video Frame Extractor for Optical Live Streaming */
-    function extractVideoOpticalFrames(file, maxFrames, targetFps, quality) {
+    /* Video Extractor that samples optical frames sized to fit safely inside 1 QR code */
+    function extractVideoOpticalFrames(file, maxFrames, targetFps) {
       return new Promise(function(resolve) {
         var video = document.createElement('video');
         video.muted = true;
@@ -501,50 +531,42 @@
 
         video.onloadedmetadata = function() {
           var duration = video.duration || 3;
+          if (duration > 15) duration = 15;
           var totalFrames = Math.min(Math.floor(duration * targetFps), maxFrames);
           if (totalFrames < 4) totalFrames = 4;
 
-          var w = video.videoWidth || 240;
-          var h = video.videoHeight || 180;
-          var maxDim = 200;
-          if (w > maxDim || h > maxDim) {
-            if (w > h) {
-              h = Math.round((h * maxDim) / w);
-              w = maxDim;
-            } else {
-              w = Math.round((w * maxDim) / h);
-              h = maxDim;
-            }
-          }
-
+          var w = 64;
+          var h = 48;
           var canvas = document.createElement('canvas');
           canvas.width = w;
           canvas.height = h;
-          var ctx = canvas.getContext('2d');
+          var ctx = canvas.getContext('2d', { willReadFrequently: true });
 
           var frames = [];
           var frameIdx = 0;
           var timeStep = duration / totalFrames;
 
-          function seekNext() {
+          function captureNext() {
             if (frameIdx >= totalFrames) {
               clearTimeout(timeout);
               URL.revokeObjectURL(url);
               resolve({ frames: frames, width: w, height: h, duration: duration });
               return;
             }
-            video.currentTime = frameIdx * timeStep;
+            video.currentTime = Math.min(frameIdx * timeStep, duration - 0.05);
           }
 
           video.onseeked = function() {
             ctx.drawImage(video, 0, 0, w, h);
-            var dataUrl = canvas.toDataURL('image/jpeg', quality);
-            frames.push(dataUrl.split(',')[1]);
+            var imgData = ctx.getImageData(0, 0, w, h);
+            var rgbBytes = rgbaToRgb332(imgData);
+            var comp = pako.deflate(rgbBytes, { level: 9 });
+            frames.push(u8ToBase64(comp));
             frameIdx++;
-            seekNext();
+            captureNext();
           };
 
-          seekNext();
+          captureNext();
         };
 
         video.onerror = function() {
@@ -683,7 +705,7 @@
       document.getElementById('corruptNum').textContent = val;
     }
 
-    /* Injects controllable bit/byte mutations for glitch testing */
+    /* Injects bit mutations for glitch testing */
     function applyCorruption(dataStr, pct) {
       if (!pct || pct <= 0) return dataStr;
       var parts = dataStr.split('|');
@@ -713,7 +735,7 @@
 
       var optRaw = document.getElementById('optRaw');
 
-      // Video can NOT be raw - grey it out & default to deflate
+      // Video cannot be raw: disable and default to deflate
       if (isVideoFile) {
         optRaw.disabled = true;
         optRaw.textContent = 'none (disabled for video)';
@@ -756,16 +778,16 @@
 
       var fileId = Math.random().toString(36).substring(2, 6);
 
+      // VIDEO OPTICAL STREAMING ENGINE
       if (isVideoFile) {
         document.getElementById('txStatus').textContent = 'processing video...';
-        // Extract optical live streaming frames (sample 36 frames at 8 fps)
-        var vidResult = await extractVideoOpticalFrames(selectedFileObj, 38, 8, 0.48);
+        var vidResult = await extractVideoOpticalFrames(selectedFileObj, 36, 8);
         if (vidResult && vidResult.frames.length > 0) {
           var frames = vidResult.frames;
           var totalFrames = frames.length;
-          baseMetaPacket = 'ab0|' + fileId + '|' + totalFrames + '|' + selectedFileObj.size + '|0|0|video/mp4|' + encodeURIComponent(activeFileName);
+          baseMetaPacket = 'ab0|' + fileId + '|' + totalFrames + '|' + selectedFileObj.size + '|1|0|video/mp4|' + encodeURIComponent(activeFileName);
           for (var f = 0; f < totalFrames; f++) {
-            baseDataPackets.push('ab|' + fileId + '|' + (f + 1) + '|' + totalFrames + '|' + frames[f]);
+            baseDataPackets.push('abv|' + fileId + '|' + (f + 1) + '|' + totalFrames + '|' + frames[f]);
           }
 
           document.getElementById('fileInfoRow').style.display = 'flex';
@@ -774,7 +796,7 @@
         }
       }
 
-      // Non-video fallback or standard files
+      // Standard Files & Images
       if (baseDataPackets.length === 0) {
         var inputPayload = rawFileData;
 
@@ -919,7 +941,7 @@
       var delay = 1000 / currentFps;
 
       if (isLastFrame) {
-        delay = 800; // 0.8s hang on last frame
+        delay = 800; // 0.8s hang on final frame
         scheduleCursor = 0;
         loopCounter++;
         constructSchedule(loopCounter % 2 === 0);
@@ -1034,6 +1056,12 @@
     var isLiveVideoActive = false;
     var loopPlaybackTimer = null;
     var isLooping = false;
+
+    // Offscreen canvas for rendering RGB332 pixel frames
+    var tempFrameCanvas = document.createElement('canvas');
+    tempFrameCanvas.width = 64;
+    tempFrameCanvas.height = 48;
+    var tempFrameCtx = tempFrameCanvas.getContext('2d', { willReadFrequently: true });
 
     var chunkHits = new Map();
 
@@ -1207,18 +1235,26 @@
       }
     }
 
-    /* Live Stream Video Painting */
-    function renderLiveFrame(base64Data, idx) {
-      var img = new Image();
-      img.onload = function() {
+    /* Live Video Painter: renders deflated optical video frames immediately */
+    function renderLiveFrame(base64Comp, idx) {
+      try {
+        var compBytes = base64ToU8(base64Comp);
+        var rgbBytes = pako.inflate(compBytes);
+        var imgData = rgb332ToRgba(rgbBytes, 64, 48);
+
+        tempFrameCtx.putImageData(imgData, 0, 0);
+
         var canvas = document.getElementById('rxLiveCanvas');
         var ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      };
-      img.src = 'data:image/jpeg;base64,' + base64Data;
-      rxVideoFrames[idx] = 'data:image/jpeg;base64,' + base64Data;
-      document.getElementById('rxLiveFrames').textContent = 'frame ' + idx + ' / ' + rxTotalExpected;
-      document.getElementById('rxLiveState').textContent = 'streaming live';
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(tempFrameCanvas, 0, 0, canvas.width, canvas.height);
+
+        rxVideoFrames[idx] = imgData;
+        document.getElementById('rxLiveFrames').textContent = 'frame ' + idx + ' / ' + rxTotalExpected;
+        document.getElementById('rxLiveState').textContent = 'streaming live';
+      } catch (err) {
+        console.warn('live frame decode error (corrupt packet)', err);
+      }
     }
 
     function toggleLoopPlayback() {
@@ -1247,17 +1283,15 @@
 
       clearInterval(loopPlaybackTimer);
       loopPlaybackTimer = setInterval(function() {
-        var img = new Image();
-        img.onload = function() {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        };
-        img.src = available[cursor];
+        tempFrameCtx.putImageData(available[cursor], 0, 0);
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(tempFrameCanvas, 0, 0, canvas.width, canvas.height);
         cursor = (cursor + 1) % available.length;
       }, 100);
     }
 
     function parsePacket(str) {
-      if (!str || (!str.startsWith('ab|') && !str.startsWith('ab0|'))) return;
+      if (!str || (!str.startsWith('ab|') && !str.startsWith('ab0|') && !str.startsWith('abv|'))) return;
       var parts = str.split('|');
       var type = parts[0];
       var fId = parts[1];
@@ -1306,7 +1340,6 @@
           name: decodeURIComponent(parts[7] || 'file')
         };
 
-        // When receiver realizes it is video: activate live stream viewer!
         if (rxMeta.mime.indexOf('video/') === 0) {
           isLiveVideoActive = true;
           document.getElementById('rxLiveBox').style.display = 'flex';
@@ -1319,19 +1352,34 @@
         updateRxStats();
       }
 
-      // Data Packet
-      if (type === 'ab') {
-        var idx = parseInt(parts[2]);
-
-        // Live stream video directly to canvas as chunks arrive
-        if (isLiveVideoActive || (rxMeta && rxMeta.mime.indexOf('video/') === 0)) {
-          if (!isLiveVideoActive) {
-            isLiveVideoActive = true;
-            document.getElementById('rxLiveBox').style.display = 'flex';
-          }
-          renderLiveFrame(parts[4], idx);
+      // Optical Video Frame Stream
+      if (type === 'abv') {
+        var vIdx = parseInt(parts[2]);
+        if (!isLiveVideoActive) {
+          isLiveVideoActive = true;
+          document.getElementById('rxLiveBox').style.display = 'flex';
+          document.getElementById('rxStatus').textContent = 'live streaming video...';
         }
 
+        renderLiveFrame(parts[4], vIdx);
+
+        if (vIdx >= 1 && vIdx <= rxTotalExpected && !rxChunks[vIdx]) {
+          rxChunks[vIdx] = new Uint8Array([1]);
+          rxReceivedCount++;
+          updateRxStats();
+          drawHeatmap();
+
+          if (rxReceivedCount >= rxTotalExpected) {
+            document.getElementById('rxLiveState').textContent = 'stream fully buffered';
+            document.getElementById('rxStatus').textContent = 'video stream complete';
+            toggleLoopPlayback();
+          }
+        }
+      }
+
+      // Standard Data Chunks
+      if (type === 'ab') {
+        var idx = parseInt(parts[2]);
         if (idx >= 1 && idx <= rxTotalExpected && !rxChunks[idx]) {
           rxChunks[idx] = base64ToU8(parts[4]);
           rxReceivedCount++;
@@ -1339,13 +1387,7 @@
           drawHeatmap();
 
           if (rxReceivedCount >= rxTotalExpected && rxMeta && !rxDone) {
-            if (isLiveVideoActive) {
-              document.getElementById('rxLiveState').textContent = 'stream fully buffered';
-              document.getElementById('rxStatus').textContent = 'video stream complete';
-              toggleLoopPlayback();
-            } else {
-              assembleAndComplete();
-            }
+            assembleAndComplete();
           }
         }
       }
@@ -1376,6 +1418,7 @@
       document.getElementById('rxChunkCount').textContent = 'chunks: ' + rxReceivedCount + ' / ' + rxTotalExpected;
       document.getElementById('rxMissingCount').textContent = 'missing: ' + (rxTotalExpected - rxReceivedCount);
 
+      // Blocked on unsupported types like text, PDFs, archives, and binaries
       var partialBtn = document.getElementById('btnDownloadPartial');
       if (pct >= 70 && !rxDone && isUnfinishedSupported() && !isLiveVideoActive) {
         partialBtn.style.display = 'block';
@@ -1550,12 +1593,23 @@
         audio.src = url;
         audio.style.width = '100%';
         previewContainer.appendChild(audio);
+      } else if (mime.indexOf('video/') === 0) {
+        var videoEl = document.createElement('video');
+        videoEl.controls = true;
+        videoEl.playsInline = true;
+        videoEl.src = url;
+        videoEl.style.maxWidth = '100%';
+        videoEl.style.maxHeight = '200px';
+        videoEl.style.border = '1px solid #222222';
+        videoEl.style.display = 'block';
+        previewContainer.appendChild(videoEl);
       }
 
       document.getElementById('rxFileName').textContent = filename.toLowerCase() + ' (' + formatBytes(blob.size) + ') ' + (isVerified ? '• crc verified' : '');
       document.getElementById('rxSuccessBox').style.display = 'flex';
     }
 
+    /* Web Share API for Mobile Camera Roll Saving */
     async function handleSaveAction() {
       if (!currentReadyBlob) return;
 
