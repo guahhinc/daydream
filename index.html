@@ -286,8 +286,8 @@
       <div class="field-row">
         <label for="compressSelect">compression</label>
         <select id="compressSelect" onchange="recomputeFile()">
-          <option value="super" selected>super deflate</option>
-          <option value="deflate">deflate</option>
+          <option value="super" id="optSuper" selected>super deflate</option>
+          <option value="deflate" id="optDeflate">deflate</option>
           <option value="none" id="optRaw">none (raw)</option>
         </select>
       </div>
@@ -427,12 +427,14 @@
       return u8;
     }
 
-    function isTextOrCodeFile(file) {
+    /* Validates if the file is text, code, or PDF */
+    function isTextCodeOrPdf(file) {
       if (!file) return false;
       var type = (file.type || '').toLowerCase();
       var name = (file.name || '').toLowerCase();
 
       if (type.indexOf('text/') === 0) return true;
+      if (type === 'application/pdf') return true;
       if (type === 'application/json' || type === 'application/javascript' ||
           type === 'application/xml' || type === 'application/x-yaml' ||
           type === 'application/x-sh' || type === 'application/sql') return true;
@@ -440,13 +442,13 @@
       var extMatch = name.match(/\.([a-z0-9]+)$/i);
       if (extMatch) {
         var ext = extMatch[1];
-        var codeExts = [
-          'txt', 'md', 'csv', 'json', 'js', 'ts', 'jsx', 'tsx', 'html', 'htm',
+        var textCodeExts = [
+          'pdf', 'txt', 'md', 'csv', 'json', 'js', 'ts', 'jsx', 'tsx', 'html', 'htm',
           'css', 'scss', 'xml', 'svg', 'py', 'c', 'cpp', 'h', 'hpp', 'cs',
           'java', 'rs', 'go', 'php', 'rb', 'sh', 'bat', 'ps1', 'yaml', 'yml',
           'toml', 'ini', 'cfg', 'conf', 'env', 'sql', 'log', 'v', 'sv'
         ];
-        if (codeExts.indexOf(ext) !== -1) return true;
+        if (textCodeExts.indexOf(ext) !== -1) return true;
       }
       return false;
     }
@@ -598,18 +600,32 @@
       activeFileType = file.type || 'application/octet-stream';
 
       var optRaw = document.getElementById('optRaw');
-      var isText = isTextOrCodeFile(file);
+      var optDeflate = document.getElementById('optDeflate');
+      var optSuper = document.getElementById('optSuper');
+      var select = document.getElementById('compressSelect');
 
-      // Only let text/code files work in raw
-      if (!isText) {
-        optRaw.disabled = true;
-        optRaw.textContent = 'none (text/code only)';
-        if (document.getElementById('compressSelect').value === 'none') {
-          document.getElementById('compressSelect').value = 'super';
-        }
-      } else {
+      var isTextPdf = isTextCodeOrPdf(file);
+
+      // Text/Code/PDF files ONLY can use raw and nothing else
+      if (isTextPdf) {
         optRaw.disabled = false;
         optRaw.textContent = 'none (raw)';
+        optDeflate.disabled = true;
+        optDeflate.textContent = 'deflate (raw only)';
+        optSuper.disabled = true;
+        optSuper.textContent = 'super deflate (raw only)';
+        select.value = 'none';
+      } else {
+        // Raw added back for images and everything else
+        optRaw.disabled = false;
+        optRaw.textContent = 'none (raw)';
+        optDeflate.disabled = false;
+        optDeflate.textContent = 'deflate';
+        optSuper.disabled = false;
+        optSuper.textContent = 'super deflate';
+        if (select.value === 'none') {
+          select.value = 'super';
+        }
       }
 
       rawFileData = await readFileBuffer(file);
@@ -696,7 +712,13 @@
     }
 
     function recomputeFile() {
-      if (rawFileData) buildPackets();
+      if (rawFileData) {
+        // Enforce text/code/pdf files can only use raw
+        if (isTextCodeOrPdf(selectedFileObj)) {
+          document.getElementById('compressSelect').value = 'none';
+        }
+        buildPackets();
+      }
     }
 
     function onSpeedChange(val) {
@@ -785,7 +807,6 @@
       broadcastTimer = setTimeout(broadcastStep, delay);
     }
 
-    /* Batched Path Canvas Draw */
     function drawFrameToCanvas(content, canvasId) {
       var canvas = document.getElementById(canvasId);
       if (!canvas) return;
@@ -1144,7 +1165,7 @@
       document.getElementById('rxChunkCount').textContent = 'chunks: ' + rxReceivedCount + ' / ' + rxTotalExpected;
       document.getElementById('rxMissingCount').textContent = 'missing: ' + (rxTotalExpected - rxReceivedCount);
 
-      // Only allow download unfinished PAST 90%
+      // Download unfinished ONLY past 90%
       var partialBtn = document.getElementById('btnDownloadPartial');
       if (pct >= 90 && !rxDone && isUnfinishedSupported()) {
         partialBtn.style.display = 'block';
@@ -1154,7 +1175,6 @@
       }
     }
 
-    /* Batched Path Heatmap Draw */
     function drawHeatmap() {
       var canvas = document.getElementById('heatmapCanvas');
       var ctx = canvas.getContext('2d');
@@ -1326,6 +1346,16 @@
         audio.src = url;
         audio.style.width = '100%';
         previewContainer.appendChild(audio);
+      } else if (mime.indexOf('video/') === 0) {
+        var videoEl = document.createElement('video');
+        videoEl.controls = true;
+        videoEl.playsInline = true;
+        videoEl.src = url;
+        videoEl.style.maxWidth = '100%';
+        videoEl.style.maxHeight = '200px';
+        videoEl.style.border = '1px solid #222222';
+        videoEl.style.display = 'block';
+        previewContainer.appendChild(videoEl);
       } else if (mime.startsWith('text/') || mime.includes('json') || mime.includes('javascript') || mime.includes('xml')) {
         try {
           var textSnippet = new TextDecoder('utf-8').decode(finalBytes.subarray(0, 1500));
