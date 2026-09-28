@@ -94,7 +94,7 @@
       flex-direction: column;
       overflow: hidden;
       box-shadow: 0 0 60px rgba(0, 0, 0, 0.95);
-      padding-top: max(env(safe-area-inset-top, 0px) + 8px, 46px);
+      padding-top: max(env(safe-area-inset-top, 0px), 24px);
       padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
       overscroll-behavior: none;
     }
@@ -111,7 +111,7 @@
       background-color: #000000;
     }
 
-    /* 100% Solid Opaque Screen Views */
+    /* 100% Solid Opaque Screen Views with Hardware GPU Acceleration */
     .screen-view {
       position: absolute;
       top: 0;
@@ -126,6 +126,9 @@
       -webkit-backface-visibility: hidden;
       transform-origin: 0% 50%;
       z-index: 1;
+      will-change: transform, opacity;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
     }
 
     .screen-view.active {
@@ -176,21 +179,23 @@
     }
 
     .turnstile-in {
-      animation: wpTurnstileEnter 0.28s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+      animation: wpTurnstileEnter 0.38s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
       z-index: 10 !important;
       background: #000000 !important;
       transform-origin: 0% 50%;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
+      will-change: transform, opacity;
     }
 
     .turnstile-back-in {
-      animation: wpTurnstileBackEnter 0.28s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+      animation: wpTurnstileBackEnter 0.38s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
       z-index: 10 !important;
       background: #000000 !important;
       transform-origin: 100% 50%;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
+      will-change: transform, opacity;
     }
 
     /* ================= START SCREEN ================= */
@@ -236,8 +241,9 @@
       aspect-ratio: 1 / 1;
     }
 
-    /* Settings Tile Never Flips */
-    #tile-settings .tile-slab {
+    /* Settings & Camera Tiles Never Flip - Pure Static Metro */
+    #tile-settings .tile-slab,
+    #tile-camera .tile-slab {
       transform: none !important;
       transition: none !important;
     }
@@ -250,7 +256,8 @@
       transform-style: preserve-3d;
       -webkit-transform-style: preserve-3d;
       transform-origin: center center;
-      transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+      will-change: transform;
     }
 
     /* Vertical Live Flip (bottom-over-top) */
@@ -1089,13 +1096,13 @@
       display: block;
     }
 
-    /* Solid black bar at top of screen for iPhone notch / Dynamic Island / blur isolation */
+    /* Thinner solid black bar at top of screen for iPhone notch / Dynamic Island */
     #iphone-top-bar {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
-      height: max(env(safe-area-inset-top, 0px) + 8px, 46px);
+      height: max(env(safe-area-inset-top, 0px), 24px);
       background: #000000;
       z-index: 998;
       pointer-events: none;
@@ -1309,7 +1316,7 @@
             </div>
           </div>
 
-          <!-- 4. Camera Tile -->
+          <!-- 4. Camera Tile (Static - No Live Tile) -->
           <div class="wp-tile tile-1sq" id="tile-camera" data-app="camera" data-size="1sq" onclick="launchApp('camera')">
             <div class="tile-slab">
               <div class="tile-face">
@@ -1317,11 +1324,6 @@
                   <span class="material-symbols-sharp">photo_camera</span>
                 </div>
                 <div class="tile-label">Camera</div>
-              </div>
-              <div class="tile-face tile-face-back">
-                <div style="font-size: 12px; opacity: 0.8;">Camera</div>
-                <div style="font-size: 13px; font-weight: 300; margin-top: 4px;">Tap to shoot</div>
-                <div class="tile-label">Viewfinder</div>
               </div>
             </div>
           </div>
@@ -1739,21 +1741,6 @@
                   <p style="font-size:13px; color:var(--sub-fg); margin-bottom:12px; line-height:1.4;">Force refresh daydream OS to apply latest software updates and reload system resources.</p>
                   <button class="metro-button primary" onclick="forceSoftwareUpdate()" style="width:100%;">software update</button>
                 </div>
-
-                <div class="settings-group" style="margin-top:28px;">
-                  <div class="settings-heading">live tiles</div>
-                  <p style="font-size:13px; color:var(--sub-fg); margin-bottom:14px; line-height:1.4;">Toggle dynamic tile animations and flip cycles on the start screen.</p>
-                  
-                  <div style="display:flex; justify-content:space-between; align-items:center; background:#141414; padding:12px 14px; border:1px solid #242424;">
-                    <div>
-                      <div style="font-size:16px; font-weight:300;" id="live-tiles-toggle-status">On</div>
-                      <div style="font-size:12px; color:var(--sub-fg); margin-top:2px;">Tile flip animations</div>
-                    </div>
-                    <button class="metro-toggle-btn active" id="live-tiles-toggle-btn" onclick="toggleLiveTilesSetting()" type="button" aria-label="Toggle Live Tiles">
-                      <span class="metro-toggle-thumb"></span>
-                    </button>
-                  </div>
-                </div>
               </div>
 
               <!-- PAGE 1: THEME -->
@@ -1817,9 +1804,9 @@
                   <button class="metro-button" onclick="locateUserGPS()" title="My Location" style="padding:8px 12px;"><span class="material-symbols-sharp" style="font-size:18px;">my_location</span></button>
                 </div>
                 <div style="flex:1; width:100%; position:relative; background:#181818;">
-                  <iframe id="maps-iframe" src="https://www.openstreetmap.org/export/embed.html?bbox=-0.15,51.49,-0.08,51.52&layer=mapnik&marker=51.5074,-0.1278" style="width:100%; height:100%; border:none;" loading="lazy"></iframe>
-                  <div id="map-coord-banner" style="position:absolute; bottom:8px; left:8px; right:8px; background:rgba(0,0,0,0.85); padding:6px 12px; font-size:12px; color:var(--sub-fg); pointer-events:none; border-left:3px solid var(--accent);">
-                    <span id="map-status-text">London, UK • 51.5074° N, 0.1278° W</span>
+                  <iframe id="maps-iframe" src="https://www.openstreetmap.org/export/embed.html?bbox=144.92,-37.83,145.00,-37.79&layer=mapnik&marker=-37.8136,144.9631" style="width:100%; height:100%; border:none;" loading="lazy"></iframe>
+                  <div id="map-coord-banner" style="position:absolute; bottom:8px; left:8px; right:8px; background:rgba(0,0,0,0.85); padding:8px 14px; font-size:12px; color:var(--sub-fg); pointer-events:none;">
+                    <span id="map-status-text">Melbourne, Australia • 37.8136° S, 144.9631° E</span>
                   </div>
                 </div>
               </div>
@@ -1999,7 +1986,6 @@
       renderPhotosGrid();
       renderHealthDisplay();
       updatePhotosLiveTile();
-      updateLiveTilesSettingUI();
       applyAccent(currentAccent, false);
       startLiveTilesFlipTimer();
       setupCalculatorKeyListeners();
@@ -2007,29 +1993,10 @@
       renderMapsPlaces();
     });
 
-    /* ================= GENERAL SETTINGS (SOFTWARE UPDATE & LIVE TILES) ================= */
+    /* ================= GENERAL SETTINGS (SOFTWARE UPDATE) ================= */
     function forceSoftwareUpdate() {
       // Force refresh page bypassing cache
       window.location.reload(true);
-    }
-
-    function toggleLiveTilesSetting() {
-      liveTilesEnabled = !liveTilesEnabled;
-      try {
-        localStorage.setItem('daydream_live_tiles_enabled', liveTilesEnabled ? '1' : '0');
-      } catch (e) {}
-      updateLiveTilesSettingUI();
-      if (!liveTilesEnabled) {
-        // Return all tiles to unflipped front face immediately
-        document.querySelectorAll('.wp-tile.flipped').forEach(t => t.classList.remove('flipped'));
-      }
-    }
-
-    function updateLiveTilesSettingUI() {
-      const btn = document.getElementById('live-tiles-toggle-btn');
-      const statusEl = document.getElementById('live-tiles-toggle-status');
-      if (btn) btn.classList.toggle('active', liveTilesEnabled);
-      if (statusEl) statusEl.textContent = liveTilesEnabled ? 'On' : 'Off';
     }
 
     function applyDefaultTileLayout() {
@@ -2131,14 +2098,14 @@
       document.getElementById('metro-dialog-overlay').style.display = 'none';
     }
 
-    /* ================= SCROLL SNAPPING & AUTO-SLIDING PIVOT HEADERS ================= */
-    function scrollPivotTo(sliderId, pageIndex, smooth = true) {
+    /* ================= SCROLL SNAPPING & LIGHTNING-FAST PIVOT HEADERS ================= */
+    function scrollPivotTo(sliderId, pageIndex) {
       const slider = document.getElementById(sliderId);
       if (!slider || !slider.parentElement) return;
       const parent = slider.parentElement;
       parent.scrollTo({
         left: pageIndex * parent.clientWidth,
-        behavior: smooth ? 'smooth' : 'auto'
+        behavior: 'auto'
       });
       scrollTabIntoView(sliderId, pageIndex);
     }
@@ -2153,8 +2120,8 @@
       const tabs = tabsRow.querySelectorAll('.pivot-tab-item');
       if (tabs[activeIndex]) {
         const tab = tabs[activeIndex];
-        const tabOffset = tab.offsetLeft - 18;
-        tabsRow.scrollTo({ left: Math.max(0, tabOffset), behavior: 'smooth' });
+        const targetLeft = Math.max(0, tab.offsetLeft - 18);
+        tabsRow.scrollTo({ left: targetLeft, behavior: 'smooth' });
       }
     }
 
@@ -2203,7 +2170,7 @@
           const idx = Math.round(parent.scrollLeft / w);
           onIndexChange(idx);
           scrollTabIntoView(sliderId, idx);
-        }, 8);
+        }, 5);
       }, { passive: true });
     }
 
@@ -2225,7 +2192,7 @@
       
       // Outgoing screen swings away hinged at right edge
       if (fromView) {
-        fromView.style.transition = 'transform 0.20s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.20s ease-out';
+        fromView.style.transition = 'transform 0.26s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.26s ease-out';
         fromView.style.transformOrigin = '100% 50%';
         fromView.style.opacity = '0';
         fromView.style.transform = 'perspective(1200px) rotateY(80deg)';
@@ -2236,14 +2203,14 @@
           fromView.style.transform = '';
           fromView.style.transformOrigin = '';
           fromView.style.transition = '';
-        }, 200);
+        }, 260);
       }
 
       setTimeout(() => {
         toView.className = 'screen-view active';
         activeScreen = targetApp;
         isTransitioning = false;
-      }, 290);
+      }, 380);
 
       // App-specific startup
       if (targetApp === 'browser') {
@@ -2276,7 +2243,7 @@
       
       // Outgoing screen swings away hinged at left edge
       if (fromView) {
-        fromView.style.transition = 'transform 0.20s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.20s ease-out';
+        fromView.style.transition = 'transform 0.26s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.26s ease-out';
         fromView.style.transformOrigin = '0% 50%';
         fromView.style.opacity = '0';
         fromView.style.transform = 'perspective(1200px) rotateY(-80deg)';
@@ -2287,14 +2254,14 @@
           fromView.style.transform = '';
           fromView.style.transformOrigin = '';
           fromView.style.transition = '';
-        }, 200);
+        }, 260);
       }
 
       setTimeout(() => {
         toView.className = 'screen-view active';
         activeScreen = 'home';
         isTransitioning = false;
-      }, 290);
+      }, 380);
     }
 
     function getScreenEl(appName) {
@@ -2439,8 +2406,8 @@
     }
 
     function startLiveTilesFlipTimer() {
-      // Excludes tile-settings - Settings tile remains static Metro
-      const tileIds = ['tile-contacts', 'tile-calc', 'tile-browser', 'tile-camera', 'tile-photos', 'tile-notes', 'tile-health', 'tile-maps'];
+      // Excludes static tiles (settings and camera)
+      const tileIds = ['tile-contacts', 'tile-calc', 'tile-browser', 'tile-photos', 'tile-notes', 'tile-health', 'tile-maps'];
       setInterval(() => {
         if (!liveTilesEnabled) return;
         const randId = tileIds[Math.floor(Math.random() * tileIds.length)];
@@ -3244,11 +3211,12 @@
 
     /* ================= APP 9: MAPS ================= */
     const MAP_PLACES = [
+      { name: 'Melbourne, Australia', lat: -37.8136, lon: 144.9631, desc: 'Cultural Capital of Australia • Yarra River & Laneways' },
+      { name: 'Sydney, Australia', lat: -33.8688, lon: 151.2093, desc: 'Harbour City • Opera House & Bondi' },
       { name: 'London, UK', lat: 51.5074, lon: -0.1278, desc: 'Capital of the United Kingdom • Big Ben & Thames' },
       { name: 'New York, USA', lat: 40.7128, lon: -74.0060, desc: 'The Big Apple • Manhattan & Central Park' },
       { name: 'Tokyo, Japan', lat: 35.6762, lon: 139.6503, desc: 'Capital of Japan • Shibuya & Shinjuku' },
       { name: 'Paris, France', lat: 48.8566, lon: 2.3522, desc: 'City of Light • Eiffel Tower & Seine' },
-      { name: 'Sydney, Australia', lat: -33.8688, lon: 151.2093, desc: 'Harbour City • Opera House & Bondi' },
       { name: 'Rome, Italy', lat: 41.9028, lon: 12.4964, desc: 'Eternal City • Colosseum & Vatican' },
       { name: 'Dubai, UAE', lat: 25.2048, lon: 55.2708, desc: 'Burj Khalifa & Persian Gulf' }
     ];
@@ -3313,7 +3281,7 @@
       if (!list || list.children.length > 0) return;
       MAP_PLACES.forEach(p => {
         const row = document.createElement('div');
-        row.style.cssText = 'padding: 12px 14px; background: #141414; cursor: pointer; border-left: 3px solid var(--accent); transition: background 0.1s;';
+        row.style.cssText = 'padding: 12px 14px; background: #141414; cursor: pointer; transition: background 0.1s;';
         row.innerHTML = `
           <div style="font-size: 16px; font-weight: 400; color: var(--fg);">${p.name}</div>
           <div style="font-size: 12px; color: var(--sub-fg); margin-top: 2px;">${p.desc}</div>
