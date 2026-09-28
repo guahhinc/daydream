@@ -2588,56 +2588,60 @@
       document.getElementById('metro-dialog-overlay').style.display = 'none';
     }
 
-    /* ================= SIDEWAYS SWIPING FOR PIVOT APPS ================= */
+    /* ================= SCROLL SNAPPING FOR PIVOT APPS ================= */
+    function scrollPivotTo(sliderId, pageIndex, smooth = true) {
+      const slider = document.getElementById(sliderId);
+      if (!slider || !slider.parentElement) return;
+      const parent = slider.parentElement;
+      parent.scrollTo({
+        left: pageIndex * parent.clientWidth,
+        behavior: smooth ? 'smooth' : 'auto'
+      });
+    }
+
     function setupPivotSwipeGestures() {
-      setupSwipeForElement('pivot-contacts-view', (dir) => {
-        if (dir === 'left' && contactsPivotIndex === 0) selectContactsTab('recent');
-        else if (dir === 'right' && contactsPivotIndex === 1) selectContactsTab('all');
+      bindPivotSnap('slider-contacts', (idx) => {
+        contactsPivotIndex = idx;
+        document.getElementById('tab-contacts-all')?.classList.toggle('active', idx === 0);
+        document.getElementById('tab-contacts-recent')?.classList.toggle('active', idx === 1);
       });
 
-      setupSwipeForElement('pivot-notes-view', (dir) => {
-        if (dir === 'left' && notesPivotIndex === 0) selectNotesTab('new');
-        else if (dir === 'right' && notesPivotIndex === 1) selectNotesTab('all');
+      bindPivotSnap('slider-notes', (idx) => {
+        notesPivotIndex = idx;
+        document.getElementById('tab-notes-all')?.classList.toggle('active', idx === 0);
+        document.getElementById('tab-notes-new')?.classList.toggle('active', idx === 1);
       });
 
-      setupSwipeForElement('pivot-health-view', (dir) => {
-        if (dir === 'left' && healthPivotIndex === 0) selectHealthTab('goals');
-        else if (dir === 'right' && healthPivotIndex === 1) selectHealthTab('today');
+      bindPivotSnap('slider-health', (idx) => {
+        healthPivotIndex = idx;
+        document.getElementById('tab-health-today')?.classList.toggle('active', idx === 0);
+        document.getElementById('tab-health-goals')?.classList.toggle('active', idx === 1);
       });
 
-      setupSwipeForElement('pivot-settings-view', (dir) => {
-        if (dir === 'left' && settingsPivotIndex < 2) selectSettingsTab(settingsPivotIndex === 0 ? 'start' : 'about');
-        else if (dir === 'right' && settingsPivotIndex > 0) selectSettingsTab(settingsPivotIndex === 2 ? 'start' : 'sys');
+      bindPivotSnap('slider-settings', (idx) => {
+        settingsPivotIndex = idx;
+        document.getElementById('tab-settings-sys')?.classList.toggle('active', idx === 0);
+        document.getElementById('tab-settings-start')?.classList.toggle('active', idx === 1);
+        document.getElementById('tab-settings-about')?.classList.toggle('active', idx === 2);
       });
     }
 
-    function setupSwipeForElement(elementId, onSwipe) {
-      const el = document.getElementById(elementId);
-      if (!el) return;
-
-      let startX = 0;
-      let startY = 0;
-      let isTracking = false;
-
-      el.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        isTracking = true;
-      }, { passive: true });
-
-      el.addEventListener('touchend', (e) => {
-        if (!isTracking) return;
-        const diffX = e.changedTouches[0].clientX - startX;
-        const diffY = e.changedTouches[0].clientY - startY;
-
-        if (Math.abs(diffX) > 45 && Math.abs(diffX) > Math.abs(diffY) * 1.3) {
-          onSwipe(diffX < 0 ? 'left' : 'right');
-        }
-        isTracking = false;
+    function bindPivotSnap(sliderId, onIndexChange) {
+      const slider = document.getElementById(sliderId);
+      if (!slider || !slider.parentElement) return;
+      const parent = slider.parentElement;
+      let timer = null;
+      parent.addEventListener('scroll', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          const w = parent.clientWidth || 1;
+          const idx = Math.round(parent.scrollLeft / w);
+          onIndexChange(idx);
+        }, 50);
       }, { passive: true });
     }
 
-    /* ================= TURNSTILE APP LAUNCH (OPAQUE & CLEAN) ================= */
+    /* ================= SMOOTH SIDE-SLIDE APP LAUNCH WITH FADE ================= */
     function launchApp(targetApp) {
       closeAppSwitcher();
       if (isTransitioning || activeScreen === targetApp) return;
@@ -2663,23 +2667,25 @@
       toView.style.display = 'flex';
       toView.className = 'screen-view active turnstile-in';
       
-      // Quick smooth fade out of outgoing screen
+      // Smooth fade and slide out of outgoing screen
       if (fromView) {
-        fromView.style.transition = 'opacity 0.12s ease-out';
+        fromView.style.transition = 'opacity 0.16s ease-out, transform 0.16s ease-out';
         fromView.style.opacity = '0';
+        fromView.style.transform = 'translateX(-30px)';
         setTimeout(() => {
           fromView.style.display = 'none';
           fromView.className = 'screen-view';
           fromView.style.opacity = '1';
+          fromView.style.transform = '';
           fromView.style.transition = '';
-        }, 120);
+        }, 160);
       }
 
       setTimeout(() => {
         toView.className = 'screen-view active';
         activeScreen = targetApp;
         isTransitioning = false;
-      }, 480);
+      }, 340);
 
       // App-specific startup
       if (targetApp === 'browser') {
@@ -2709,23 +2715,25 @@
       toView.style.display = 'flex';
       toView.className = 'screen-view active turnstile-back-in';
       
-      // Quick smooth fade out of outgoing screen
+      // Smooth fade and slide out of outgoing screen
       if (fromView) {
-        fromView.style.transition = 'opacity 0.12s ease-out';
+        fromView.style.transition = 'opacity 0.16s ease-out, transform 0.16s ease-out';
         fromView.style.opacity = '0';
+        fromView.style.transform = 'translateX(30px)';
         setTimeout(() => {
           fromView.style.display = 'none';
           fromView.className = 'screen-view';
           fromView.style.opacity = '1';
+          fromView.style.transform = '';
           fromView.style.transition = '';
-        }, 120);
+        }, 160);
       }
 
       setTimeout(() => {
         toView.className = 'screen-view active';
         activeScreen = 'home';
         isTransitioning = false;
-      }, 480);
+      }, 340);
     }
 
     function getScreenEl(appName) {
@@ -2800,14 +2808,14 @@
       if (photos.length === 0) {
         front.innerHTML = `
           <div class="tile-center-icon">
-            <span class="material-symbols-sharp" style="font-size: 38px;">photo_library</span>
+            <span class="material-symbols-sharp">photo_library</span>
           </div>
           <div class="tile-label">Photos</div>
         `;
         back.innerHTML = `
           <div>
             <div style="font-size: 12px; opacity: 0.8;">Gallery</div>
-            <div style="font-size: 15px; font-weight: 300; margin-top: 6px;">0 Photos</div>
+            <div style="font-size: 15px; font-weight: 300; margin-top: 4px;" id="tile-photos-count">0 Photos</div>
           </div>
           <div class="tile-label">Camera Roll</div>
         `;
@@ -2818,15 +2826,19 @@
       const p2 = photos[(currentPhotoTileIdx + 1) % photos.length];
 
       front.innerHTML = `
-        <img src="${p1.src}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" alt="Photo">
-        <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 45%); pointer-events:none;"></div>
-        <div class="tile-label" style="position:relative; z-index:2;">Photos</div>
+        <div style="position:absolute; inset:0; width:100%; height:100%; overflow:hidden;">
+          <img src="${p1.src}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" alt="Photo">
+          <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 45%); pointer-events:none;"></div>
+          <div class="tile-label" style="position:absolute; bottom:10px; left:10px; z-index:2;">Photos</div>
+        </div>
       `;
 
       back.innerHTML = `
-        <img src="${p2.src}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" alt="Photo">
-        <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 45%); pointer-events:none;"></div>
-        <div class="tile-label" style="position:relative; z-index:2;">Camera Roll</div>
+        <div style="position:absolute; inset:0; width:100%; height:100%; overflow:hidden;">
+          <img src="${p2.src}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" alt="Photo">
+          <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 45%); pointer-events:none;"></div>
+          <div class="tile-label" style="position:absolute; bottom:10px; left:10px; z-index:2;">Camera Roll</div>
+        </div>
       `;
     }
 
@@ -2998,7 +3010,7 @@
       contactsPivotIndex = tab === 'recent' ? 1 : 0;
       document.getElementById('tab-contacts-all').classList.toggle('active', tab === 'all');
       document.getElementById('tab-contacts-recent').classList.toggle('active', tab === 'recent');
-      document.getElementById('slider-contacts').style.transform = `translateX(calc(-${contactsPivotIndex * 100}% - ${contactsPivotIndex * 120}px))`;
+      scrollPivotTo('slider-contacts', contactsPivotIndex);
     }
 
     function openAddContactModal() {
@@ -3297,7 +3309,7 @@
       notesPivotIndex = tab === 'new' ? 1 : 0;
       document.getElementById('tab-notes-all').classList.toggle('active', tab === 'all');
       document.getElementById('tab-notes-new').classList.toggle('active', tab === 'new');
-      document.getElementById('slider-notes').style.transform = `translateX(calc(-${notesPivotIndex * 100}% - ${notesPivotIndex * 120}px))`;
+      scrollPivotTo('slider-notes', notesPivotIndex);
     }
 
     function saveNote() {
@@ -3421,7 +3433,7 @@
       healthPivotIndex = tab === 'goals' ? 1 : 0;
       document.getElementById('tab-health-today').classList.toggle('active', tab === 'today');
       document.getElementById('tab-health-goals').classList.toggle('active', tab === 'goals');
-      document.getElementById('slider-health').style.transform = `translateX(calc(-${healthPivotIndex * 100}% - ${healthPivotIndex * 120}px))`;
+      scrollPivotTo('slider-health', healthPivotIndex);
     }
 
     /* ================= APP 6: CAMERA (LIVE VIEWFINDER & SHUTTER) ================= */
@@ -3604,7 +3616,7 @@
       document.getElementById('tab-settings-sys').classList.toggle('active', tab === 'sys');
       document.getElementById('tab-settings-start').classList.toggle('active', tab === 'start');
       document.getElementById('tab-settings-about').classList.toggle('active', tab === 'about');
-      document.getElementById('slider-settings').style.transform = `translateX(calc(-${settingsPivotIndex * 100}% - ${settingsPivotIndex * 120}px))`;
+      scrollPivotTo('slider-settings', settingsPivotIndex);
     }
 
     function confirmResetDefaults() {
