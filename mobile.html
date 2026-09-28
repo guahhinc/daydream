@@ -136,35 +136,35 @@
       z-index: 5;
     }
 
-    /* App Opening/Closing: Authentic Windows Phone Turnstile (Flips in from side like a door to fill screen) */
-    @keyframes wpTurnstileEnter {
+    /* App Opening/Closing: 3D Flip from Top and Bottom (Matching Metro Pop Up Flip) */
+    @keyframes wpAppFlipEnter {
       0% {
-        transform: perspective(1200px) rotateY(-35deg) scale(0.96);
-        transform-origin: 0% 50%;
+        transform: perspective(900px) rotateX(-45deg) scale(0.92);
+        transform-origin: center top;
         opacity: 0;
       }
-      35% {
-        opacity: 1;
+      40% {
+        opacity: 0.95;
       }
       100% {
-        transform: perspective(1200px) rotateY(0deg) scale(1);
-        transform-origin: 0% 50%;
+        transform: perspective(900px) rotateX(0deg) scale(1);
+        transform-origin: center top;
         opacity: 1;
       }
     }
 
-    @keyframes wpTurnstileBackEnter {
+    @keyframes wpAppFlipBackEnter {
       0% {
-        transform: perspective(1200px) rotateY(35deg) scale(0.96);
-        transform-origin: 100% 50%;
+        transform: perspective(900px) rotateX(45deg) scale(0.92);
+        transform-origin: center bottom;
         opacity: 0;
       }
-      35% {
-        opacity: 1;
+      40% {
+        opacity: 0.95;
       }
       100% {
-        transform: perspective(1200px) rotateY(0deg) scale(1);
-        transform-origin: 100% 50%;
+        transform: perspective(900px) rotateX(0deg) scale(1);
+        transform-origin: center bottom;
         opacity: 1;
       }
     }
@@ -179,20 +179,20 @@
     }
 
     .turnstile-in {
-      animation: wpTurnstileEnter 0.44s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      animation: wpAppFlipEnter 0.30s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
       z-index: 10 !important;
       background: #000000 !important;
-      transform-origin: 0% 50%;
+      transform-origin: center top;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       will-change: transform, opacity;
     }
 
     .turnstile-back-in {
-      animation: wpTurnstileBackEnter 0.44s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      animation: wpAppFlipBackEnter 0.30s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
       z-index: 10 !important;
       background: #000000 !important;
-      transform-origin: 100% 50%;
+      transform-origin: center bottom;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       will-change: transform, opacity;
@@ -770,6 +770,7 @@
       display: block;
     }
 
+    .browser-top-bar,
     .browser-bottom-bar {
       height: 52px;
       background: #111111;
@@ -778,6 +779,7 @@
       padding: 0 8px;
       gap: 6px;
       flex-shrink: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .browser-nav-btn {
@@ -1577,11 +1579,7 @@
       <!-- ================= APP 3: BROWSER (WITH BACK & FORWARD) ================= -->
       <div id="view-browser" class="screen-view">
         <div id="browser-container">
-          <div class="browser-web-viewport">
-            <iframe id="browser-iframe" src="about:blank" sandbox="allow-scripts allow-forms allow-popups allow-modals"></iframe>
-          </div>
-
-          <div class="browser-bottom-bar">
+          <div class="browser-top-bar" id="browser-controls-bar">
             <!-- Back & Forward Navigation -->
             <button class="browser-nav-btn" onclick="browserNavBack()" title="Back">
               <span class="material-symbols-sharp">arrow_back</span>
@@ -1597,6 +1595,10 @@
             <button class="browser-nav-btn" onclick="submitBrowserGo()" title="Go / Refresh">
               <span class="material-symbols-sharp">refresh</span>
             </button>
+          </div>
+
+          <div class="browser-web-viewport">
+            <iframe id="browser-iframe" src="about:blank" sandbox="allow-scripts allow-forms allow-popups allow-modals"></iframe>
           </div>
         </div>
       </div>
