@@ -194,7 +194,7 @@
     }
 
     .app-flip-close {
-      animation: appFlipClose 0.18s ease-in forwards;
+      animation: appFlipClose 0.12s ease-in forwards;
       z-index: 10 !important;
       background: #000000 !important;
       transform-origin: center top !important;
@@ -206,7 +206,7 @@
 
     .app-home-return,
     .turnstile-back-in {
-      animation: appHomeReturn 0.18s ease-out forwards;
+      animation: appHomeReturn 0.12s ease-out forwards;
       z-index: 5 !important;
       background: #000000 !important;
       backface-visibility: hidden;
@@ -948,6 +948,34 @@
       transform-origin: center center;
       transition: transform 0.05s ease-out;
       will-change: transform;
+    }
+
+    .metro-zoom-pill {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s, color 0.15s;
+    }
+
+    .metro-zoom-pill.active {
+      background: rgba(0, 0, 0, 0.85);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 500;
+      transform: scale(1.1);
+    }
+
+    .metro-zoom-pill:active {
+      transform: scale(0.92);
     }
 
     #camera-shutter-flash {
@@ -1761,6 +1789,11 @@
         <div id="camera-app-viewport">
           <video id="camera-video-stream" autoplay playsinline muted></video>
           <div id="camera-zoom-badge" style="position:absolute; top:18px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.75); border:1px solid rgba(255,255,255,0.2); padding:5px 14px; font-size:14px; font-weight:400; color:#fff; display:none; z-index:30; pointer-events:none; letter-spacing:0.5px;">1.0x</div>
+          <div id="camera-zoom-pills" style="position:absolute; bottom:16px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:30;">
+            <button type="button" class="metro-zoom-pill" id="zoom-pill-05" onclick="applyCameraZoom(0.5)">0.5</button>
+            <button type="button" class="metro-zoom-pill active" id="zoom-pill-1" onclick="applyCameraZoom(1.0)">1x</button>
+            <button type="button" class="metro-zoom-pill" id="zoom-pill-2" onclick="applyCameraZoom(2.0)">2x</button>
+          </div>
           <div id="camera-shutter-flash"></div>
           <canvas id="camera-snapshot-canvas" style="display:none;"></canvas>
         </div>
@@ -2352,14 +2385,14 @@
           fromView.style.opacity = '1';
           fromView.style.transform = '';
           fromView.style.transition = '';
-        }, 180);
+        }, 120);
       }
 
       setTimeout(() => {
         toView.className = 'screen-view active';
         activeScreen = 'home';
         isTransitioning = false;
-      }, 190);
+      }, 130);
     }
 
     function getScreenEl(appName) {
@@ -3354,7 +3387,7 @@
           const dy = e.touches[0].clientY - e.touches[1].clientY;
           const dist = Math.hypot(dx, dy);
           const factor = dist / cameraInitialPinchDist;
-          const newZoom = Math.min(5.0, Math.max(1.0, cameraInitialZoom * factor));
+          const newZoom = Math.min(5.0, Math.max(0.5, cameraInitialZoom * factor));
           applyCameraZoom(newZoom);
         }
       }, { passive: true });
@@ -3368,13 +3401,13 @@
       viewport.addEventListener('wheel', (e) => {
         e.preventDefault();
         const delta = e.deltaY < 0 ? 0.2 : -0.2;
-        const newZoom = Math.min(5.0, Math.max(1.0, cameraZoom + delta));
+        const newZoom = Math.min(5.0, Math.max(0.5, cameraZoom + delta));
         applyCameraZoom(newZoom);
       }, { passive: false });
     }
 
     function applyCameraZoom(level) {
-      cameraZoom = Math.round(level * 10) / 10;
+      cameraZoom = Math.min(5.0, Math.max(0.5, Math.round(level * 10) / 10));
       const video = document.getElementById('camera-video-stream');
       const badge = document.getElementById('camera-zoom-badge');
       if (video) {
@@ -3385,7 +3418,10 @@
         const track = cameraStream.getVideoTracks()[0];
         if (track && track.getCapabilities && track.getCapabilities().zoom) {
           try {
-            track.applyConstraints({ advanced: [{ zoom: cameraZoom }] });
+            const minZ = track.getCapabilities().zoom.min || 0.5;
+            const maxZ = track.getCapabilities().zoom.max || 5.0;
+            const constrainedZoom = Math.min(maxZ, Math.max(minZ, cameraZoom));
+            track.applyConstraints({ advanced: [{ zoom: constrainedZoom }] });
           } catch (err) {}
         }
       }
@@ -3397,6 +3433,10 @@
           badge.style.display = 'none';
         }, 1200);
       }
+
+      document.getElementById('zoom-pill-05')?.classList.toggle('active', Math.abs(cameraZoom - 0.5) < 0.1);
+      document.getElementById('zoom-pill-1')?.classList.toggle('active', Math.abs(cameraZoom - 1.0) < 0.1);
+      document.getElementById('zoom-pill-2')?.classList.toggle('active', Math.abs(cameraZoom - 2.0) < 0.1);
     }
 
     function startCameraStream() {
@@ -3464,6 +3504,14 @@
           const sx = (canvas.width - sw) / 2;
           const sy = (canvas.height - sh) / 2;
           ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+        } else if (cameraZoom < 1.0) {
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          const dw = canvas.width * cameraZoom;
+          const dh = canvas.height * cameraZoom;
+          const dx = (canvas.width - dw) / 2;
+          const dy = (canvas.height - dh) / 2;
+          ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, dx, dy, dw, dh);
         } else {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         }
