@@ -386,6 +386,7 @@
       position: relative;
       scrollbar-width: none !important;
       padding: 0;
+      scroll-behavior: smooth;
     }
 
     .pivot-body::-webkit-scrollbar {
@@ -1636,7 +1637,7 @@
           <div class="pivot-header">
             <div class="pivot-tabs-row">
               <div class="pivot-tab-item active" id="tab-health-today" onclick="selectHealthTab('today')">today</div>
-              <div class="pivot-tab-item" id="tab-health-mind" onclick="selectHealthTab('mind')">state of mind</div>
+              <div class="pivot-tab-item" id="tab-health-mind" onclick="selectHealthTab('mind')">mind</div>
               <div class="pivot-tab-item" id="tab-health-goals" onclick="selectHealthTab('goals')">goals</div>
             </div>
           </div>
@@ -1822,7 +1823,6 @@
               <div class="pivot-tab-item active" id="tab-settings-general" onclick="selectSettingsTab('general')">general</div>
               <div class="pivot-tab-item" id="tab-settings-apps" onclick="selectSettingsTab('apps')">apps</div>
               <div class="pivot-tab-item" id="tab-settings-theme" onclick="selectSettingsTab('theme')">theme</div>
-              <div class="pivot-tab-item" id="tab-settings-about" onclick="selectSettingsTab('about')">about</div>
             </div>
           </div>
 
@@ -1831,9 +1831,16 @@
               <!-- PAGE 0: GENERAL (FIRST PAGE) -->
               <div class="pivot-page">
                 <div class="settings-group">
+                  <div style="font-size: 28px; font-weight: 100; margin-bottom: 2px;">daydream</div>
+                  <div style="font-size: 13px; color: var(--sub-fg); margin-bottom: 20px;">daydream OS 1.0</div>
+
                   <div class="settings-heading">software update</div>
                   <p style="font-size:13px; color:var(--sub-fg); margin-bottom:12px; line-height:1.4;">Force refresh daydream OS to apply latest software updates and reload system resources.</p>
-                  <button class="metro-button primary" onclick="forceSoftwareUpdate()" style="width:100%;">software update</button>
+                  <button class="metro-button primary" onclick="forceSoftwareUpdate()" style="width:100%; margin-bottom:24px;">software update</button>
+
+                  <div class="settings-heading">Device Reset</div>
+                  <p style="font-size:13px; color:var(--sub-fg); margin-bottom:12px; line-height:1.4;">Clear stored system preferences and restore default configuration.</p>
+                  <button class="metro-button" onclick="confirmResetDefaults()" style="width:100%;">restore defaults</button>
                 </div>
               </div>
 
@@ -1858,29 +1865,6 @@
                   </div>
 
                   <div class="accent-palette-grid" id="palette-swatches"></div>
-                </div>
-              </div>
-
-              <!-- PAGE 3: ABOUT -->
-              <div class="pivot-page">
-                <div class="settings-group">
-                  <div class="settings-heading">Device Info</div>
-                  <div style="font-size: 26px; font-weight: 100; margin-bottom: 4px;">daydream Mobile</div>
-                  <div style="font-size: 13px; color: var(--sub-fg); margin-bottom: 18px;">daydream OS 1.0</div>
-
-                  <div style="padding: 12px 0;">
-                    <div style="font-size: 15px; font-weight: 300;">Installed Apps</div>
-                    <div style="font-size: 12px; color: var(--sub-fg); margin-top: 2px;">Contacts, Calculator, Photos, Camera, Notes, Compass, Browser, Health, Maps, Settings</div>
-                  </div>
-
-                  <div style="padding: 12px 0;">
-                    <div style="font-size: 15px; font-weight: 300;">Storage</div>
-                    <div style="font-size: 12px; color: var(--sub-fg); margin-top: 2px;">All preferences, camera photos & data saved locally</div>
-                  </div>
-
-                  <div style="margin-top: 24px;">
-                    <button class="metro-button" onclick="confirmResetDefaults()">restore defaults</button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -2281,7 +2265,7 @@
       const parent = slider.parentElement;
       parent.scrollTo({
         left: pageIndex * parent.clientWidth,
-        behavior: 'auto'
+        behavior: 'smooth'
       });
       scrollTabIntoView(sliderId, pageIndex);
     }
@@ -2332,7 +2316,6 @@
         document.getElementById('tab-settings-general')?.classList.toggle('active', idx === 0);
         document.getElementById('tab-settings-apps')?.classList.toggle('active', idx === 1);
         document.getElementById('tab-settings-theme')?.classList.toggle('active', idx === 2);
-        document.getElementById('tab-settings-about')?.classList.toggle('active', idx === 3);
       });
     }
 
@@ -3955,12 +3938,10 @@
       if (tab === 'general') settingsPivotIndex = 0;
       else if (tab === 'apps') settingsPivotIndex = 1;
       else if (tab === 'theme') settingsPivotIndex = 2;
-      else if (tab === 'about') settingsPivotIndex = 3;
 
       document.getElementById('tab-settings-general')?.classList.toggle('active', tab === 'general');
       document.getElementById('tab-settings-apps')?.classList.toggle('active', tab === 'apps');
       document.getElementById('tab-settings-theme')?.classList.toggle('active', tab === 'theme');
-      document.getElementById('tab-settings-about')?.classList.toggle('active', tab === 'about');
       scrollPivotTo('slider-settings', settingsPivotIndex);
     }
 
