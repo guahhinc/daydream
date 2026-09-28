@@ -69,7 +69,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Full-screen phone container: mobile full-width, centered on desktop */
+    /* Full-screen phone container: mobile full-width, centered on desktop with iPhone safe area */
     #phone-container {
       width: 100%;
       max-width: 480px;
@@ -82,6 +82,8 @@
       position: relative;
       overflow: hidden;
       box-shadow: 0 0 60px rgba(0, 0, 0, 0.95);
+      padding-top: max(env(safe-area-inset-top, 0px), 36px);
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
     }
 
     /* Screen Viewport */
@@ -118,31 +120,25 @@
       z-index: 5;
     }
 
-    /* OPAQUE 3D Turnstile Animations with Super Quick Fade */
-    @keyframes wpTurnstileEnter {
+    /* App Opening/Closing: Smooth Slide from Side with Fade */
+    @keyframes wpSlideInFromRight {
       0% {
-        transform: perspective(1200px) rotateY(-32deg) translateZ(-140px) scale(0.92);
+        transform: translateX(46px);
         opacity: 0;
       }
-      30% {
-        opacity: 1;
-      }
       100% {
-        transform: perspective(1200px) rotateY(0deg) translateZ(0) scale(1);
+        transform: translateX(0);
         opacity: 1;
       }
     }
 
-    @keyframes wpTurnstileBackEnter {
+    @keyframes wpSlideInFromLeft {
       0% {
-        transform: perspective(1200px) rotateY(32deg) translateZ(-140px) scale(0.92);
+        transform: translateX(-46px);
         opacity: 0;
       }
-      30% {
-        opacity: 1;
-      }
       100% {
-        transform: perspective(1200px) rotateY(0deg) translateZ(0) scale(1);
+        transform: translateX(0);
         opacity: 1;
       }
     }
@@ -159,13 +155,13 @@
     }
 
     .turnstile-in {
-      animation: wpTurnstileEnter 0.45s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      animation: wpSlideInFromRight 0.32s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
       z-index: 10 !important;
       background: #000000 !important;
     }
 
     .turnstile-back-in {
-      animation: wpTurnstileBackEnter 0.45s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      animation: wpSlideInFromLeft 0.32s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
       z-index: 10 !important;
       background: #000000 !important;
     }
@@ -176,19 +172,18 @@
       flex-direction: column;
       width: 100%;
       height: 100%;
-      padding: 16px 14px 14px;
+      padding: 10px 14px 16px;
       overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
       background: #000000;
     }
 
-    /* 3 Squares Per Row Grid - Dense Packing Prevents Gaps */
+    /* 3 Squares Per Row Grid - All Tiles Square */
     .start-tile-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      grid-auto-flow: dense;
-      gap: 8px;
+      gap: 10px;
       padding-bottom: 24px;
     }
 
@@ -204,22 +199,14 @@
       background: transparent;
       transition: transform 0.15s ease;
       touch-action: pan-y;
-      height: 100%;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      grid-column: span 1;
     }
 
     .tile-1sq {
       grid-column: span 1;
       aspect-ratio: 1 / 1;
-    }
-
-    .tile-2sq {
-      grid-column: span 2;
-      aspect-ratio: 2.06 / 1;
-    }
-
-    .tile-3sq {
-      grid-column: span 3;
-      aspect-ratio: 3.12 / 1;
     }
 
     /* Settings Tile Never Flips */
@@ -235,6 +222,7 @@
       height: 100%;
       transform-style: preserve-3d;
       -webkit-transform-style: preserve-3d;
+      transform-origin: center center;
       transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
 
@@ -256,10 +244,12 @@
       -webkit-backface-visibility: hidden;
       transform: rotateX(0deg);
       -webkit-transform: rotateX(0deg);
+      transform-origin: center center;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       overflow: hidden;
+      box-sizing: border-box;
     }
 
     .tile-face-back {
@@ -293,9 +283,14 @@
       justify-content: center;
     }
 
+    .tile-center-icon .material-symbols-sharp {
+      font-size: 52px;
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+    }
+
     .app-svg-icon {
-      width: 44px;
-      height: 44px;
+      width: 52px;
+      height: 52px;
       fill: currentColor;
     }
 
@@ -309,7 +304,7 @@
     }
 
     .pivot-header {
-      padding: 22px 18px 8px;
+      padding: 16px 18px 8px;
       flex-shrink: 0;
     }
 
@@ -337,28 +332,41 @@
       color: var(--fg);
     }
 
+    /* Snap into place on mobile */
     .pivot-body {
       flex: 1;
+      overflow-x: auto;
       overflow-y: hidden;
-      padding: 6px 18px 16px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
       position: relative;
+      scrollbar-width: none !important;
+      padding: 0;
     }
 
-    /* Horizontal swipe slider wrapper with a 120px gap */
+    .pivot-body::-webkit-scrollbar {
+      display: none !important;
+    }
+
+    /* Horizontal snap slider wrapper */
     .pivot-slider {
       display: flex;
       width: 100%;
       height: 100%;
-      gap: 120px;
-      transition: transform 0.32s cubic-bezier(0.12, 0.9, 0.2, 1);
+      transition: none;
     }
 
     .pivot-page {
       width: 100%;
+      min-width: 100%;
       height: 100%;
       flex-shrink: 0;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      padding: 6px 18px 16px;
+      box-sizing: border-box;
     }
 
     .pivot-page::-webkit-scrollbar {
@@ -1358,12 +1366,12 @@
         <!-- 3 Squares Per Row Grid: 8 Apps -->
         <div class="start-tile-grid" id="main-tile-grid">
 
-          <!-- 1. Contacts Tile (Row 1: 2sq + 1sq = 3sq) -->
-          <div class="wp-tile tile-2sq" id="tile-contacts" data-app="contacts" data-size="2sq" onclick="launchApp('contacts')">
+          <!-- 1. Contacts Tile -->
+          <div class="wp-tile tile-1sq" id="tile-contacts" data-app="contacts" data-size="1sq" onclick="launchApp('contacts')">
             <div class="tile-slab">
               <div class="tile-face">
                 <div class="tile-center-icon">
-                  <svg class="app-svg-icon" viewBox="0 0 24 24">
+                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 52px; height: 52px;">
                     <circle cx="9" cy="8" r="3.5"/>
                     <path d="M2 18.5v-1c0-2.5 4-3.8 7-3.8s7 1.3 7 3.8v1H2z"/>
                     <circle cx="16.5" cy="8.5" r="2.8"/>
@@ -1374,8 +1382,8 @@
               </div>
               <div class="tile-face tile-face-back">
                 <div>
-                  <div style="font-size: 18px; font-weight: 300;" id="tile-contact-name">0 Contacts</div>
-                  <div style="font-size: 13px; opacity: 0.85; margin-top: 4px;" id="tile-contact-sub">Tap to add contacts</div>
+                  <div style="font-size: 16px; font-weight: 300;" id="tile-contact-name">0 Contacts</div>
+                  <div style="font-size: 12px; opacity: 0.85; margin-top: 3px;" id="tile-contact-sub">Tap to add</div>
                 </div>
                 <div class="tile-label">Contacts</div>
               </div>
@@ -1387,45 +1395,35 @@
             <div class="tile-slab">
               <div class="tile-face">
                 <div class="tile-center-icon">
-                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 40px; height: 40px;">
-                    <rect x="4" y="2" width="16" height="20" rx="1" fill="none" stroke="currentColor" stroke-width="2"/>
-                    <rect x="6" y="4" width="12" height="4" fill="currentColor"/>
-                    <circle cx="7.5" cy="11.5" r="1" fill="currentColor"/>
-                    <circle cx="12" cy="11.5" r="1" fill="currentColor"/>
-                    <circle cx="16.5" cy="11.5" r="1" fill="currentColor"/>
-                    <circle cx="7.5" cy="15" r="1" fill="currentColor"/>
-                    <circle cx="12" cy="15" r="1" fill="currentColor"/>
-                    <circle cx="16.5" cy="15" r="1" fill="currentColor"/>
-                    <circle cx="7.5" cy="18.5" r="1" fill="currentColor"/>
-                    <circle cx="12" cy="18.5" r="1" fill="currentColor"/>
-                    <circle cx="16.5" cy="18.5" r="1" fill="currentColor"/>
+                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 50px; height: 50px;">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-4v-2h4v2zm0-4h-4v-2h4v2zm-6 4H6v-2h2v2zm0-4H6v-2h2v2zm6-4H6V7h8v2zm5 8h-3v-6h3v6zm0-8h-3V7h3v2z"/>
                   </svg>
                 </div>
                 <div class="tile-label">Calculator</div>
               </div>
               <div class="tile-face tile-face-back">
                 <div style="font-size: 12px; opacity: 0.8;">Recent:</div>
-                <div id="calc-tile-val" style="font-size: 28px; font-weight: 100; margin: 4px 0;">0</div>
+                <div id="calc-tile-val" style="font-size: 26px; font-weight: 100; margin: 3px 0;">0</div>
                 <div class="tile-label">Calculator</div>
               </div>
             </div>
           </div>
 
-          <!-- 3. Photos Tile (Row 2: 2sq + 1sq = 3sq) -->
-          <div class="wp-tile tile-2sq" id="tile-photos" data-app="photos" data-size="2sq" onclick="launchApp('photos')">
+          <!-- 3. Photos Tile -->
+          <div class="wp-tile tile-1sq" id="tile-photos" data-app="photos" data-size="1sq" onclick="launchApp('photos')">
             <div class="tile-slab">
-              <div class="tile-face" id="tile-photos-face-front" style="padding:0; position:relative; overflow:hidden;">
-                <div id="tile-photos-content-front" style="width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; padding:10px; box-sizing:border-box;">
+              <div class="tile-face" id="tile-photos-face-front" style="padding:0; overflow:hidden;">
+                <div id="tile-photos-content-front" style="position:absolute; inset:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; padding:10px; box-sizing:border-box;">
                   <div class="tile-center-icon">
-                    <span class="material-symbols-sharp" style="font-size: 38px;">photo_library</span>
+                    <span class="material-symbols-sharp">photo_library</span>
                   </div>
                   <div class="tile-label">Photos</div>
                 </div>
               </div>
-              <div class="tile-face tile-face-back" id="tile-photos-face-back" style="padding:0; position:relative; overflow:hidden;">
-                <div id="tile-photos-content-back" style="width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; padding:10px; box-sizing:border-box;">
+              <div class="tile-face tile-face-back" id="tile-photos-face-back" style="padding:0; overflow:hidden;">
+                <div id="tile-photos-content-back" style="position:absolute; inset:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; padding:10px; box-sizing:border-box;">
                   <div style="font-size: 12px; opacity: 0.8;">Gallery</div>
-                  <div id="tile-photos-count" style="font-size: 15px; font-weight: 300; margin-top: 6px;">0 Photos</div>
+                  <div id="tile-photos-count" style="font-size: 15px; font-weight: 300; margin-top: 4px;">0 Photos</div>
                   <div class="tile-label">Camera Roll</div>
                 </div>
               </div>
@@ -1437,31 +1435,31 @@
             <div class="tile-slab">
               <div class="tile-face">
                 <div class="tile-center-icon">
-                  <span class="material-symbols-sharp" style="font-size: 38px;">photo_camera</span>
+                  <span class="material-symbols-sharp">photo_camera</span>
                 </div>
                 <div class="tile-label">Camera</div>
               </div>
               <div class="tile-face tile-face-back">
                 <div style="font-size: 12px; opacity: 0.8;">Camera</div>
-                <div style="font-size: 14px; font-weight: 300; margin-top: 6px;">Tap to capture</div>
+                <div style="font-size: 13px; font-weight: 300; margin-top: 4px;">Tap to shoot</div>
                 <div class="tile-label">Viewfinder</div>
               </div>
             </div>
           </div>
 
-          <!-- 5. Notes Tile (Row 3: 2sq + 1sq = 3sq) -->
-          <div class="wp-tile tile-2sq" id="tile-notes" data-app="notes" data-size="2sq" onclick="launchApp('notes')">
+          <!-- 5. Notes Tile -->
+          <div class="wp-tile tile-1sq" id="tile-notes" data-app="notes" data-size="1sq" onclick="launchApp('notes')">
             <div class="tile-slab">
               <div class="tile-face">
                 <div class="tile-center-icon">
-                  <span class="material-symbols-sharp" style="font-size: 42px;">description</span>
+                  <span class="material-symbols-sharp">description</span>
                 </div>
                 <div class="tile-label">Notes</div>
               </div>
               <div class="tile-face tile-face-back">
                 <div>
-                  <div style="font-size: 17px; font-weight: 400;" id="tile-note-title">Notes</div>
-                  <div style="font-size: 13px; opacity: 0.85; margin-top: 4px;" id="tile-note-snippet">Tap to create a note</div>
+                  <div style="font-size: 15px; font-weight: 400;" id="tile-note-title">Notes</div>
+                  <div style="font-size: 12px; opacity: 0.85; margin-top: 3px;" id="tile-note-snippet">Tap to create</div>
                 </div>
                 <div class="tile-label">Notes</div>
               </div>
@@ -1473,7 +1471,7 @@
             <div class="tile-slab">
               <div class="tile-face">
                 <div class="tile-center-icon">
-                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 42px; height: 42px;">
+                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 50px; height: 50px;">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
                   </svg>
                 </div>
@@ -1481,25 +1479,25 @@
               </div>
               <div class="tile-face tile-face-back">
                 <div style="font-size: 12px; opacity: 0.8;">Active:</div>
-                <div id="browser-tile-val" style="font-size: 14px; font-weight: 300; margin-top: 6px;">Wikipedia</div>
+                <div id="browser-tile-val" style="font-size: 13px; font-weight: 300; margin-top: 4px;">Wikipedia</div>
                 <div class="tile-label">Browser</div>
               </div>
             </div>
           </div>
 
-          <!-- 7. Health Tile (Row 4: 2sq + 1sq = 3sq) -->
-          <div class="wp-tile tile-2sq" id="tile-health" data-app="health" data-size="2sq" onclick="launchApp('health')">
+          <!-- 7. Health Tile -->
+          <div class="wp-tile tile-1sq" id="tile-health" data-app="health" data-size="1sq" onclick="launchApp('health')">
             <div class="tile-slab">
               <div class="tile-face">
                 <div class="tile-center-icon">
-                  <span class="material-symbols-sharp" style="font-size: 42px;">favorite</span>
+                  <span class="material-symbols-sharp">favorite</span>
                 </div>
                 <div class="tile-label">Health</div>
               </div>
               <div class="tile-face tile-face-back">
                 <div>
-                  <div style="font-size: 28px; font-weight: 100;" id="tile-health-steps">0</div>
-                  <div style="font-size: 13px; opacity: 0.85;" id="tile-health-sub">Daily Steps • 0% Goal</div>
+                  <div style="font-size: 24px; font-weight: 100;" id="tile-health-steps">0</div>
+                  <div style="font-size: 12px; opacity: 0.85;" id="tile-health-sub">0% Goal</div>
                 </div>
                 <div class="tile-label">Health</div>
               </div>
@@ -1511,7 +1509,7 @@
             <div class="tile-slab">
               <div class="tile-face">
                 <div class="tile-center-icon">
-                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 36px; height: 36px;">
+                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 50px; height: 50px;">
                     <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
                   </svg>
                 </div>
