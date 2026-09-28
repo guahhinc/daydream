@@ -124,7 +124,7 @@
       overflow: hidden;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
-      transform-origin: 0% 50%;
+      transform-origin: center top;
       z-index: 1;
       will-change: transform, opacity;
       transform: translateZ(0);
@@ -136,11 +136,10 @@
       z-index: 5;
     }
 
-    /* App Opening/Closing: 3D Flip from Top and Bottom (Matching Metro Pop Up Flip) */
-    @keyframes wpAppFlipEnter {
+    /* App Opening/Closing: Flip from Top (same as popup) and reverse on close */
+    @keyframes appFlipOpen {
       0% {
         transform: perspective(900px) rotateX(-45deg) scale(0.92);
-        transform-origin: center top;
         opacity: 0;
       }
       40% {
@@ -148,23 +147,28 @@
       }
       100% {
         transform: perspective(900px) rotateX(0deg) scale(1);
-        transform-origin: center top;
         opacity: 1;
       }
     }
 
-    @keyframes wpAppFlipBackEnter {
+    @keyframes appFlipClose {
       0% {
-        transform: perspective(900px) rotateX(45deg) scale(0.92);
-        transform-origin: center bottom;
-        opacity: 0;
-      }
-      40% {
-        opacity: 0.95;
+        transform: perspective(900px) rotateX(0deg) scale(1);
+        opacity: 1;
       }
       100% {
-        transform: perspective(900px) rotateX(0deg) scale(1);
-        transform-origin: center bottom;
+        transform: perspective(900px) rotateX(-40deg) scale(0.92);
+        opacity: 0;
+      }
+    }
+
+    @keyframes appHomeReturn {
+      0% {
+        transform: scale(0.96);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
         opacity: 1;
       }
     }
@@ -178,21 +182,33 @@
       }
     }
 
+    .app-flip-open,
     .turnstile-in {
-      animation: wpAppFlipEnter 0.30s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      animation: appFlipOpen 0.28s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
       z-index: 10 !important;
       background: #000000 !important;
-      transform-origin: center top;
+      transform-origin: center top !important;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       will-change: transform, opacity;
     }
 
-    .turnstile-back-in {
-      animation: wpAppFlipBackEnter 0.30s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+    .app-flip-close {
+      animation: appFlipClose 0.18s ease-in forwards;
       z-index: 10 !important;
       background: #000000 !important;
-      transform-origin: center bottom;
+      transform-origin: center top !important;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      will-change: transform, opacity;
+      pointer-events: none;
+    }
+
+    .app-home-return,
+    .turnstile-back-in {
+      animation: appHomeReturn 0.18s ease-out forwards;
+      z-index: 5 !important;
+      background: #000000 !important;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       will-change: transform, opacity;
@@ -673,8 +689,8 @@
       z-index: 50;
       display: none;
       flex-direction: column;
-      transform-origin: 0% 50%;
-      animation: wpTurnstileEnter 0.32s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      transform-origin: center top;
+      animation: appFlipOpen 0.28s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
       will-change: transform, opacity;
     }
 
@@ -779,7 +795,6 @@
       padding: 0 8px;
       gap: 6px;
       flex-shrink: 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .browser-nav-btn {
@@ -1386,24 +1401,6 @@
             </div>
           </div>
 
-          <!-- 6. Compass Tile (New App) -->
-          <div class="wp-tile tile-1sq" id="tile-compass" data-app="compass" data-size="1sq" onclick="launchApp('compass')">
-            <div class="tile-slab">
-              <div class="tile-face">
-                <div class="tile-center-icon">
-                  <span class="material-symbols-sharp">explore</span>
-                </div>
-                <div class="tile-label">Compass</div>
-              </div>
-              <div class="tile-face tile-face-back">
-                <div>
-                  <div style="font-size: 11px; opacity: 0.85;">Heading</div>
-                  <div style="font-size: 16px; font-weight: 300; margin-top: 3px;" id="tile-compass-val">0° N</div>
-                </div>
-                <div class="tile-label">Compass</div>
-              </div>
-            </div>
-          </div>
 
           <!-- 7. Browser Tile -->
           <div class="wp-tile tile-1sq" id="tile-browser" data-app="browser" data-size="1sq" onclick="launchApp('browser')">
@@ -1579,7 +1576,7 @@
       <!-- ================= APP 3: BROWSER (WITH BACK & FORWARD) ================= -->
       <div id="view-browser" class="screen-view">
         <div id="browser-container">
-          <div class="browser-top-bar" id="browser-controls-bar">
+          <div class="browser-top-bar">
             <!-- Back & Forward Navigation -->
             <button class="browser-nav-btn" onclick="browserNavBack()" title="Back">
               <span class="material-symbols-sharp">arrow_back</span>
@@ -1922,69 +1919,6 @@
         </div>
       </div>
 
-      <!-- ================= APP 10: COMPASS ================= -->
-      <div id="view-compass" class="screen-view">
-        <div class="pivot-view" id="pivot-compass-view">
-          <div class="pivot-header">
-            <div class="pivot-tabs-row">
-              <div class="pivot-tab-item active" id="tab-compass-main">compass</div>
-            </div>
-          </div>
-
-          <div class="pivot-body">
-            <div class="pivot-slider" id="slider-compass">
-              <!-- Page 1: Live Compass Rose & Heading -->
-              <div class="pivot-page" style="display:flex; flex-direction:column; align-items:center; justify-content:space-between; padding:10px 18px 24px;">
-                <div style="text-align:center; margin-top:6px;">
-                  <div id="compass-degrees" style="font-size:72px; font-weight:100; letter-spacing:-2px; line-height:1;">0°</div>
-                  <div id="compass-cardinal" style="font-size:18px; font-weight:400; color:var(--accent); margin-top:4px; text-transform:uppercase; letter-spacing:2px;">NORTH</div>
-                </div>
-
-                <!-- Circular Metro Compass Dial -->
-                <div id="compass-dial-wrap" style="position:relative; width:240px; height:240px; margin:16px auto; display:flex; align-items:center; justify-content:center; touch-action:none;">
-                  <svg id="compass-rose-svg" viewBox="0 0 250 250" style="width:100%; height:100%; transform:rotate(0deg); transition:transform 0.08s ease-out; will-change:transform;">
-                    <circle cx="125" cy="125" r="116" stroke="#333333" stroke-width="2" fill="none"/>
-                    <circle cx="125" cy="125" r="92" stroke="#222222" stroke-width="1.5" fill="none"/>
-                    <!-- Cardinal labels -->
-                    <text x="125" y="32" font-size="20" font-weight="700" fill="var(--accent)" text-anchor="middle" dominant-baseline="central">N</text>
-                    <text x="218" y="125" font-size="16" font-weight="400" fill="#888888" text-anchor="middle" dominant-baseline="central">E</text>
-                    <text x="125" y="218" font-size="16" font-weight="400" fill="#888888" text-anchor="middle" dominant-baseline="central">S</text>
-                    <text x="32" y="125" font-size="16" font-weight="400" fill="#888888" text-anchor="middle" dominant-baseline="central">W</text>
-                    <!-- Degree ticks -->
-                    <line x1="125" y1="10" x2="125" y2="20" stroke="var(--accent)" stroke-width="3"/>
-                    <line x1="125" y1="230" x2="125" y2="240" stroke="#666666" stroke-width="2"/>
-                    <line x1="10" y1="125" x2="20" y2="125" stroke="#666666" stroke-width="2"/>
-                    <line x1="230" y1="125" x2="240" y2="125" stroke="#666666" stroke-width="2"/>
-                    <line x1="45" y1="45" x2="52" y2="52" stroke="#444444" stroke-width="1.5"/>
-                    <line x1="205" y1="45" x2="198" y2="52" stroke="#444444" stroke-width="1.5"/>
-                    <line x1="45" y1="205" x2="52" y2="198" stroke="#444444" stroke-width="1.5"/>
-                    <line x1="205" y1="205" x2="198" y2="198" stroke="#444444" stroke-width="1.5"/>
-                    <!-- Metro needle -->
-                    <polygon points="125,50 133,125 117,125" fill="var(--accent)"/>
-                    <polygon points="125,200 133,125 117,125" fill="#444444"/>
-                    <circle cx="125" cy="125" r="7" fill="#ffffff"/>
-                  </svg>
-                  <!-- Central crosshair -->
-                  <div style="position:absolute; width:14px; height:14px; border-radius:50%; border:2px solid #ffffff; pointer-events:none;"></div>
-                </div>
-
-                <div style="width:100%; display:flex; justify-content:space-between; background:#141414; padding:12px 16px; box-sizing:border-box;">
-                  <div>
-                    <div style="font-size:11px; color:var(--sub-fg); text-transform:uppercase; letter-spacing:1px;">Elevation</div>
-                    <div id="compass-elevation" style="font-size:16px; font-weight:300; margin-top:2px;">38 m</div>
-                  </div>
-                  <div style="text-align:right;">
-                    <div style="font-size:11px; color:var(--sub-fg); text-transform:uppercase; letter-spacing:1px;">Coordinates</div>
-                    <div id="compass-coords" style="font-size:14px; font-weight:300; margin-top:2px;">-37.81° S, 144.96° E</div>
-                  </div>
-                </div>
-
-                <button class="metro-button" id="compass-perm-btn" onclick="requestCompassPermission()" style="margin-top:10px; width:100%; display:none;">calibrate / enable orientation sensor</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
     </div>
 
@@ -2044,7 +1978,6 @@
     let healthPivotIndex = 0;
     let settingsPivotIndex = 0;
     let mapsPivotIndex = 0;
-    let compassPivotIndex = 0;
 
     function loadSavedData() {
       // 1. Contacts
@@ -2171,7 +2104,6 @@
         { id: 'tile-photos', size: '1sq' },
         { id: 'tile-calc', size: '1sq' },
         { id: 'tile-notes', size: '1sq' },
-        { id: 'tile-compass', size: '1sq' },
         { id: 'tile-browser', size: '1sq' },
         { id: 'tile-health', size: '1sq' },
         { id: 'tile-maps', size: '1sq' },
@@ -2344,7 +2276,7 @@
       }, { passive: true });
     }
 
-    /* ================= 3D TURNSTILE FLIP FROM SIDE (AUTHENTIC WP8.1) ================= */
+    /* ================= APP FLIP OPEN FROM TOP & REVERSE ON CLOSE ================= */
     function launchApp(targetApp) {
       if (isTransitioning || activeScreen === targetApp) return;
       isTransitioning = true;
@@ -2358,29 +2290,27 @@
       }
 
       toView.style.display = 'flex';
-      toView.className = 'screen-view active turnstile-in';
+      toView.className = 'screen-view active app-flip-open';
       
-      // Outgoing screen swings away hinged at right edge
+      // Outgoing screen softly recedes
       if (fromView) {
-        fromView.style.transition = 'transform 0.30s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.30s ease-out';
-        fromView.style.transformOrigin = '100% 50%';
+        fromView.style.transition = 'transform 0.24s ease-out, opacity 0.24s ease-out';
         fromView.style.opacity = '0';
-        fromView.style.transform = 'perspective(1200px) rotateY(35deg) scale(0.96)';
+        fromView.style.transform = 'scale(0.95)';
         setTimeout(() => {
           fromView.style.display = 'none';
           fromView.className = 'screen-view';
           fromView.style.opacity = '1';
           fromView.style.transform = '';
-          fromView.style.transformOrigin = '';
           fromView.style.transition = '';
-        }, 300);
+        }, 250);
       }
 
       setTimeout(() => {
         toView.className = 'screen-view active';
         activeScreen = targetApp;
         isTransitioning = false;
-      }, 440);
+      }, 290);
 
       // App-specific startup
       if (targetApp === 'browser') {
@@ -2394,10 +2324,6 @@
         stopCameraStream();
       } else if (targetApp === 'maps') {
         renderMapsPlaces();
-      } else if (targetApp === 'compass') {
-        startCompassSensor();
-      } else if (activeScreen === 'compass' && targetApp !== 'compass') {
-        stopCompassSensor();
       } else if (targetApp === 'settings') {
         renderSettingsAppsList();
       }
@@ -2410,37 +2336,30 @@
       if (activeScreen === 'camera') {
         stopCameraStream();
       }
-      if (activeScreen === 'compass') {
-        stopCompassSensor();
-      }
 
       const fromView = getScreenEl(activeScreen);
       const toView = getScreenEl('home');
 
       toView.style.display = 'flex';
-      toView.className = 'screen-view active turnstile-back-in';
+      toView.className = 'screen-view active app-home-return';
       
-      // Outgoing screen swings away hinged at left edge
+      // Outgoing app flips back up swiftly with no hang
       if (fromView) {
-        fromView.style.transition = 'transform 0.30s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.30s ease-out';
-        fromView.style.transformOrigin = '0% 50%';
-        fromView.style.opacity = '0';
-        fromView.style.transform = 'perspective(1200px) rotateY(-35deg) scale(0.96)';
+        fromView.className = 'screen-view active app-flip-close';
         setTimeout(() => {
           fromView.style.display = 'none';
           fromView.className = 'screen-view';
           fromView.style.opacity = '1';
           fromView.style.transform = '';
-          fromView.style.transformOrigin = '';
           fromView.style.transition = '';
-        }, 300);
+        }, 180);
       }
 
       setTimeout(() => {
         toView.className = 'screen-view active';
         activeScreen = 'home';
         isTransitioning = false;
-      }, 440);
+      }, 190);
     }
 
     function getScreenEl(appName) {
@@ -2454,7 +2373,6 @@
         case 'camera': return document.getElementById('view-camera');
         case 'photos': return document.getElementById('view-photos');
         case 'maps': return document.getElementById('view-maps');
-        case 'compass': return document.getElementById('view-compass');
         case 'settings': return document.getElementById('view-settings');
         default: return null;
       }
@@ -2591,7 +2509,7 @@
 
     function startLiveTilesFlipTimer() {
       // Excludes static tiles (settings and camera)
-      const tileIds = ['tile-contacts', 'tile-calc', 'tile-browser', 'tile-photos', 'tile-notes', 'tile-compass', 'tile-health', 'tile-maps'];
+      const tileIds = ['tile-contacts', 'tile-calc', 'tile-browser', 'tile-photos', 'tile-notes', 'tile-health', 'tile-maps'];
       setInterval(() => {
         if (!liveTilesEnabled || activeScreen !== 'home') return;
         const randId = tileIds[Math.floor(Math.random() * tileIds.length)];
@@ -2625,12 +2543,6 @@
             const randCity = cities[Math.floor(Math.random() * cities.length)];
             const cityEl = document.getElementById('tile-maps-city');
             if (cityEl) cityEl.textContent = randCity;
-          }
-        } else if (randId === 'tile-compass') {
-          el.classList.toggle('flipped');
-          if (el.classList.contains('flipped')) {
-            const valEl = document.getElementById('tile-compass-val');
-            if (valEl) valEl.textContent = `${Math.round(compassHeading)}° ${getCardinalDirection(compassHeading)}`;
           }
         } else {
           el.classList.toggle('flipped');
@@ -4110,7 +4022,6 @@
       { id: 'photos', name: 'Photos', icon: 'photo_library', tileId: 'tile-photos' },
       { id: 'calc', name: 'Calculator', icon: 'calculate', tileId: 'tile-calc' },
       { id: 'notes', name: 'Notes', icon: 'description', tileId: 'tile-notes' },
-      { id: 'compass', name: 'Compass', icon: 'explore', tileId: 'tile-compass' },
       { id: 'browser', name: 'Browser', icon: 'language', tileId: 'tile-browser' },
       { id: 'health', name: 'Health', icon: 'favorite', tileId: 'tile-health' },
       { id: 'maps', name: 'Maps', icon: 'map', tileId: 'tile-maps' }
@@ -4191,154 +4102,6 @@
         `;
         container.appendChild(row);
       });
-    }
-
-    /* ================= APP 10: COMPASS CONTROLLER & SENSORS ================= */
-    let compassHeading = 0;
-    let compassSensorAttached = false;
-
-    function selectCompassTab(tab) {
-      compassPivotIndex = 0;
-      document.getElementById('tab-compass-main')?.classList.add('active');
-    }
-
-    function getCardinalDirection(deg) {
-      const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-      const index = Math.round(deg / 45) % 8;
-      return dirs[index];
-    }
-
-    function getFullCardinalName(deg) {
-      const dirs = ['North', 'North-East', 'East', 'South-East', 'South', 'South-West', 'West', 'North-West'];
-      const index = Math.round(deg / 45) % 8;
-      return dirs[index];
-    }
-
-    function updateCompassHeading(deg) {
-      compassHeading = ((deg % 360) + 360) % 360;
-      const degRounded = Math.round(compassHeading);
-      const cardinalFull = getFullCardinalName(compassHeading);
-      const cardinalShort = getCardinalDirection(compassHeading);
-
-      const degEl = document.getElementById('compass-degrees');
-      if (degEl) degEl.textContent = `${degRounded}°`;
-
-      const cardEl = document.getElementById('compass-cardinal');
-      if (cardEl) cardEl.textContent = cardinalFull.toUpperCase();
-
-      const roseSvg = document.getElementById('compass-rose-svg');
-      if (roseSvg) {
-        // Rotate dial opposite to device rotation so North matches magnetic North
-        roseSvg.style.transform = `rotate(${-compassHeading}deg)`;
-      }
-
-      const tileCompassVal = document.getElementById('tile-compass-val');
-      if (tileCompassVal) {
-        tileCompassVal.textContent = `${degRounded}° ${cardinalShort}`;
-      }
-    }
-
-    function testCompassTurn(step) {
-      updateCompassHeading(compassHeading + step);
-    }
-
-    function handleDeviceOrientation(e) {
-      let heading = null;
-      if (typeof e.webkitCompassHeading === 'number') {
-        // iOS Safari provides high-accuracy compass heading directly
-        heading = e.webkitCompassHeading;
-      } else if (e.alpha !== null && typeof e.alpha === 'number') {
-        // Standard Android / Chrome / Mobile browsers
-        heading = (360 - e.alpha);
-      }
-      if (heading !== null && !isNaN(heading)) {
-        updateCompassHeading(heading);
-        const statusEl = document.getElementById('compass-sensor-status');
-        if (statusEl) statusEl.textContent = 'Hardware Gyroscope Active';
-      }
-    }
-
-    function requestCompassPermission() {
-      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission()
-          .then(permissionState => {
-            if (permissionState === 'granted') {
-              startCompassSensor();
-              const permBtn = document.getElementById('compass-perm-btn');
-              if (permBtn) permBtn.style.display = 'none';
-            }
-          })
-          .catch(() => {});
-      } else {
-        startCompassSensor();
-      }
-    }
-
-    function startCompassSensor() {
-      if (compassSensorAttached) return;
-      if (typeof window.DeviceOrientationEvent !== 'undefined') {
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-          // iOS 13+ requires user gesture permission
-          const permBtn = document.getElementById('compass-perm-btn');
-          if (permBtn) permBtn.style.display = 'block';
-        }
-        window.addEventListener('deviceorientation', handleDeviceOrientation, true);
-        compassSensorAttached = true;
-      }
-      setupCompassInteractiveDrag();
-    }
-
-    function stopCompassSensor() {
-      if (!compassSensorAttached) return;
-      window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
-      compassSensorAttached = false;
-    }
-
-    function setupCompassInteractiveDrag() {
-      const dial = document.getElementById('compass-dial-wrap');
-      if (!dial || dial._dragBound) return;
-      dial._dragBound = true;
-
-      let isDragging = false;
-      let startAngle = 0;
-      let startHeading = 0;
-
-      function getAngleFromCenter(clientX, clientY) {
-        const rect = dial.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const rad = Math.atan2(clientY - cy, clientX - cx);
-        return rad * (180 / Math.PI);
-      }
-
-      function onDown(e) {
-        isDragging = true;
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        startAngle = getAngleFromCenter(clientX, clientY);
-        startHeading = compassHeading;
-      }
-
-      function onMove(e) {
-        if (!isDragging) return;
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        const curAngle = getAngleFromCenter(clientX, clientY);
-        const delta = curAngle - startAngle;
-        updateCompassHeading(startHeading + delta);
-      }
-
-      function onUp() {
-        isDragging = false;
-      }
-
-      dial.addEventListener('mousedown', onDown);
-      window.addEventListener('mousemove', onMove);
-      window.addEventListener('mouseup', onUp);
-
-      dial.addEventListener('touchstart', onDown, { passive: true });
-      window.addEventListener('touchmove', onMove, { passive: true });
-      window.addEventListener('touchend', onUp);
     }
   </script>
 </body>
