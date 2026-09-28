@@ -486,9 +486,10 @@
       top: 0;
       left: 0;
       width: 100%;
-      height: 100%;
+      height: calc(100% - var(--nav-height));
+      bottom: var(--nav-height);
       background: rgba(0, 0, 0, 0.88);
-      z-index: 999;
+      z-index: 900;
       display: none;
       align-items: center;
       justify-content: center;
@@ -1176,9 +1177,10 @@
       top: 0;
       left: 0;
       width: 100%;
-      height: 100%;
+      height: calc(100% - var(--nav-height));
+      bottom: var(--nav-height);
       background: rgba(0, 0, 0, 0.9);
-      z-index: 120;
+      z-index: 900;
       display: none;
       align-items: center;
       justify-content: center;
@@ -1203,13 +1205,14 @@
 
     /* ================= VIRTUAL HARDWARE BAR ================= */
     #virtual-nav {
+      position: relative;
       height: var(--nav-height);
       background: #000000;
       display: flex;
-      justify-content: space-around;
+      justify-content: center;
       align-items: center;
       flex-shrink: 0;
-      z-index: 100;
+      z-index: 1000;
     }
 
     .nav-touch-btn {
@@ -1309,19 +1312,14 @@
             </div>
           </div>
 
-          <!-- 2. Calculator Tile -->
-          <div class="wp-tile tile-1sq" id="tile-calc" data-app="calc" data-size="1sq" onclick="launchApp('calc')">
+          <!-- 2. Camera Tile (Static - No Live Tile) -->
+          <div class="wp-tile tile-1sq" id="tile-camera" data-app="camera" data-size="1sq" onclick="launchApp('camera')">
             <div class="tile-slab">
               <div class="tile-face">
                 <div class="tile-center-icon">
-                  <span class="material-symbols-sharp">calculate</span>
+                  <span class="material-symbols-sharp">photo_camera</span>
                 </div>
-                <div class="tile-label">Calculator</div>
-              </div>
-              <div class="tile-face tile-face-back">
-                <div style="font-size: 12px; opacity: 0.8;">Recent:</div>
-                <div id="calc-tile-val" style="font-size: 26px; font-weight: 100; margin: 3px 0;">0</div>
-                <div class="tile-label">Calculator</div>
+                <div class="tile-label">Camera</div>
               </div>
             </div>
           </div>
@@ -1347,14 +1345,19 @@
             </div>
           </div>
 
-          <!-- 4. Camera Tile (Static - No Live Tile) -->
-          <div class="wp-tile tile-1sq" id="tile-camera" data-app="camera" data-size="1sq" onclick="launchApp('camera')">
+          <!-- 4. Calculator Tile -->
+          <div class="wp-tile tile-1sq" id="tile-calc" data-app="calc" data-size="1sq" onclick="launchApp('calc')">
             <div class="tile-slab">
               <div class="tile-face">
                 <div class="tile-center-icon">
-                  <span class="material-symbols-sharp">photo_camera</span>
+                  <span class="material-symbols-sharp">calculate</span>
                 </div>
-                <div class="tile-label">Camera</div>
+                <div class="tile-label">Calculator</div>
+              </div>
+              <div class="tile-face tile-face-back">
+                <div style="font-size: 12px; opacity: 0.8;">Recent:</div>
+                <div id="calc-tile-val" style="font-size: 26px; font-weight: 100; margin: 3px 0;">0</div>
+                <div class="tile-label">Calculator</div>
               </div>
             </div>
           </div>
@@ -1896,8 +1899,7 @@
         <div class="pivot-view" id="pivot-compass-view">
           <div class="pivot-header">
             <div class="pivot-tabs-row">
-              <div class="pivot-tab-item active" id="tab-compass-main" onclick="selectCompassTab('main')">compass</div>
-              <div class="pivot-tab-item" id="tab-compass-info" onclick="selectCompassTab('info')">sensor</div>
+              <div class="pivot-tab-item active" id="tab-compass-main">compass</div>
             </div>
           </div>
 
@@ -1951,40 +1953,6 @@
 
                 <button class="metro-button" id="compass-perm-btn" onclick="requestCompassPermission()" style="margin-top:10px; width:100%; display:none;">calibrate / enable orientation sensor</button>
               </div>
-
-              <!-- Page 2: Sensor & Calibration Info -->
-              <div class="pivot-page">
-                <div class="settings-group">
-                  <div class="settings-heading">Sensor Calibration</div>
-                  <p style="font-size:13px; color:var(--sub-fg); margin-bottom:14px; line-height:1.4;">daydream uses gyroscope, magnetometer and orientation hardware sensors.</p>
-                  
-                  <div style="display:flex; flex-direction:column; gap:10px;">
-                    <div style="padding:12px 14px; background:#141414; display:flex; justify-content:space-between; align-items:center;">
-                      <div>
-                        <div style="font-size:15px; font-weight:300;">Hardware Sensor</div>
-                        <div style="font-size:11px; color:var(--sub-fg); margin-top:2px;" id="compass-sensor-status">Orientation Sensor Active</div>
-                      </div>
-                      <span class="material-symbols-sharp" style="color:var(--accent);">sensors</span>
-                    </div>
-
-                    <div style="padding:12px 14px; background:#141414; display:flex; justify-content:space-between; align-items:center;">
-                      <div>
-                        <div style="font-size:15px; font-weight:300;">Heading Reference</div>
-                        <div style="font-size:11px; color:var(--sub-fg); margin-top:2px;">Magnetic North</div>
-                      </div>
-                      <span class="material-symbols-sharp" style="color:var(--accent);">navigation</span>
-                    </div>
-
-                    <div style="padding:12px 14px; background:#141414; display:flex; justify-content:space-between; align-items:center;">
-                      <div>
-                        <div style="font-size:15px; font-weight:300;">Manual Heading Step</div>
-                        <div style="font-size:11px; color:var(--sub-fg); margin-top:2px;">Tap or drag compass to rotate</div>
-                      </div>
-                      <button class="metro-button" onclick="testCompassTurn(45)" style="padding:6px 14px; font-size:12px;">+45°</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -1994,18 +1962,10 @@
 
     <!-- ================= HARDWARE NAVIGATION BAR ================= -->
     <div id="virtual-nav">
-      <!-- Back Button -->
-      <button class="nav-touch-btn" onclick="onHardwareBack()" title="Back">
-        <span class="material-symbols-sharp">arrow_back</span>
-      </button>
-
       <!-- Center Home Button: Circle -->
       <button class="nav-touch-btn" onclick="onHardwareHome()" title="Home">
         <span class="nav-circle-home"></span>
       </button>
-
-      <!-- Empty placeholder: no button, keeps center home button centered -->
-      <div class="nav-touch-btn" style="cursor:default; pointer-events:none;"></div>
     </div>
 
   </div>
@@ -2178,9 +2138,9 @@
       const grid = document.getElementById('main-tile-grid');
       const defaults = [
         { id: 'tile-contacts', size: '1sq' },
-        { id: 'tile-calc', size: '1sq' },
-        { id: 'tile-photos', size: '1sq' },
         { id: 'tile-camera', size: '1sq' },
+        { id: 'tile-photos', size: '1sq' },
+        { id: 'tile-calc', size: '1sq' },
         { id: 'tile-notes', size: '1sq' },
         { id: 'tile-compass', size: '1sq' },
         { id: 'tile-browser', size: '1sq' },
@@ -2208,14 +2168,14 @@
       });
       try { 
         localStorage.setItem('daydream_tile_layout', JSON.stringify(layout)); 
-        localStorage.setItem('daydream_layout_ver', 'v4');
+        localStorage.setItem('daydream_layout_ver', 'v5');
       } catch (e) {}
     }
 
     function loadTileLayout() {
       try {
         const ver = localStorage.getItem('daydream_layout_ver');
-        if (ver !== 'v4') {
+        if (ver !== 'v5') {
           applyDefaultTileLayout();
           return;
         }
@@ -2849,18 +2809,8 @@
         bodyHtml: photoHeader,
         buttons: [
           {
-            text: 'call',
-            primary: true,
-            action: () => {
-              showMetroDialog({
-                title: 'Calling',
-                body: `Dialing ${c.name} at ${c.phone}...`,
-                buttons: [{ text: 'end call', primary: true }]
-              });
-            }
-          },
-          {
             text: 'edit',
+            primary: true,
             action: () => {
               document.getElementById('contact-modal-title').textContent = 'edit contact';
               document.getElementById('edit-id-holder').value = c.id;
