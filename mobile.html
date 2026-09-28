@@ -93,8 +93,8 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 0 60px rgba(0, 0, 0, 0.95);
-      padding-top: max(env(safe-area-inset-top, 0px), 24px);
+      box-shadow: none;
+      padding-top: max(env(safe-area-inset-top, 0px), 10px);
       padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
       overscroll-behavior: none;
     }
@@ -179,7 +179,7 @@
     }
 
     .turnstile-in {
-      animation: wpTurnstileEnter 0.38s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      animation: wpTurnstileEnter 0.44s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
       z-index: 10 !important;
       background: #000000 !important;
       transform-origin: 0% 50%;
@@ -189,7 +189,7 @@
     }
 
     .turnstile-back-in {
-      animation: wpTurnstileBackEnter 0.38s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      animation: wpTurnstileBackEnter 0.44s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
       z-index: 10 !important;
       background: #000000 !important;
       transform-origin: 100% 50%;
@@ -462,6 +462,10 @@
       cursor: pointer;
       text-transform: lowercase;
       transition: background 0.15s, transform 0.1s;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      -webkit-appearance: none;
     }
 
     .metro-button:active {
@@ -473,6 +477,7 @@
     .metro-button.primary {
       background: var(--accent);
       color: #ffffff;
+      border: none !important;
     }
 
     /* ================= CENTERED EDGE-TO-EDGE BUILT-IN METRO DIALOG ================= */
