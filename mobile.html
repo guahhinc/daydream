@@ -2057,7 +2057,7 @@
       const grid = document.getElementById('main-tile-grid');
       const tiles = Array.from(grid.querySelectorAll('.wp-tile'));
 
-      // 1. Live Visual Mini Start Screen Mockup
+      // 1. Live Visual Mini Start Screen Mockup (All Square 3 Per Row)
       const previewCard = document.createElement('div');
       previewCard.className = 'start-manager-preview-card';
       previewCard.style.cssText = 'background:#121212; border:1px solid #262626; padding:12px; margin-bottom:16px;';
@@ -2065,26 +2065,23 @@
       let miniTilesHtml = '';
       tiles.forEach(tile => {
         const app = tile.dataset.app || '';
-        const size = tile.dataset.size || '1sq';
-        const spanClass = size === '3sq' ? 'span-3' : (size === '2sq' ? 'span-2' : 'span-1');
-        miniTilesHtml += `<div class="start-manager-mini-tile ${spanClass}" style="background:var(--accent);">${app}</div>`;
+        miniTilesHtml += `<div class="start-manager-mini-tile span-1" style="background:var(--accent); aspect-ratio:1/1; height:auto; min-height:48px;">${app}</div>`;
       });
 
       previewCard.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--sub-fg); font-weight:500;">Live Start Screen Preview</span>
-          <span style="font-size:10px; color:#666;">updates live</span>
+          <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--sub-fg); font-weight:500;">Live Start Screen (3 Per Row)</span>
+          <span style="font-size:10px; color:#666;">all square</span>
         </div>
-        <div class="start-manager-mini-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); grid-auto-flow:dense; gap:5px; background:#000; padding:6px;">
+        <div class="start-manager-mini-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; background:#000; padding:8px;">
           ${miniTilesHtml}
         </div>
       `;
       container.appendChild(previewCard);
 
-      // 2. Individual Visual Tile Customization Cards
+      // 2. Individual Reorder Cards
       tiles.forEach((tile, idx) => {
         const appName = tile.dataset.app;
-        const currentSize = tile.dataset.size || '1sq';
 
         const card = document.createElement('div');
         card.className = 'tile-manager-card';
@@ -2094,20 +2091,12 @@
               <div class="tile-manager-badge" style="background:var(--accent);">${idx + 1}</div>
               <div>
                 <div style="font-size:14px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px;">${appName}</div>
-                <div style="font-size:11px; color:var(--sub-fg); margin-top:1px;">Size: ${currentSize === '1sq' ? '1x1 Small' : currentSize === '2sq' ? '2x1 Wide' : '3x1 Full'}</div>
+                <div style="font-size:11px; color:var(--sub-fg); margin-top:1px;">Tile 1x1 Square</div>
               </div>
             </div>
-            <div style="display:flex; gap:4px;">
+            <div style="display:flex; gap:6px;">
               <button class="tile-order-btn" onclick="managerMoveTile('${tile.id}', -1)" title="Move Up" ${idx === 0 ? 'disabled style="opacity:0.25; cursor:default;"' : ''}>▲</button>
               <button class="tile-order-btn" onclick="managerMoveTile('${tile.id}', 1)" title="Move Down" ${idx === tiles.length - 1 ? 'disabled style="opacity:0.25; cursor:default;"' : ''}>▼</button>
-            </div>
-          </div>
-          <div class="tile-manager-controls-row">
-            <span style="font-size:11px; color:var(--sub-fg);">Tile Size:</span>
-            <div class="tile-size-btn-group">
-              <button class="tile-size-pill ${currentSize === '1sq' ? 'active' : ''}" onclick="managerSetTileSize('${tile.id}', '1sq')">1x1</button>
-              <button class="tile-size-pill ${currentSize === '2sq' ? 'active' : ''}" onclick="managerSetTileSize('${tile.id}', '2sq')">2x1</button>
-              <button class="tile-size-pill ${currentSize === '3sq' ? 'active' : ''}" onclick="managerSetTileSize('${tile.id}', '3sq')">3x1</button>
             </div>
           </div>
         `;
@@ -2119,27 +2108,6 @@
       resetContainer.style.cssText = 'margin-top:16px; margin-bottom:20px;';
       resetContainer.innerHTML = `<button class="metro-button" onclick="confirmResetLayout()" style="width:100%;">reset layout to default</button>`;
       container.appendChild(resetContainer);
-    }
-
-    function managerSetTileSize(tileId, size) {
-      const tile = document.getElementById(tileId);
-      if (!tile) return;
-      tile.classList.remove('tile-1sq', 'tile-2sq', 'tile-3sq');
-      tile.classList.add('tile-' + size);
-      tile.dataset.size = size;
-      saveTileLayout();
-      renderStartScreenManager();
-    }
-
-    function managerResizeTile(tileId) {
-      const tile = document.getElementById(tileId);
-      if (!tile) return;
-      const cur = tile.dataset.size || '1sq';
-      let nxt = '2sq';
-      if (cur === '1sq') nxt = '2sq';
-      else if (cur === '2sq') nxt = '3sq';
-      else nxt = '1sq';
-      managerSetTileSize(tileId, nxt);
     }
 
     function managerMoveTile(tileId, dir) {
@@ -2159,7 +2127,7 @@
     function confirmResetLayout() {
       showMetroDialog({
         title: 'Reset Layout',
-        body: 'Reset home screen tiles back to default pairing and sizes?',
+        body: 'Reset home screen tiles back to default order?',
         buttons: [
           {
             text: 'reset',
@@ -2177,21 +2145,20 @@
     function applyDefaultTileLayout() {
       const grid = document.getElementById('main-tile-grid');
       const defaults = [
-        { id: 'tile-contacts', size: '2sq' },
+        { id: 'tile-contacts', size: '1sq' },
         { id: 'tile-calc', size: '1sq' },
-        { id: 'tile-photos', size: '2sq' },
+        { id: 'tile-photos', size: '1sq' },
         { id: 'tile-camera', size: '1sq' },
-        { id: 'tile-notes', size: '2sq' },
+        { id: 'tile-notes', size: '1sq' },
         { id: 'tile-browser', size: '1sq' },
-        { id: 'tile-health', size: '2sq' },
+        { id: 'tile-health', size: '1sq' },
         { id: 'tile-settings', size: '1sq' }
       ];
       defaults.forEach(item => {
         const el = document.getElementById(item.id);
         if (el) {
-          el.classList.remove('tile-1sq', 'tile-2sq', 'tile-3sq');
-          el.classList.add('tile-' + item.size);
-          el.dataset.size = item.size;
+          el.className = 'wp-tile tile-1sq';
+          el.dataset.size = '1sq';
           grid.appendChild(el);
         }
       });
@@ -2203,18 +2170,18 @@
       const tileEls = grid.querySelectorAll('.wp-tile');
       const layout = [];
       tileEls.forEach(el => {
-        layout.push({ id: el.id, size: el.dataset.size || '1sq' });
+        layout.push({ id: el.id, size: '1sq' });
       });
       try { 
         localStorage.setItem('daydream_tile_layout', JSON.stringify(layout)); 
-        localStorage.setItem('daydream_layout_ver', 'v2');
+        localStorage.setItem('daydream_layout_ver', 'v3');
       } catch (e) {}
     }
 
     function loadTileLayout() {
       try {
         const ver = localStorage.getItem('daydream_layout_ver');
-        if (ver !== 'v2') {
+        if (ver !== 'v3') {
           applyDefaultTileLayout();
           return;
         }
@@ -2230,10 +2197,8 @@
         layout.forEach(item => {
           const el = document.getElementById(item.id);
           if (el) {
-            const size = item.size || '1sq';
-            el.classList.remove('tile-1sq', 'tile-2sq', 'tile-3sq');
-            el.classList.add('tile-' + size);
-            el.dataset.size = size;
+            el.className = 'wp-tile tile-1sq';
+            el.dataset.size = '1sq';
             grid.appendChild(el);
           }
         });
