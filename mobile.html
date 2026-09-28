@@ -1777,7 +1777,8 @@
     let currentContactPhotoData = '';
 
     // Photos Live Tile Cycling state
-    let currentPhotoTileIdx = 0;
+    let photoFrontIdx = 0;
+    let photoBackIdx = 1;
 
     // Browser History Stack
     let browserHistory = ['https://en.wikipedia.org/wiki/'];
@@ -2236,27 +2237,34 @@
             <div style="font-size: 12px; opacity: 0.8;">Gallery</div>
             <div style="font-size: 15px; font-weight: 300; margin-top: 4px;" id="tile-photos-count">0 Photos</div>
           </div>
-          <div class="tile-label">Camera Roll</div>
+          <div class="tile-label">Photos</div>
         `;
         return;
       }
 
-      const p1 = photos[currentPhotoTileIdx % photos.length];
-      const p2 = photos[(currentPhotoTileIdx + 1) % photos.length];
+      const pFront = photos[photoFrontIdx % photos.length];
+      const pBack = photos[photoBackIdx % photos.length];
 
-      front.innerHTML = `
+      renderPhotoTileFace(front, pFront);
+      renderPhotoTileFace(back, pBack);
+    }
+
+    function renderPhotoTileFace(faceEl, photo) {
+      if (!faceEl) return;
+      if (!photo) {
+        faceEl.innerHTML = `
+          <div class="tile-center-icon">
+            <span class="material-symbols-sharp">photo_library</span>
+          </div>
+          <div class="tile-label">Photos</div>
+        `;
+        return;
+      }
+      faceEl.innerHTML = `
         <div style="position:absolute; inset:0; width:100%; height:100%; overflow:hidden;">
-          <img src="${p1.src}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" alt="Photo">
+          <img src="${photo.src}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" alt="Photo">
           <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 45%); pointer-events:none;"></div>
           <div class="tile-label" style="position:absolute; bottom:10px; left:10px; z-index:2;">Photos</div>
-        </div>
-      `;
-
-      back.innerHTML = `
-        <div style="position:absolute; inset:0; width:100%; height:100%; overflow:hidden;">
-          <img src="${p2.src}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" alt="Photo">
-          <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 45%); pointer-events:none;"></div>
-          <div class="tile-label" style="position:absolute; bottom:10px; left:10px; z-index:2;">Camera Roll</div>
         </div>
       `;
     }
@@ -2295,9 +2303,25 @@
         const el = document.getElementById(randId);
         if (el) {
           el.classList.toggle('flipped');
-          if (randId === 'tile-photos' && photos.length > 0) {
-            currentPhotoTileIdx = (currentPhotoTileIdx + 1) % photos.length;
-            setTimeout(updatePhotosLiveTile, 850);
+          const isFlippedNow = el.classList.contains('flipped');
+
+          if (randId === 'tile-photos' && photos.length > 1) {
+            // Only update the HIDDEN face after flip so the user never sees an image abruptly switch
+            if (isFlippedNow) {
+              // User is viewing the back face. Front face is hidden. Advance front image!
+              photoFrontIdx = (Math.max(photoFrontIdx, photoBackIdx) + 1) % photos.length;
+              setTimeout(() => {
+                const front = document.getElementById('tile-photos-content-front');
+                renderPhotoTileFace(front, photos[photoFrontIdx % photos.length]);
+              }, 850);
+            } else {
+              // User is viewing the front face. Back face is hidden. Advance back image!
+              photoBackIdx = (Math.max(photoFrontIdx, photoBackIdx) + 1) % photos.length;
+              setTimeout(() => {
+                const back = document.getElementById('tile-photos-content-back');
+                renderPhotoTileFace(back, photos[photoBackIdx % photos.length]);
+              }, 850);
+            }
           } else if (randId === 'tile-contacts' && contacts.length > 0) {
             currentContactTileIdx = (currentContactTileIdx + 1) % contacts.length;
             setTimeout(updateContactsLiveTile, 850);
@@ -2313,7 +2337,7 @@
       grid.innerHTML = '';
 
       if (photos.length === 0) {
-        grid.innerHTML = '<div style="grid-column: span 3; color: var(--sub-fg); font-size: 13px; text-align: center; padding: 24px 0;">no photos in camera roll yet</div>';
+        grid.innerHTML = '<div style="grid-column: span 3; color: var(--sub-fg); font-size: 13px; text-align: center; padding: 24px 0;">no photos yet</div>';
       } else {
         photos.forEach(p => {
           const item = document.createElement('div');
@@ -2856,15 +2880,22 @@
       scrollPivotTo('slider-health', healthPivotIndex);
     }
 
-    /* ================= APP 6: CAMERA (LIVE VIEWFINDER & SHUTTER) ================= */
+    /* ================= APP 6: CAMERA (HIGH QUALITY & PERSISTENT ACCESS) ================= */
     function startCameraStream() {
       const video = document.getElementById('camera-video-stream');
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({
-          video: { facingMode: cameraFacing }
+          video: {
+            facingMode: cameraFacing,
+            width: { ideal: 1920, min: 1280 },
+            height: { ideal: 1080, min: 720 }
+          }
         }).then(stream => {
           cameraStream = stream;
           video.srcObject = stream;
+          try {
+            localStorage.setItem('daydream_camera_allowed', 'true');
+          } catch (e) {}
         }).catch(err => {
           console.log('Camera access unavailable:', err);
         });
@@ -2894,13 +2925,13 @@
       const canvas = document.getElementById('camera-snapshot-canvas');
       const ctx = canvas.getContext('2d');
 
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
+      canvas.width = video.videoWidth || 1920;
+      canvas.height = video.videoHeight || 1080;
 
       if (video.videoWidth) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       } else {
-        // Fallback snapshot graphic if camera stream not permitted
+        // Fallback snapshot graphic if camera stream not active
         ctx.fillStyle = '#1c1c1c';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = currentAccent.hex;
@@ -2909,7 +2940,7 @@
         ctx.fill();
       }
 
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
       photos.unshift({
         id: Date.now().toString(),
         src: dataUrl,
@@ -2979,7 +3010,7 @@
       if (currentViewingPhotoIdx < 0) return;
       showMetroDialog({
         title: 'Delete Photo',
-        body: 'Are you sure you want to delete this photo from your camera roll?',
+        body: 'Are you sure you want to delete this photo?',
         buttons: [
           {
             text: 'delete',
