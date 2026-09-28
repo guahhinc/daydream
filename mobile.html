@@ -139,7 +139,7 @@
     /* App Opening/Closing: Authentic Windows Phone Turnstile (Flips in from side like a door to fill screen) */
     @keyframes wpTurnstileEnter {
       0% {
-        transform: perspective(1200px) rotateY(-80deg);
+        transform: perspective(1200px) rotateY(-35deg) scale(0.96);
         transform-origin: 0% 50%;
         opacity: 0;
       }
@@ -147,7 +147,7 @@
         opacity: 1;
       }
       100% {
-        transform: perspective(1200px) rotateY(0deg);
+        transform: perspective(1200px) rotateY(0deg) scale(1);
         transform-origin: 0% 50%;
         opacity: 1;
       }
@@ -155,7 +155,7 @@
 
     @keyframes wpTurnstileBackEnter {
       0% {
-        transform: perspective(1200px) rotateY(80deg);
+        transform: perspective(1200px) rotateY(35deg) scale(0.96);
         transform-origin: 100% 50%;
         opacity: 0;
       }
@@ -163,7 +163,7 @@
         opacity: 1;
       }
       100% {
-        transform: perspective(1200px) rotateY(0deg);
+        transform: perspective(1200px) rotateY(0deg) scale(1);
         transform-origin: 100% 50%;
         opacity: 1;
       }
@@ -496,15 +496,31 @@
       animation: superQuickFade 0.15s ease-out;
     }
 
+    @keyframes metroPopupFlip {
+      0% {
+        transform: perspective(900px) rotateX(-45deg) scale(0.92);
+        opacity: 0;
+      }
+      40% {
+        opacity: 0.95;
+      }
+      100% {
+        transform: perspective(900px) rotateX(0deg) scale(1);
+        opacity: 1;
+      }
+    }
+
     .metro-dialog-card {
       width: 100%;
       background: #141414;
       padding: 24px 18px 24px;
       color: #ffffff;
-      animation: superQuickFade 0.15s ease-out;
+      transform-origin: center top;
+      animation: metroPopupFlip 0.28s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
       display: flex;
       flex-direction: column;
       box-sizing: border-box;
+      will-change: transform, opacity;
     }
 
     .metro-dialog-title {
@@ -655,7 +671,9 @@
       z-index: 50;
       display: none;
       flex-direction: column;
-      animation: superQuickFade 0.16s ease-out;
+      transform-origin: 0% 50%;
+      animation: wpTurnstileEnter 0.32s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      will-change: transform, opacity;
     }
 
     /* ================= APP 2: CALCULATOR ================= */
@@ -1025,6 +1043,8 @@
       -webkit-user-drag: none;
       display: block;
       margin: auto;
+      transition: transform 0.22s cubic-bezier(0.12, 0.9, 0.2, 1), opacity 0.22s ease-out;
+      will-change: transform, opacity;
     }
 
     .photo-viewer-toolbar {
@@ -1173,6 +1193,9 @@
       display: flex;
       flex-direction: column;
       box-sizing: border-box;
+      transform-origin: center top;
+      animation: metroPopupFlip 0.28s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      will-change: transform, opacity;
     }
 
     /* ================= VIRTUAL HARDWARE BAR ================= */
@@ -1802,11 +1825,19 @@
           <div class="pivot-body">
             <div class="pivot-slider" id="slider-maps">
               <!-- Page 1: Interactive Map -->
-              <div class="pivot-page" style="padding:0; overflow:hidden; display:flex; flex-direction:column;">
-                <div style="padding: 10px 14px; background:#111111; display:flex; gap:8px; flex-shrink:0;">
+              <div class="pivot-page" style="padding:0; overflow:hidden; display:flex; flex-direction:column; position:relative;">
+                <div style="padding: 10px 14px; background:#111111; display:flex; gap:8px; flex-shrink:0; position:relative; z-index:30;">
                   <input type="text" class="metro-input" id="map-search-in" placeholder="search city or place..." style="margin-bottom:0;" onkeydown="if(event.key==='Enter') searchMapsLocation()">
                   <button class="metro-button primary" onclick="searchMapsLocation()" style="padding:8px 14px;">find</button>
                   <button class="metro-button" onclick="locateUserGPS()" title="My Location" style="padding:8px 12px;"><span class="material-symbols-sharp" style="font-size:18px;">my_location</span></button>
+                </div>
+                <!-- Interactive Clickable Search Results Overlay -->
+                <div id="map-search-results-box" style="display:none; position:absolute; top:54px; left:0; right:0; z-index:45; background:#141414; max-height:260px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,0.9); border-bottom:2px solid var(--accent);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 14px; background:#1c1c1c; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--sub-fg);">
+                    <span>search results</span>
+                    <span onclick="closeMapSearchResults()" style="cursor:pointer; color:var(--fg); padding:2px 6px;">close ✕</span>
+                  </div>
+                  <div id="map-search-results-list"></div>
                 </div>
                 <div style="flex:1; width:100%; position:relative; background:#181818;">
                   <iframe id="maps-iframe" src="https://www.openstreetmap.org/export/embed.html?bbox=144.92,-37.83,145.00,-37.79&layer=mapnik&marker=-37.8136,144.9631" style="width:100%; height:100%; border:none;" loading="lazy"></iframe>
@@ -1850,20 +1881,20 @@
     /* ================= ACCENT PALETTE (15 Authentic Lumia Themes) ================= */
     const ACCENTS = [
       { name: 'Royal Purple', hex: '#5118d6', dark: '#370da0' },
-      { name: 'Cobalt Blue', hex: '#0050ef', dark: '#003399' },
-      { name: 'Lumia Cyan', hex: '#00a4ef', dark: '#006da0' },
-      { name: 'Nokia Blue', hex: '#1ba1e2', dark: '#005a9e' },
-      { name: 'Violet', hex: '#8a00ff', dark: '#5d00b3' },
-      { name: 'Magenta', hex: '#d80073', dark: '#a20056' },
-      { name: 'Crimson', hex: '#e51400', dark: '#b01000' },
-      { name: 'Orange', hex: '#fa6800', dark: '#c85000' },
-      { name: 'Lime', hex: '#a4c400', dark: '#7b9400' },
-      { name: 'Emerald', hex: '#008a00', dark: '#006400' },
-      { name: 'Amber Gold', hex: '#f0a30a', dark: '#b87b00' },
-      { name: 'Mango', hex: '#ff8c00', dark: '#cc7000' },
+      { name: 'Lumia Cyan', hex: '#00b4d8', dark: '#0077b6' },
+      { name: 'Sunshine Yellow', hex: '#ffd000', dark: '#cca600' },
+      { name: 'Emerald Green', hex: '#00a859', dark: '#00733e' },
+      { name: 'Sunset Orange', hex: '#ff5500', dark: '#cc4400' },
       { name: 'Steel Teal', hex: '#00a896', dark: '#028090' },
-      { name: 'Crimson Rose', hex: '#e30052', dark: '#9e003a' },
-      { name: 'Forest Moss', hex: '#5b8a00', dark: '#3d5c00' }
+      { name: 'Crimson Red', hex: '#e60023', dark: '#a8001a' },
+      { name: 'Hot Neon Pink', hex: '#ff1493', dark: '#c71585' },
+      { name: 'Arctic Blue', hex: '#0077b6', dark: '#023e8a' },
+      { name: 'Amber Gold', hex: '#ffaa00', dark: '#cc8800' },
+      { name: 'Electric Lime', hex: '#76ba1b', dark: '#568713' },
+      { name: 'Terracotta Copper', hex: '#d35400', dark: '#a04000' },
+      { name: 'Deep Cobalt', hex: '#1d3557', dark: '#112233' },
+      { name: 'Plum Orchid', hex: '#800080', dark: '#4c004c' },
+      { name: 'Slate Charcoal', hex: '#4a5568', dark: '#2d3748' }
     ];
 
     /* ================= SYSTEM STATE ================= */
@@ -1904,6 +1935,9 @@
       try {
         const savedNotes = localStorage.getItem('daydream_notes');
         notes = savedNotes ? JSON.parse(savedNotes) : [];
+        notes.forEach((n, idx) => {
+          if (!n.id) n.id = 'note_' + (Date.now() + idx);
+        });
       } catch (e) { notes = []; }
 
       // 3. Photos
@@ -2204,7 +2238,7 @@
         fromView.style.transition = 'transform 0.30s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.30s ease-out';
         fromView.style.transformOrigin = '100% 50%';
         fromView.style.opacity = '0';
-        fromView.style.transform = 'perspective(1200px) rotateY(80deg)';
+        fromView.style.transform = 'perspective(1200px) rotateY(35deg) scale(0.96)';
         setTimeout(() => {
           fromView.style.display = 'none';
           fromView.className = 'screen-view';
@@ -2255,7 +2289,7 @@
         fromView.style.transition = 'transform 0.30s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.30s ease-out';
         fromView.style.transformOrigin = '0% 50%';
         fromView.style.opacity = '0';
-        fromView.style.transform = 'perspective(1200px) rotateY(-80deg)';
+        fromView.style.transform = 'perspective(1200px) rotateY(-35deg) scale(0.96)';
         setTimeout(() => {
           fromView.style.display = 'none';
           fromView.className = 'screen-view';
@@ -2874,7 +2908,8 @@
     }
 
     function openNewNotePage() {
-      document.getElementById('note-edit-id').value = '';
+      const generatedId = 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+      document.getElementById('note-edit-id').value = generatedId;
       document.getElementById('note-input-title').value = '';
       document.getElementById('note-input-body').value = '';
       selectNotesTab('new');
@@ -2888,7 +2923,11 @@
     }
 
     function saveNote() {
-      const id = document.getElementById('note-edit-id').value;
+      let id = document.getElementById('note-edit-id').value;
+      if (!id) {
+        id = 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        document.getElementById('note-edit-id').value = id;
+      }
       const title = document.getElementById('note-input-title').value.trim();
       const body = document.getElementById('note-input-body').value.trim();
 
@@ -2896,12 +2935,12 @@
 
       const dateStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      if (id) {
-        const idx = notes.findIndex(n => n.id === id);
-        if (idx !== -1) notes[idx] = { id, title: title || 'Untitled', body, date: dateStr };
+      const idx = notes.findIndex(n => n.id === id);
+      if (idx !== -1) {
+        notes[idx] = { id, title: title || 'Untitled', body, date: dateStr };
       } else {
         notes.unshift({
-          id: Date.now().toString(),
+          id,
           title: title || 'Untitled',
           body,
           date: dateStr
@@ -2930,6 +2969,9 @@
               notes = notes.filter(n => n.id !== id);
               saveNotesToStorage();
               renderNotesList();
+              document.getElementById('note-edit-id').value = '';
+              document.getElementById('note-input-title').value = '';
+              document.getElementById('note-input-body').value = '';
               selectNotesTab('all');
             }
           },
@@ -3146,17 +3188,63 @@
       if (nextBtn) nextBtn.style.opacity = currentViewingPhotoIdx < photos.length - 1 ? '1' : '0.3';
     }
 
+    let isPhotoSliding = false;
+
     function viewPrevPhoto() {
-      if (currentViewingPhotoIdx > 0) {
-        currentViewingPhotoIdx--;
-        updatePhotoViewerContent();
+      if (currentViewingPhotoIdx > 0 && !isPhotoSliding) {
+        isPhotoSliding = true;
+        const img = document.getElementById('photo-viewer-img');
+        if (!img) {
+          isPhotoSliding = false;
+          return;
+        }
+        img.style.transition = 'transform 0.16s ease-in, opacity 0.16s ease-in';
+        img.style.transform = 'translateX(80px)';
+        img.style.opacity = '0.3';
+        setTimeout(() => {
+          currentViewingPhotoIdx--;
+          updatePhotoViewerContent();
+          img.style.transition = 'none';
+          img.style.transform = 'translateX(-80px)';
+          img.style.opacity = '0.3';
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              img.style.transition = 'transform 0.22s cubic-bezier(0.12, 0.9, 0.2, 1), opacity 0.22s ease-out';
+              img.style.transform = 'translateX(0)';
+              img.style.opacity = '1';
+              setTimeout(() => { isPhotoSliding = false; }, 230);
+            });
+          });
+        }, 160);
       }
     }
 
     function viewNextPhoto() {
-      if (currentViewingPhotoIdx < photos.length - 1) {
-        currentViewingPhotoIdx++;
-        updatePhotoViewerContent();
+      if (currentViewingPhotoIdx < photos.length - 1 && !isPhotoSliding) {
+        isPhotoSliding = true;
+        const img = document.getElementById('photo-viewer-img');
+        if (!img) {
+          isPhotoSliding = false;
+          return;
+        }
+        img.style.transition = 'transform 0.16s ease-in, opacity 0.16s ease-in';
+        img.style.transform = 'translateX(-80px)';
+        img.style.opacity = '0.3';
+        setTimeout(() => {
+          currentViewingPhotoIdx++;
+          updatePhotoViewerContent();
+          img.style.transition = 'none';
+          img.style.transform = 'translateX(80px)';
+          img.style.opacity = '0.3';
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              img.style.transition = 'transform 0.22s cubic-bezier(0.12, 0.9, 0.2, 1), opacity 0.22s ease-out';
+              img.style.transform = 'translateX(0)';
+              img.style.opacity = '1';
+              setTimeout(() => { isPhotoSliding = false; }, 230);
+            });
+          });
+        }, 160);
       }
     }
 
@@ -3168,20 +3256,42 @@
       if (!body) return;
       let startX = 0;
       let startY = 0;
+      let currentDx = 0;
+
       body.addEventListener('touchstart', (e) => {
+        if (isPhotoSliding) return;
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
+        currentDx = 0;
+      }, { passive: true });
+
+      body.addEventListener('touchmove', (e) => {
+        if (isPhotoSliding) return;
+        currentDx = e.touches[0].clientX - startX;
+        const img = document.getElementById('photo-viewer-img');
+        if (img && Math.abs(currentDx) < 140) {
+          img.style.transition = 'none';
+          img.style.transform = `translateX(${currentDx * 0.65}px)`;
+        }
       }, { passive: true });
 
       body.addEventListener('touchend', (e) => {
+        if (isPhotoSliding) return;
         const dx = e.changedTouches[0].clientX - startX;
         const dy = e.changedTouches[0].clientY - startY;
-        if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy) * 1.3) {
-          if (dx < 0) {
+        const img = document.getElementById('photo-viewer-img');
+        if (Math.abs(dx) > 36 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+          if (dx < 0 && currentViewingPhotoIdx < photos.length - 1) {
             viewNextPhoto();
-          } else {
+          } else if (dx > 0 && currentViewingPhotoIdx > 0) {
             viewPrevPhoto();
+          } else if (img) {
+            img.style.transition = 'transform 0.2s ease-out';
+            img.style.transform = 'translateX(0)';
           }
+        } else if (img) {
+          img.style.transition = 'transform 0.2s ease-out';
+          img.style.transform = 'translateX(0)';
         }
       }, { passive: true });
     }
@@ -3220,14 +3330,21 @@
 
     /* ================= APP 9: MAPS ================= */
     const MAP_PLACES = [
-      { name: 'Melbourne, Australia', lat: -37.8136, lon: 144.9631, desc: 'Cultural Capital of Australia • Yarra River & Laneways' },
-      { name: 'Sydney, Australia', lat: -33.8688, lon: 151.2093, desc: 'Harbour City • Opera House & Bondi' },
+      { name: 'Melbourne, Australia', lat: -37.8136, lon: 144.9631, desc: 'Victoria • Yarra River, Flinders St & Laneways' },
+      { name: 'Sydney, Australia', lat: -33.8688, lon: 151.2093, desc: 'New South Wales • Harbour, Opera House & Bondi' },
+      { name: 'Brisbane, Australia', lat: -27.4698, lon: 153.0251, desc: 'Queensland • South Bank & Sunshine Coast' },
+      { name: 'Perth, Australia', lat: -31.9505, lon: 115.8605, desc: 'Western Australia • Swan River & Kings Park' },
+      { name: 'Adelaide, Australia', lat: -34.9285, lon: 138.6007, desc: 'South Australia • City of Churches & Barossa' },
       { name: 'London, UK', lat: 51.5074, lon: -0.1278, desc: 'Capital of the United Kingdom • Big Ben & Thames' },
       { name: 'New York, USA', lat: 40.7128, lon: -74.0060, desc: 'The Big Apple • Manhattan & Central Park' },
+      { name: 'Los Angeles, USA', lat: 34.0522, lon: -118.2437, desc: 'California • Hollywood & Santa Monica' },
+      { name: 'San Francisco, USA', lat: 37.7749, lon: -122.4194, desc: 'California • Golden Gate Bridge & Bay' },
       { name: 'Tokyo, Japan', lat: 35.6762, lon: 139.6503, desc: 'Capital of Japan • Shibuya & Shinjuku' },
       { name: 'Paris, France', lat: 48.8566, lon: 2.3522, desc: 'City of Light • Eiffel Tower & Seine' },
       { name: 'Rome, Italy', lat: 41.9028, lon: 12.4964, desc: 'Eternal City • Colosseum & Vatican' },
-      { name: 'Dubai, UAE', lat: 25.2048, lon: 55.2708, desc: 'Burj Khalifa & Persian Gulf' }
+      { name: 'Dubai, UAE', lat: 25.2048, lon: 55.2708, desc: 'Burj Khalifa & Persian Gulf' },
+      { name: 'Singapore', lat: 1.3521, lon: 103.8198, desc: 'Marina Bay Sands & Gardens by the Bay' },
+      { name: 'Auckland, New Zealand', lat: -36.8485, lon: 174.7633, desc: 'City of Sails & Sky Tower' }
     ];
 
     function selectMapsTab(tab) {
@@ -3252,20 +3369,81 @@
       selectMapsTab('explore');
     }
 
+    function closeMapSearchResults() {
+      const box = document.getElementById('map-search-results-box');
+      if (box) box.style.display = 'none';
+    }
+
     function searchMapsLocation() {
       const q = document.getElementById('map-search-in').value.trim();
       if (!q) return;
-      const match = MAP_PLACES.find(p => p.name.toLowerCase().includes(q.toLowerCase()));
-      if (match) {
-        loadMapLocation(match.lat, match.lon, match.name);
-      } else {
-        // Direct OpenStreetMap query embed
-        const iframe = document.getElementById('maps-iframe');
-        iframe.src = `https://www.openstreetmap.org/export/embed.html?layer=mapnik`;
-        const statusText = document.getElementById('map-status-text');
-        if (statusText) statusText.textContent = `Search: ${q}`;
-        selectMapsTab('explore');
+
+      const resultsBox = document.getElementById('map-search-results-box');
+      const listEl = document.getElementById('map-search-results-list');
+      if (!resultsBox || !listEl) return;
+
+      resultsBox.style.display = 'block';
+      listEl.innerHTML = '<div style="padding:16px 14px; color:var(--sub-fg); font-size:13px; text-align:center;">searching locations...</div>';
+
+      // 1. Instant local match from rich database
+      const localMatches = MAP_PLACES.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.desc.toLowerCase().includes(q.toLowerCase()));
+      renderSearchResultsList(localMatches, q);
+
+      // 2. Query Nominatim live API for global live places
+      try {
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=6`)
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+              const liveMatches = data.map(item => ({
+                name: item.display_name.split(',').slice(0, 2).join(', '),
+                lat: parseFloat(item.lat),
+                lon: parseFloat(item.lon),
+                desc: item.display_name
+              }));
+              const combined = [...localMatches];
+              liveMatches.forEach(lm => {
+                if (!combined.some(c => Math.abs(c.lat - lm.lat) < 0.05 && Math.abs(c.lon - lm.lon) < 0.05)) {
+                  combined.push(lm);
+                }
+              });
+              renderSearchResultsList(combined, q);
+            }
+          })
+          .catch(() => {});
+      } catch (e) {}
+    }
+
+    function renderSearchResultsList(matches, query) {
+      const listEl = document.getElementById('map-search-results-list');
+      if (!listEl) return;
+      listEl.innerHTML = '';
+
+      if (matches.length === 0) {
+        listEl.innerHTML = `
+          <div style="padding:18px 14px; text-align:center;">
+            <div style="font-size:13px; color:var(--sub-fg); margin-bottom:8px;">No places found for "${query}"</div>
+            <button class="metro-button primary" onclick="loadMapLocation(0, 0, '${query}'); closeMapSearchResults();" style="font-size:12px; padding:6px 14px;">view on map</button>
+          </div>
+        `;
+        return;
       }
+
+      matches.forEach(m => {
+        const item = document.createElement('div');
+        item.style.cssText = 'padding: 12px 14px; border-bottom: 1px solid #222222; cursor: pointer; transition: background 0.12s; background: #141414;';
+        item.innerHTML = `
+          <div style="font-size: 15px; font-weight: 400; color: #ffffff;">${m.name}</div>
+          <div style="font-size: 12px; color: var(--sub-fg); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${m.desc}</div>
+        `;
+        item.onmouseenter = () => { item.style.background = '#222222'; };
+        item.onmouseleave = () => { item.style.background = '#141414'; };
+        item.onclick = () => {
+          loadMapLocation(m.lat, m.lon, m.name);
+          closeMapSearchResults();
+        };
+        listEl.appendChild(item);
+      });
     }
 
     function locateUserGPS() {
