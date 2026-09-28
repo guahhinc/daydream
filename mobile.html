@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>daydream</title>
   
   <!-- Fonts: Roboto Thin & Google Material Symbols Sharp -->
@@ -120,25 +120,29 @@
       z-index: 5;
     }
 
-    /* App Opening/Closing: Smooth Slide from Side with Fade */
-    @keyframes wpSlideInFromRight {
+    /* App Opening/Closing: Windows Phone 3D Flip from Side (Turnstile Door Animation) */
+    @keyframes wpTurnstileEnter {
       0% {
-        transform: translateX(46px);
+        transform: perspective(1000px) rotateY(-40deg);
+        transform-origin: 0% 50%;
         opacity: 0;
       }
       100% {
-        transform: translateX(0);
+        transform: perspective(1000px) rotateY(0deg);
+        transform-origin: 0% 50%;
         opacity: 1;
       }
     }
 
-    @keyframes wpSlideInFromLeft {
+    @keyframes wpTurnstileBackEnter {
       0% {
-        transform: translateX(-46px);
+        transform: perspective(1000px) rotateY(40deg);
+        transform-origin: 100% 50%;
         opacity: 0;
       }
       100% {
-        transform: translateX(0);
+        transform: perspective(1000px) rotateY(0deg);
+        transform-origin: 100% 50%;
         opacity: 1;
       }
     }
@@ -155,15 +159,21 @@
     }
 
     .turnstile-in {
-      animation: wpSlideInFromRight 0.32s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      animation: wpTurnstileEnter 0.36s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
       z-index: 10 !important;
       background: #000000 !important;
+      transform-origin: 0% 50%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     .turnstile-back-in {
-      animation: wpSlideInFromLeft 0.32s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      animation: wpTurnstileBackEnter 0.36s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
       z-index: 10 !important;
       background: #000000 !important;
+      transform-origin: 100% 50%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     /* ================= START SCREEN ================= */
@@ -1124,122 +1134,50 @@
       display: block;
     }
 
-    /* Dedicated Visual Start Screen Manager in Settings */
-    .start-manager-preview-card {
-      background: #101010;
-      padding: 14px;
-      margin-bottom: 18px;
-      border: 1px solid #222222;
-    }
-
-    .start-manager-mini-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-auto-flow: dense;
-      gap: 5px;
-      margin-top: 10px;
+    /* Thin solid black bar at top of screen for iPhone notch / blur isolation */
+    #iphone-top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: max(env(safe-area-inset-top, 0px), 36px);
       background: #000000;
-      padding: 8px;
+      z-index: 998;
+      pointer-events: none;
     }
 
-    .start-manager-mini-tile {
-      background: var(--accent);
-      color: #ffffff;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      padding: 2px 4px;
-      transition: all 0.15s ease;
-    }
-
-    .start-manager-mini-tile.span-1 { grid-column: span 1; }
-    .start-manager-mini-tile.span-2 { grid-column: span 2; }
-    .start-manager-mini-tile.span-3 { grid-column: span 3; }
-
-    .tile-manager-card {
-      background: #141414;
-      padding: 12px 14px;
-      margin-bottom: 10px;
-      border-left: 3px solid var(--accent);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .tile-manager-top-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .tile-manager-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .tile-manager-badge {
-      width: 28px;
-      height: 28px;
-      background: var(--accent);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: bold;
-    }
-
-    .tile-manager-controls-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .tile-size-btn-group {
-      display: flex;
-      gap: 4px;
-    }
-
-    .tile-size-pill {
-      padding: 5px 9px;
-      background: #222222;
-      color: #aaaaaa;
-      font-size: 11px;
+    /* Windows Phone Metro Toggle Switch */
+    .metro-toggle-btn {
+      width: 60px;
+      height: 30px;
+      background: #1c1c1c;
+      border: 2px solid #555555;
+      position: relative;
       cursor: pointer;
-      border: 1px solid transparent;
-      transition: all 0.1s;
+      padding: 0;
+      box-sizing: border-box;
+      transition: background 0.15s, border-color 0.15s;
+      flex-shrink: 0;
     }
 
-    .tile-size-pill.active {
+    .metro-toggle-btn.active {
       background: var(--accent);
-      color: #ffffff;
-      font-weight: 500;
+      border-color: var(--accent);
     }
 
-    .tile-size-pill:active {
-      transform: scale(0.95);
+    .metro-toggle-thumb {
+      width: 14px;
+      height: 22px;
+      background: #ffffff;
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      transition: left 0.18s cubic-bezier(0.1, 0.9, 0.2, 1);
+      pointer-events: none;
     }
 
-    .tile-order-btn {
-      padding: 5px 10px;
-      background: #222222;
-      color: #ffffff;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .tile-order-btn:active {
-      background: var(--accent);
+    .metro-toggle-btn.active .metro-toggle-thumb {
+      left: 38px;
     }
 
     /* Metro Picker Modal for Contact Photo */
