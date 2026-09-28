@@ -180,10 +180,11 @@
       background: #000000;
     }
 
-    /* 3 Squares Per Row Grid */
+    /* 3 Squares Per Row Grid - Dense Packing Prevents Gaps */
     .start-tile-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
+      grid-auto-flow: dense;
       grid-auto-rows: calc((100vw - 28px - 16px) / 3);
       gap: 8px;
       padding-bottom: 24px;
@@ -269,7 +270,7 @@
     }
 
     .tile-label {
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 400;
       letter-spacing: 0.4px;
       text-transform: capitalize;
@@ -1106,37 +1107,150 @@
       display: block;
     }
 
-    /* Dedicated Start Screen Manager in Settings */
-    .tile-manager-item {
+    /* Dedicated Visual Start Screen Manager in Settings */
+    .start-manager-preview-card {
+      background: #101010;
+      padding: 14px;
+      margin-bottom: 18px;
+      border: 1px solid #222222;
+    }
+
+    .start-manager-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-flow: dense;
+      gap: 5px;
+      margin-top: 10px;
+      background: #000000;
+      padding: 8px;
+    }
+
+    .start-manager-mini-tile {
+      background: var(--accent);
+      color: #ffffff;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 2px 4px;
+      transition: all 0.15s ease;
+    }
+
+    .start-manager-mini-tile.span-1 { grid-column: span 1; }
+    .start-manager-mini-tile.span-2 { grid-column: span 2; }
+    .start-manager-mini-tile.span-3 { grid-column: span 3; }
+
+    .tile-manager-card {
+      background: #141414;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      border-left: 3px solid var(--accent);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tile-manager-top-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #161616;
-      padding: 12px 14px;
-      margin-bottom: 8px;
     }
 
-    .tile-manager-name {
-      font-size: 16px;
-      font-weight: 300;
-      color: #ffffff;
-    }
-
-    .tile-manager-actions {
+    .tile-manager-info {
       display: flex;
-      gap: 6px;
+      align-items: center;
+      gap: 10px;
     }
 
-    .tile-manager-btn {
-      padding: 6px 10px;
-      background: #242424;
+    .tile-manager-badge {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .tile-manager-controls-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tile-size-btn-group {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tile-size-pill {
+      padding: 5px 9px;
+      background: #222222;
+      color: #aaaaaa;
+      font-size: 11px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.1s;
+    }
+
+    .tile-size-pill.active {
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    .tile-size-pill:active {
+      transform: scale(0.95);
+    }
+
+    .tile-order-btn {
+      padding: 5px 10px;
+      background: #222222;
       color: #ffffff;
       font-size: 12px;
       cursor: pointer;
     }
 
-    .tile-manager-btn:active {
+    .tile-order-btn:active {
       background: var(--accent);
+    }
+
+    /* Metro Picker Modal for Contact Photo */
+    .metro-picker-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 120;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      animation: superQuickFade 0.16s ease-out;
+      box-sizing: border-box;
+      padding: 16px;
+    }
+
+    .metro-picker-card {
+      width: 100%;
+      max-width: 380px;
+      background: #141414;
+      padding: 20px 18px;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
     }
 
     /* ================= VIRTUAL HARDWARE BAR ================= */
@@ -1191,6 +1305,30 @@
       </div>
     </div>
 
+    <!-- ================= CONTACT PHOTO PICKER MODAL (USES PHOTOS APP) ================= -->
+    <div id="contact-photo-picker-modal" class="metro-picker-overlay">
+      <div class="metro-picker-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <div style="font-size: 20px; font-weight: 300;">choose photo</div>
+          <button class="metro-button" onclick="closeContactPhotoPicker()">close</button>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <div style="font-size:12px; color:var(--sub-fg); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">from photos app</div>
+          <div id="contact-picker-photos-grid" class="photos-grid" style="max-height: 220px; overflow-y: auto;">
+            <!-- Populated via JS with photos from the Photos app -->
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid #222; padding-top: 14px;">
+          <label class="metro-button primary" style="display:block; text-align:center; cursor:pointer; width:100%; box-sizing:border-box;">
+            + upload from device
+            <input type="file" id="contact-photo-file-in" accept="image/*" style="display:none;" onchange="handleContactPhotoSelected(event)">
+          </label>
+        </div>
+      </div>
+    </div>
+
     <!-- ================= APP SWITCHER (MULTITASKING) ================= -->
     <div id="app-switcher-overlay" onclick="closeAppSwitcher()">
       <div style="padding: 0 24px 10px; font-size: 20px; font-weight: 100; color: #888888; display:flex; justify-content:space-between; align-items:center;">
@@ -1211,7 +1349,7 @@
         <!-- 3 Squares Per Row Grid: 8 Apps -->
         <div class="start-tile-grid" id="main-tile-grid">
 
-          <!-- 1. Contacts Tile -->
+          <!-- 1. Contacts Tile (Row 1: 2sq + 1sq = 3sq) -->
           <div class="wp-tile tile-2sq" id="tile-contacts" data-app="contacts" data-size="2sq" onclick="launchApp('contacts')">
             <div class="tile-slab">
               <div class="tile-face">
@@ -1227,8 +1365,8 @@
               </div>
               <div class="tile-face tile-face-back">
                 <div>
-                  <div style="font-size: 16px; font-weight: 300;" id="tile-contact-name">0 Contacts</div>
-                  <div style="font-size: 11px; opacity: 0.85; margin-top: 4px;" id="tile-contact-sub">Tap to add contacts</div>
+                  <div style="font-size: 18px; font-weight: 300;" id="tile-contact-name">0 Contacts</div>
+                  <div style="font-size: 13px; opacity: 0.85; margin-top: 4px;" id="tile-contact-sub">Tap to add contacts</div>
                 </div>
                 <div class="tile-label">Contacts</div>
               </div>
@@ -1257,50 +1395,14 @@
                 <div class="tile-label">Calculator</div>
               </div>
               <div class="tile-face tile-face-back">
-                <div style="font-size: 10px; opacity: 0.8;">Recent:</div>
-                <div id="calc-tile-val" style="font-size: 26px; font-weight: 100; margin: 4px 0;">0</div>
+                <div style="font-size: 12px; opacity: 0.8;">Recent:</div>
+                <div id="calc-tile-val" style="font-size: 28px; font-weight: 100; margin: 4px 0;">0</div>
                 <div class="tile-label">Calculator</div>
               </div>
             </div>
           </div>
 
-          <!-- 3. Browser Tile -->
-          <div class="wp-tile tile-1sq" id="tile-browser" data-app="browser" data-size="1sq" onclick="launchApp('browser')">
-            <div class="tile-slab">
-              <div class="tile-face">
-                <div class="tile-center-icon">
-                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 42px; height: 42px;">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                  </svg>
-                </div>
-                <div class="tile-label">Browser</div>
-              </div>
-              <div class="tile-face tile-face-back">
-                <div style="font-size: 10px; opacity: 0.8;">Active:</div>
-                <div id="browser-tile-val" style="font-size: 12px; font-weight: 300; margin-top: 6px;">Wikipedia</div>
-                <div class="tile-label">Browser</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 4. Camera Tile (NEW) -->
-          <div class="wp-tile tile-1sq" id="tile-camera" data-app="camera" data-size="1sq" onclick="launchApp('camera')">
-            <div class="tile-slab">
-              <div class="tile-face">
-                <div class="tile-center-icon">
-                  <span class="material-symbols-sharp" style="font-size: 38px;">photo_camera</span>
-                </div>
-                <div class="tile-label">Camera</div>
-              </div>
-              <div class="tile-face tile-face-back">
-                <div style="font-size: 10px; opacity: 0.8;">Camera</div>
-                <div style="font-size: 12px; font-weight: 300; margin-top: 6px;">Tap to capture</div>
-                <div class="tile-label">Viewfinder</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 5. Photos Tile (Default 2sq wide, cycles camera roll) -->
+          <!-- 3. Photos Tile (Row 2: 2sq + 1sq = 3sq) -->
           <div class="wp-tile tile-2sq" id="tile-photos" data-app="photos" data-size="2sq" onclick="launchApp('photos')">
             <div class="tile-slab">
               <div class="tile-face" id="tile-photos-face-front" style="padding:0; position:relative; overflow:hidden;">
@@ -1313,15 +1415,32 @@
               </div>
               <div class="tile-face tile-face-back" id="tile-photos-face-back" style="padding:0; position:relative; overflow:hidden;">
                 <div id="tile-photos-content-back" style="width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; padding:10px; box-sizing:border-box;">
-                  <div style="font-size: 10px; opacity: 0.8;">Gallery</div>
-                  <div id="tile-photos-count" style="font-size: 13px; font-weight: 300; margin-top: 6px;">0 Photos</div>
+                  <div style="font-size: 12px; opacity: 0.8;">Gallery</div>
+                  <div id="tile-photos-count" style="font-size: 15px; font-weight: 300; margin-top: 6px;">0 Photos</div>
                   <div class="tile-label">Camera Roll</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 6. Notes Tile -->
+          <!-- 4. Camera Tile -->
+          <div class="wp-tile tile-1sq" id="tile-camera" data-app="camera" data-size="1sq" onclick="launchApp('camera')">
+            <div class="tile-slab">
+              <div class="tile-face">
+                <div class="tile-center-icon">
+                  <span class="material-symbols-sharp" style="font-size: 38px;">photo_camera</span>
+                </div>
+                <div class="tile-label">Camera</div>
+              </div>
+              <div class="tile-face tile-face-back">
+                <div style="font-size: 12px; opacity: 0.8;">Camera</div>
+                <div style="font-size: 14px; font-weight: 300; margin-top: 6px;">Tap to capture</div>
+                <div class="tile-label">Viewfinder</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. Notes Tile (Row 3: 2sq + 1sq = 3sq) -->
           <div class="wp-tile tile-2sq" id="tile-notes" data-app="notes" data-size="2sq" onclick="launchApp('notes')">
             <div class="tile-slab">
               <div class="tile-face">
@@ -1332,15 +1451,34 @@
               </div>
               <div class="tile-face tile-face-back">
                 <div>
-                  <div style="font-size: 15px; font-weight: 400;" id="tile-note-title">Notes</div>
-                  <div style="font-size: 11px; opacity: 0.85; margin-top: 4px;" id="tile-note-snippet">Tap to create a note</div>
+                  <div style="font-size: 17px; font-weight: 400;" id="tile-note-title">Notes</div>
+                  <div style="font-size: 13px; opacity: 0.85; margin-top: 4px;" id="tile-note-snippet">Tap to create a note</div>
                 </div>
                 <div class="tile-label">Notes</div>
               </div>
             </div>
           </div>
 
-          <!-- 7. Health Tile -->
+          <!-- 6. Browser Tile -->
+          <div class="wp-tile tile-1sq" id="tile-browser" data-app="browser" data-size="1sq" onclick="launchApp('browser')">
+            <div class="tile-slab">
+              <div class="tile-face">
+                <div class="tile-center-icon">
+                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 42px; height: 42px;">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                  </svg>
+                </div>
+                <div class="tile-label">Browser</div>
+              </div>
+              <div class="tile-face tile-face-back">
+                <div style="font-size: 12px; opacity: 0.8;">Active:</div>
+                <div id="browser-tile-val" style="font-size: 14px; font-weight: 300; margin-top: 6px;">Wikipedia</div>
+                <div class="tile-label">Browser</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. Health Tile (Row 4: 2sq + 1sq = 3sq) -->
           <div class="wp-tile tile-2sq" id="tile-health" data-app="health" data-size="2sq" onclick="launchApp('health')">
             <div class="tile-slab">
               <div class="tile-face">
@@ -1351,15 +1489,15 @@
               </div>
               <div class="tile-face tile-face-back">
                 <div>
-                  <div style="font-size: 26px; font-weight: 100;" id="tile-health-steps">0</div>
-                  <div style="font-size: 11px; opacity: 0.85;" id="tile-health-sub">Daily Steps • 0% Goal</div>
+                  <div style="font-size: 28px; font-weight: 100;" id="tile-health-steps">0</div>
+                  <div style="font-size: 13px; opacity: 0.85;" id="tile-health-sub">Daily Steps • 0% Goal</div>
                 </div>
                 <div class="tile-label">Health</div>
               </div>
             </div>
           </div>
 
-          <!-- 8. Settings Tile -->
+          <!-- 8. Settings Tile (Static - Pure Metro, No Flip) -->
           <div class="wp-tile tile-1sq" id="tile-settings" data-app="settings" data-size="1sq" onclick="launchApp('settings')">
             <div class="tile-slab">
               <div class="tile-face">
@@ -1367,13 +1505,6 @@
                   <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 36px; height: 36px;">
                     <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
                   </svg>
-                </div>
-                <div class="tile-label">Settings</div>
-              </div>
-              <div class="tile-face tile-face-back">
-                <div>
-                  <div style="font-size: 13px; font-weight: 400;">daydream OS</div>
-                  <div style="font-size: 11px; opacity: 0.85; margin-top: 3px;">System</div>
                 </div>
                 <div class="tile-label">Settings</div>
               </div>
@@ -1420,14 +1551,13 @@
 
             <!-- Contact Photo Selector -->
             <div class="contact-photo-editor-row">
-              <div class="contact-photo-preview-box" id="contact-photo-preview" onclick="document.getElementById('contact-photo-file-in').click()" title="Change contact photo">
+              <div class="contact-photo-preview-box" id="contact-photo-preview" onclick="openContactPhotoPicker()" title="Choose photo from Photos app">
                 <img id="contact-photo-preview-img" src="" style="display:none; width:100%; height:100%; object-fit:cover;" alt="Contact Photo">
                 <span id="contact-photo-placeholder" class="material-symbols-sharp" style="font-size:28px; color:var(--sub-fg);">add_a_photo</span>
               </div>
               <div style="display:flex; flex-direction:column; gap:6px;">
-                <button type="button" class="metro-button" onclick="document.getElementById('contact-photo-file-in').click()" style="padding:6px 12px; font-size:12px;">choose photo</button>
+                <button type="button" class="metro-button" onclick="openContactPhotoPicker()" style="padding:6px 12px; font-size:12px;">choose photo</button>
                 <button type="button" class="metro-button" id="contact-photo-remove-btn" onclick="removeContactPhoto()" style="display:none; padding:6px 12px; font-size:11px;">remove photo</button>
-                <input type="file" id="contact-photo-file-in" accept="image/*" style="display:none;" onchange="handleContactPhotoSelected(event)">
               </div>
             </div>
 
