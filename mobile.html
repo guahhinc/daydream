@@ -1,0 +1,3324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>daydream</title>
+  
+  <!-- Fonts: Roboto Thin & Google Material Symbols Sharp -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@24..48,200..400,0..1,0" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* Slightly darker, bluer royal purple default */
+      --accent: #5118d6;
+      --accent-dark: #370da0;
+      --bg: #000000;
+      --fg: #ffffff;
+      --sub-fg: #888888;
+      --tile-bg: var(--accent);
+      --nav-height: 52px;
+      --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      border: none;
+      outline: none;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    *::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      background-color: #000000;
+      color: var(--fg);
+      font-family: var(--font-family);
+      font-weight: 300;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    .material-symbols-sharp {
+      font-family: 'Material Symbols Sharp';
+      font-weight: 300;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      display: inline-block;
+      white-space: nowrap;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Full-screen phone container */
+    #phone-container {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      background-color: #000000;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Screen Viewport */
+    #os-viewport {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: calc(100% - var(--nav-height));
+      overflow: hidden;
+      perspective: 1400px;
+      -webkit-perspective: 1400px;
+      background-color: #000000;
+    }
+
+    /* 100% Solid Opaque Screen Views */
+    .screen-view {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000000;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform-origin: 0% 50%;
+      z-index: 1;
+    }
+
+    .screen-view.active {
+      display: flex;
+      z-index: 5;
+    }
+
+    /* OPAQUE 3D Turnstile Animations with Super Quick Fade */
+    @keyframes wpTurnstileEnter {
+      0% {
+        transform: perspective(1200px) rotateY(-32deg) translateZ(-140px) scale(0.92);
+        opacity: 0;
+      }
+      30% {
+        opacity: 1;
+      }
+      100% {
+        transform: perspective(1200px) rotateY(0deg) translateZ(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes wpTurnstileBackEnter {
+      0% {
+        transform: perspective(1200px) rotateY(32deg) translateZ(-140px) scale(0.92);
+        opacity: 0;
+      }
+      30% {
+        opacity: 1;
+      }
+      100% {
+        transform: perspective(1200px) rotateY(0deg) translateZ(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes superQuickFade {
+      0% {
+        opacity: 0;
+        transform: scale(0.97);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .turnstile-in {
+      animation: wpTurnstileEnter 0.45s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      z-index: 10 !important;
+      background: #000000 !important;
+    }
+
+    .turnstile-back-in {
+      animation: wpTurnstileBackEnter 0.45s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      z-index: 10 !important;
+      background: #000000 !important;
+    }
+
+    /* ================= START SCREEN ================= */
+    #view-home {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      padding: 16px 14px 14px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      background: #000000;
+    }
+
+    /* 3 Squares Per Row Grid */
+    .start-tile-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: calc((100vw - 28px - 16px) / 3);
+      gap: 8px;
+      padding-bottom: 24px;
+    }
+
+    /* Live Tile 3D Slab Flip Engine */
+    .wp-tile {
+      position: relative;
+      cursor: pointer;
+      perspective: 1000px;
+      -webkit-perspective: 1000px;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      will-change: transform;
+      background: transparent;
+      transition: transform 0.15s ease;
+      touch-action: pan-y;
+    }
+
+    .tile-1sq {
+      grid-column: span 1;
+      grid-row: span 1;
+    }
+
+    .tile-2sq {
+      grid-column: span 2;
+      grid-row: span 1;
+    }
+
+    .tile-3sq {
+      grid-column: span 3;
+      grid-row: span 1;
+    }
+
+    .tile-slab {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    /* Vertical Live Flip (bottom-over-top) */
+    .wp-tile.flipped .tile-slab {
+      transform: rotateX(180deg);
+      -webkit-transform: rotateX(180deg);
+    }
+
+    .tile-face {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      padding: 10px;
+      color: #ffffff;
+      background: var(--tile-bg);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform: rotateX(0deg);
+      -webkit-transform: rotateX(0deg);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .tile-face-back {
+      transform: rotateX(180deg);
+      -webkit-transform: rotateX(180deg);
+      background: var(--accent-dark);
+    }
+
+    .wp-tile:active .tile-slab {
+      transform: scale(0.95);
+      transition: transform 0.08s ease-out;
+    }
+
+    .wp-tile.flipped:active .tile-slab {
+      transform: rotateX(180deg) scale(0.95);
+      -webkit-transform: rotateX(180deg) scale(0.95);
+    }
+
+    .tile-label {
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.4px;
+      text-transform: capitalize;
+      z-index: 2;
+    }
+
+    .tile-center-icon {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .app-svg-icon {
+      width: 44px;
+      height: 44px;
+      fill: currentColor;
+    }
+
+    /* ================= PIVOT APPS DESIGN SYSTEM ================= */
+    .pivot-view {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #000000;
+      touch-action: pan-y;
+    }
+
+    .pivot-header {
+      padding: 22px 18px 8px;
+      flex-shrink: 0;
+    }
+
+    .pivot-tabs-row {
+      display: flex;
+      gap: 26px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .pivot-tabs-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .pivot-tab-item {
+      font-size: 44px;
+      font-weight: 100;
+      letter-spacing: -1.5px;
+      color: var(--sub-fg);
+      cursor: pointer;
+      transition: color 0.25s ease;
+    }
+
+    .pivot-tab-item.active {
+      color: var(--fg);
+    }
+
+    .pivot-body {
+      flex: 1;
+      overflow-y: hidden;
+      padding: 6px 18px 16px;
+      position: relative;
+    }
+
+    /* Horizontal swipe slider wrapper with a 120px gap */
+    .pivot-slider {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      gap: 120px;
+      transition: transform 0.32s cubic-bezier(0.12, 0.9, 0.2, 1);
+    }
+
+    .pivot-page {
+      width: 100%;
+      height: 100%;
+      flex-shrink: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .pivot-page::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Pure Flat Metro Inputs & Buttons */
+    .metro-input {
+      width: 100%;
+      background: #181818;
+      padding: 12px 14px;
+      color: var(--fg);
+      font-family: var(--font-family);
+      font-size: 15px;
+      font-weight: 300;
+      margin-bottom: 12px;
+    }
+
+    .metro-input:focus {
+      background: #222222;
+    }
+
+    .metro-textarea {
+      width: 100%;
+      height: 240px;
+      background: #181818;
+      padding: 14px;
+      color: var(--fg);
+      font-family: var(--font-family);
+      font-size: 15px;
+      font-weight: 300;
+      resize: none;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    .metro-textarea:focus {
+      background: #222222;
+    }
+
+    .metro-button {
+      padding: 10px 22px;
+      background: #222222;
+      color: var(--fg);
+      font-family: var(--font-family);
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      text-transform: lowercase;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .metro-button:active {
+      background: var(--accent);
+      color: #ffffff;
+      transform: scale(0.96);
+    }
+
+    .metro-button.primary {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    /* ================= CENTERED EDGE-TO-EDGE BUILT-IN METRO DIALOG ================= */
+    #metro-dialog-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.88);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      animation: superQuickFade 0.15s ease-out;
+    }
+
+    .metro-dialog-card {
+      width: 100%;
+      background: #141414;
+      padding: 24px 18px 24px;
+      color: #ffffff;
+      animation: superQuickFade 0.15s ease-out;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
+
+    .metro-dialog-title {
+      font-size: 22px;
+      font-weight: 300;
+      margin-bottom: 8px;
+      color: var(--accent);
+      word-break: break-word;
+    }
+
+    .metro-dialog-body {
+      font-size: 14px;
+      line-height: 1.4;
+      color: #cccccc;
+      margin-bottom: 22px;
+      word-break: break-word;
+    }
+
+    .metro-dialog-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .metro-dialog-buttons .metro-button {
+      flex: 1 1 auto;
+      min-width: 80px;
+      max-width: 100%;
+      text-align: center;
+      padding: 12px 16px;
+      box-sizing: border-box;
+    }
+
+    .empty-state {
+      padding: 32px 0;
+      color: var(--sub-fg);
+      text-align: center;
+      font-size: 15px;
+      font-weight: 300;
+    }
+
+    /* ================= APP SWITCHER (MULTITASKING VIEW) ================= */
+    #app-switcher-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.94);
+      z-index: 800;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      padding: 20px 0;
+      animation: superQuickFade 0.18s ease-out;
+    }
+
+    .switcher-cards-row {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding: 20px 24px;
+      scroll-snap-type: x mandatory;
+      align-items: center;
+    }
+
+    .switcher-card {
+      width: 250px;
+      height: 390px;
+      background: #121212;
+      border: 1px solid #282828;
+      display: flex;
+      flex-direction: column;
+      scroll-snap-align: center;
+      flex-shrink: 0;
+      cursor: grab;
+      position: relative;
+      touch-action: pan-x;
+      user-select: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+      will-change: transform, opacity;
+      overflow: hidden;
+    }
+
+    .switcher-card:active {
+      cursor: grabbing;
+    }
+
+    .switcher-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: #1c1c1c;
+      border-bottom: 1px solid #262626;
+      flex-shrink: 0;
+    }
+
+    .switcher-card-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .switcher-card-close {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #888888;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .switcher-card-close:hover {
+      color: #ffffff;
+    }
+
+    .switcher-card-body {
+      flex: 1;
+      background: #000000;
+      overflow: hidden;
+      position: relative;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .switcher-swipe-hint {
+      text-align: center;
+      font-size: 11px;
+      color: #666666;
+      text-transform: lowercase;
+      letter-spacing: 0.5px;
+      padding-top: 6px;
+    }
+
+    /* ================= APP 1: CONTACTS ================= */
+    .contact-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 0;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .contact-row:active {
+      background: #141414;
+    }
+
+    .contact-avatar-box {
+      width: 48px;
+      height: 48px;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 17px;
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .contact-avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .contact-text-box {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .contact-main-name {
+      font-size: 17px;
+      font-weight: 300;
+      color: var(--fg);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .contact-sub-phone {
+      font-size: 12px;
+      color: #bbbbbb;
+      margin-top: 2px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .contact-sub-email {
+      font-size: 11px;
+      color: var(--sub-fg);
+      margin-top: 2px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .contact-photo-editor-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding: 10px 12px;
+      background: #141414;
+    }
+
+    .contact-photo-preview-box {
+      width: 64px;
+      height: 64px;
+      background: #202020;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px dashed #444444;
+    }
+
+    .contact-photo-preview-box:hover {
+      border-color: var(--accent);
+    }
+
+    #contact-modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      z-index: 50;
+      display: none;
+      flex-direction: column;
+      animation: superQuickFade 0.16s ease-out;
+    }
+
+    /* ================= APP 2: CALCULATOR ================= */
+    #calc-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .calc-screen-display {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+      padding: 20px 20px 10px;
+    }
+
+    .calc-history-line {
+      font-size: 17px;
+      color: var(--sub-fg);
+      min-height: 24px;
+      font-weight: 300;
+    }
+
+    .calc-active-line {
+      font-size: 60px;
+      font-weight: 100;
+      letter-spacing: -2px;
+      color: var(--fg);
+      overflow-x: auto;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    .calc-buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 4px;
+      padding: 6px 12px 16px;
+      flex: 2;
+    }
+
+    .calc-key {
+      background: #161616;
+      color: #ffffff;
+      font-size: 22px;
+      font-weight: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.1s, transform 0.08s;
+    }
+
+    .calc-key:active {
+      background: var(--accent);
+      color: #ffffff;
+      transform: scale(0.95);
+    }
+
+    .calc-key.op {
+      background: #202020;
+      color: var(--accent);
+      font-weight: 400;
+    }
+
+    .calc-key.eq {
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 400;
+    }
+
+    /* ================= APP 3: BROWSER (WITH BACK / FORWARD) ================= */
+    #browser-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .browser-web-viewport {
+      flex: 1;
+      position: relative;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    #browser-iframe {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .browser-bottom-bar {
+      height: 52px;
+      background: #111111;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .browser-nav-btn {
+      width: 36px;
+      height: 36px;
+      background: transparent;
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, transform 0.15s;
+    }
+
+    .browser-nav-btn:active {
+      color: var(--accent);
+      transform: scale(0.9);
+    }
+
+    .browser-url-box {
+      flex: 1;
+      height: 38px;
+      background: #181818;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    .browser-input {
+      flex: 1;
+      background: transparent;
+      color: #ffffff;
+      font-family: var(--font-family);
+      font-size: 13px;
+      font-weight: 300;
+    }
+
+    /* ================= APP 4: NOTES ================= */
+    .note-item {
+      background: #161616;
+      padding: 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .note-item:active {
+      background: #202020;
+    }
+
+    .note-title {
+      font-size: 17px;
+      font-weight: 400;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .note-snippet {
+      font-size: 13px;
+      color: var(--sub-fg);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .note-date {
+      font-size: 11px;
+      color: var(--accent);
+      margin-top: 6px;
+    }
+
+    /* ================= APP 5: HEALTH ================= */
+    .health-metric-card {
+      background: #161616;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .health-metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .health-metric-title {
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--sub-fg);
+    }
+
+    .health-metric-value {
+      font-size: 38px;
+      font-weight: 100;
+      color: #ffffff;
+      line-height: 1;
+    }
+
+    .health-metric-unit {
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: 300;
+      margin-left: 4px;
+    }
+
+    .health-progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #252525;
+      margin-top: 10px;
+      position: relative;
+    }
+
+    .health-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.3s;
+    }
+
+    .health-action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .health-action-row .metro-button {
+      flex: 1 1 auto;
+      text-align: center;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    /* ================= APP 6: CAMERA (NEW) ================= */
+    #camera-app-viewport {
+      flex: 1;
+      position: relative;
+      background: #000000;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #camera-video-stream {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #camera-shutter-flash {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s ease-out;
+      z-index: 40;
+    }
+
+    .camera-hud-bottom {
+      height: 84px;
+      background: #000000;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 20px;
+      flex-shrink: 0;
+    }
+
+    .shutter-btn-circle {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 3px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.1s;
+    }
+
+    .shutter-btn-circle:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .shutter-btn-inner {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #ffffff;
+    }
+
+    /* ================= APP 7: PHOTOS (NEW) ================= */
+    .photos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      padding-bottom: 20px;
+    }
+
+    .photo-thumb-box {
+      aspect-ratio: 1 / 1;
+      background: #181818;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .photo-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Full-screen Photo Viewer */
+    #photo-viewer-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000000;
+      z-index: 60;
+      display: none;
+      flex-direction: column;
+      animation: superQuickFade 0.16s ease-out;
+    }
+
+    #photo-viewer-img {
+      flex: 1;
+      width: 100%;
+      object-fit: contain;
+    }
+
+    .photo-viewer-toolbar {
+      height: 52px;
+      background: #111111;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    /* ================= APP 8: SETTINGS ================= */
+    .settings-group {
+      margin-bottom: 26px;
+    }
+
+    .settings-heading {
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--sub-fg);
+      margin-bottom: 14px;
+    }
+
+    .accent-preview-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #161616;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+
+    .accent-preview-color-square {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+    }
+
+    .accent-preview-name {
+      font-size: 16px;
+      font-weight: 300;
+      color: #ffffff;
+    }
+
+    .accent-palette-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .swatch-box {
+      height: 48px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: transform 0.15s;
+    }
+
+    .swatch-box:active {
+      transform: scale(0.92);
+    }
+
+    .swatch-box .swatch-check {
+      display: none;
+      color: #ffffff;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .swatch-box.selected .swatch-check {
+      display: block;
+    }
+
+    /* Dedicated Start Screen Manager in Settings */
+    .tile-manager-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #161616;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+    }
+
+    .tile-manager-name {
+      font-size: 16px;
+      font-weight: 300;
+      color: #ffffff;
+    }
+
+    .tile-manager-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tile-manager-btn {
+      padding: 6px 10px;
+      background: #242424;
+      color: #ffffff;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .tile-manager-btn:active {
+      background: var(--accent);
+    }
+
+    /* ================= VIRTUAL HARDWARE BAR ================= */
+    #virtual-nav {
+      height: var(--nav-height);
+      background: #000000;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .nav-touch-btn {
+      background: transparent;
+      color: #ffffff;
+      width: 72px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0.85;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .nav-touch-btn:active {
+      opacity: 1;
+      transform: scale(0.88);
+      color: var(--accent);
+    }
+
+    .nav-circle-home {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="phone-container">
+
+    <!-- ================= CENTERED EDGE-TO-EDGE BUILT-IN METRO DIALOG ================= -->
+    <div id="metro-dialog-overlay">
+      <div class="metro-dialog-card">
+        <div class="metro-dialog-title" id="metro-dialog-title">Dialog</div>
+        <div class="metro-dialog-body" id="metro-dialog-body">Message text</div>
+        <div class="metro-dialog-buttons" id="metro-dialog-buttons"></div>
+      </div>
+    </div>
+
+    <!-- ================= APP SWITCHER (MULTITASKING) ================= -->
+    <div id="app-switcher-overlay" onclick="closeAppSwitcher()">
+      <div style="padding: 0 24px 10px; font-size: 20px; font-weight: 100; color: #888888; display:flex; justify-content:space-between; align-items:center;">
+        <span>running apps</span>
+        <span style="font-size:11px; color:#666666;">swipe up to close</span>
+      </div>
+      <div class="switcher-cards-row" id="switcher-cards-row" onclick="event.stopPropagation()">
+        <!-- Populated via JS -->
+      </div>
+    </div>
+
+    <!-- Operating System Viewport -->
+    <div id="os-viewport">
+
+      <!-- ================= START SCREEN ================= -->
+      <div id="view-home" class="screen-view active">
+
+        <!-- 3 Squares Per Row Grid: 8 Apps -->
+        <div class="start-tile-grid" id="main-tile-grid">
+
+          <!-- 1. Contacts Tile -->
+          <div class="wp-tile tile-2sq" id="tile-contacts" data-app="contacts" data-size="2sq" onclick="launchApp('contacts')">
+            <div class="tile-slab">
+              <div class="tile-face">
+                <div class="tile-center-icon">
+                  <svg class="app-svg-icon" viewBox="0 0 24 24">
+                    <circle cx="9" cy="8" r="3.5"/>
+                    <path d="M2 18.5v-1c0-2.5 4-3.8 7-3.8s7 1.3 7 3.8v1H2z"/>
+                    <circle cx="16.5" cy="8.5" r="2.8"/>
+                    <path d="M16.5 13.7c1.8.4 4.5 1.5 4.5 3.8v1h-3.5v-1c0-1.5-.7-2.8-1-3.8z"/>
+                  </svg>
+                </div>
+                <div class="tile-label">Contacts</div>
+              </div>
+              <div class="tile-face tile-face-back">
+                <div>
+                  <div style="font-size: 16px; font-weight: 300;" id="tile-contact-name">0 Contacts</div>
+                  <div style="font-size: 11px; opacity: 0.85; margin-top: 4px;" id="tile-contact-sub">Tap to add contacts</div>
+                </div>
+                <div class="tile-label">Contacts</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Calculator Tile -->
+          <div class="wp-tile tile-1sq" id="tile-calc" data-app="calc" data-size="1sq" onclick="launchApp('calc')">
+            <div class="tile-slab">
+              <div class="tile-face">
+                <div class="tile-center-icon">
+                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 40px; height: 40px;">
+                    <rect x="4" y="2" width="16" height="20" rx="1" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <rect x="6" y="4" width="12" height="4" fill="currentColor"/>
+                    <circle cx="7.5" cy="11.5" r="1" fill="currentColor"/>
+                    <circle cx="12" cy="11.5" r="1" fill="currentColor"/>
+                    <circle cx="16.5" cy="11.5" r="1" fill="currentColor"/>
+                    <circle cx="7.5" cy="15" r="1" fill="currentColor"/>
+                    <circle cx="12" cy="15" r="1" fill="currentColor"/>
+                    <circle cx="16.5" cy="15" r="1" fill="currentColor"/>
+                    <circle cx="7.5" cy="18.5" r="1" fill="currentColor"/>
+                    <circle cx="12" cy="18.5" r="1" fill="currentColor"/>
+                    <circle cx="16.5" cy="18.5" r="1" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="tile-label">Calculator</div>
+              </div>
+              <div class="tile-face tile-face-back">
+                <div style="font-size: 10px; opacity: 0.8;">Recent:</div>
+                <div id="calc-tile-val" style="font-size: 26px; font-weight: 100; margin: 4px 0;">0</div>
+                <div class="tile-label">Calculator</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Browser Tile -->
+          <div class="wp-tile tile-1sq" id="tile-browser" data-app="browser" data-size="1sq" onclick="launchApp('browser')">
+            <div class="tile-slab">
+              <div class="tile-face">
+                <div class="tile-center-icon">
+                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 42px; height: 42px;">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                  </svg>
+                </div>
+                <div class="tile-label">Browser</div>
+              </div>
+              <div class="tile-face tile-face-back">
+                <div style="font-size: 10px; opacity: 0.8;">Active:</div>
+                <div id="browser-tile-val" style="font-size: 12px; font-weight: 300; margin-top: 6px;">Wikipedia</div>
+                <div class="tile-label">Browser</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Camera Tile (NEW) -->
+          <div class="wp-tile tile-1sq" id="tile-camera" data-app="camera" data-size="1sq" onclick="launchApp('camera')">
+            <div class="tile-slab">
+              <div class="tile-face">
+                <div class="tile-center-icon">
+                  <span class="material-symbols-sharp" style="font-size: 38px;">photo_camera</span>
+                </div>
+                <div class="tile-label">Camera</div>
+              </div>
+              <div class="tile-face tile-face-back">
+                <div style="font-size: 10px; opacity: 0.8;">Camera</div>
+                <div style="font-size: 12px; font-weight: 300; margin-top: 6px;">Tap to capture</div>
+                <div class="tile-label">Viewfinder</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. Photos Tile (Default 2sq wide, cycles camera roll) -->
+          <div class="wp-tile tile-2sq" id="tile-photos" data-app="photos" data-size="2sq" onclick="launchApp('photos')">
+            <div class="tile-slab">
+              <div class="tile-face" id="tile-photos-face-front" style="padding:0; position:relative; overflow:hidden;">
+                <div id="tile-photos-content-front" style="width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; padding:10px; box-sizing:border-box;">
+                  <div class="tile-center-icon">
+                    <span class="material-symbols-sharp" style="font-size: 38px;">photo_library</span>
+                  </div>
+                  <div class="tile-label">Photos</div>
+                </div>
+              </div>
+              <div class="tile-face tile-face-back" id="tile-photos-face-back" style="padding:0; position:relative; overflow:hidden;">
+                <div id="tile-photos-content-back" style="width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; padding:10px; box-sizing:border-box;">
+                  <div style="font-size: 10px; opacity: 0.8;">Gallery</div>
+                  <div id="tile-photos-count" style="font-size: 13px; font-weight: 300; margin-top: 6px;">0 Photos</div>
+                  <div class="tile-label">Camera Roll</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. Notes Tile -->
+          <div class="wp-tile tile-2sq" id="tile-notes" data-app="notes" data-size="2sq" onclick="launchApp('notes')">
+            <div class="tile-slab">
+              <div class="tile-face">
+                <div class="tile-center-icon">
+                  <span class="material-symbols-sharp" style="font-size: 42px;">description</span>
+                </div>
+                <div class="tile-label">Notes</div>
+              </div>
+              <div class="tile-face tile-face-back">
+                <div>
+                  <div style="font-size: 15px; font-weight: 400;" id="tile-note-title">Notes</div>
+                  <div style="font-size: 11px; opacity: 0.85; margin-top: 4px;" id="tile-note-snippet">Tap to create a note</div>
+                </div>
+                <div class="tile-label">Notes</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. Health Tile -->
+          <div class="wp-tile tile-2sq" id="tile-health" data-app="health" data-size="2sq" onclick="launchApp('health')">
+            <div class="tile-slab">
+              <div class="tile-face">
+                <div class="tile-center-icon">
+                  <span class="material-symbols-sharp" style="font-size: 42px;">favorite</span>
+                </div>
+                <div class="tile-label">Health</div>
+              </div>
+              <div class="tile-face tile-face-back">
+                <div>
+                  <div style="font-size: 26px; font-weight: 100;" id="tile-health-steps">0</div>
+                  <div style="font-size: 11px; opacity: 0.85;" id="tile-health-sub">Daily Steps • 0% Goal</div>
+                </div>
+                <div class="tile-label">Health</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 8. Settings Tile -->
+          <div class="wp-tile tile-1sq" id="tile-settings" data-app="settings" data-size="1sq" onclick="launchApp('settings')">
+            <div class="tile-slab">
+              <div class="tile-face">
+                <div class="tile-center-icon">
+                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 36px; height: 36px;">
+                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                  </svg>
+                </div>
+                <div class="tile-label">Settings</div>
+              </div>
+              <div class="tile-face tile-face-back">
+                <div>
+                  <div style="font-size: 13px; font-weight: 400;">daydream OS</div>
+                  <div style="font-size: 11px; opacity: 0.85; margin-top: 3px;">System</div>
+                </div>
+                <div class="tile-label">Settings</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ================= APP 1: CONTACTS ================= -->
+      <div id="view-contacts" class="screen-view">
+        <div class="pivot-view" id="pivot-contacts-view">
+          <div class="pivot-header">
+            <div class="pivot-tabs-row">
+              <div class="pivot-tab-item active" id="tab-contacts-all" onclick="selectContactsTab('all')">all</div>
+              <div class="pivot-tab-item" id="tab-contacts-recent" onclick="selectContactsTab('recent')">recent</div>
+            </div>
+          </div>
+
+          <div class="pivot-body">
+            <div class="pivot-slider" id="slider-contacts">
+              <div class="pivot-page">
+                <div style="display:flex; gap:8px; margin-bottom:12px;">
+                  <input type="text" class="metro-input" placeholder="find someone..." oninput="handleSearchContacts(this.value)" id="input-search-contacts" style="margin-bottom:0;">
+                  <button class="metro-button primary" onclick="openAddContactModal()">+ add</button>
+                </div>
+                <div id="contacts-list"></div>
+              </div>
+              <div class="pivot-page">
+                <div id="contacts-recent-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="contact-modal">
+          <div class="pivot-header">
+            <div class="pivot-tabs-row">
+              <div class="pivot-tab-item active" id="contact-modal-title">new contact</div>
+            </div>
+          </div>
+          <div class="pivot-body">
+            <input type="hidden" id="edit-id-holder">
+
+            <!-- Contact Photo Selector -->
+            <div class="contact-photo-editor-row">
+              <div class="contact-photo-preview-box" id="contact-photo-preview" onclick="document.getElementById('contact-photo-file-in').click()" title="Change contact photo">
+                <img id="contact-photo-preview-img" src="" style="display:none; width:100%; height:100%; object-fit:cover;" alt="Contact Photo">
+                <span id="contact-photo-placeholder" class="material-symbols-sharp" style="font-size:28px; color:var(--sub-fg);">add_a_photo</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <button type="button" class="metro-button" onclick="document.getElementById('contact-photo-file-in').click()" style="padding:6px 12px; font-size:12px;">choose photo</button>
+                <button type="button" class="metro-button" id="contact-photo-remove-btn" onclick="removeContactPhoto()" style="display:none; padding:6px 12px; font-size:11px;">remove photo</button>
+                <input type="file" id="contact-photo-file-in" accept="image/*" style="display:none;" onchange="handleContactPhotoSelected(event)">
+              </div>
+            </div>
+
+            <input type="text" id="contact-name-in" class="metro-input" placeholder="full name">
+            <input type="tel" id="contact-phone-in" class="metro-input" placeholder="mobile phone">
+            <input type="email" id="contact-email-in" class="metro-input" placeholder="personal email">
+            <div style="display:flex; gap: 10px; margin-top: 14px;">
+              <button class="metro-button primary" onclick="submitContact()">save</button>
+              <button class="metro-button" onclick="closeContactModal()">cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= APP 2: CALCULATOR ================= -->
+      <div id="view-calc" class="screen-view">
+        <div id="calc-container">
+          <div class="pivot-header">
+            <div class="pivot-tabs-row">
+              <div class="pivot-tab-item active">calculator</div>
+            </div>
+          </div>
+
+          <div class="calc-screen-display">
+            <div class="calc-history-line" id="calc-prev-line"></div>
+            <div class="calc-active-line" id="calc-curr-line">0</div>
+          </div>
+
+          <div class="calc-buttons-grid">
+            <button class="calc-key op" onclick="pressCalcOp('C')">C</button>
+            <button class="calc-key op" onclick="pressCalcOp('DEL')">⌫</button>
+            <button class="calc-key op" onclick="pressCalcOp('%')">%</button>
+            <button class="calc-key op" onclick="pressCalcOp('/')">÷</button>
+
+            <button class="calc-key" onclick="pressCalcDigit('7')">7</button>
+            <button class="calc-key" onclick="pressCalcDigit('8')">8</button>
+            <button class="calc-key" onclick="pressCalcDigit('9')">9</button>
+            <button class="calc-key op" onclick="pressCalcOp('*')">×</button>
+
+            <button class="calc-key" onclick="pressCalcDigit('4')">4</button>
+            <button class="calc-key" onclick="pressCalcDigit('5')">5</button>
+            <button class="calc-key" onclick="pressCalcDigit('6')">6</button>
+            <button class="calc-key op" onclick="pressCalcOp('-')">−</button>
+
+            <button class="calc-key" onclick="pressCalcDigit('1')">1</button>
+            <button class="calc-key" onclick="pressCalcDigit('2')">2</button>
+            <button class="calc-key" onclick="pressCalcDigit('3')">3</button>
+            <button class="calc-key op" onclick="pressCalcOp('+')">+</button>
+
+            <button class="calc-key op" onclick="pressCalcOp('NEG')">±</button>
+            <button class="calc-key" onclick="pressCalcDigit('0')">0</button>
+            <button class="calc-key" onclick="pressCalcDigit('.')">.</button>
+            <button class="calc-key eq" onclick="pressCalcOp('=')">=</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= APP 3: BROWSER (WITH BACK & FORWARD) ================= -->
+      <div id="view-browser" class="screen-view">
+        <div id="browser-container">
+          <div class="browser-web-viewport">
+            <iframe id="browser-iframe" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+          </div>
+
+          <div class="browser-bottom-bar">
+            <!-- Back & Forward Navigation -->
+            <button class="browser-nav-btn" onclick="browserNavBack()" title="Back">
+              <span class="material-symbols-sharp">arrow_back</span>
+            </button>
+            <button class="browser-nav-btn" onclick="browserNavForward()" title="Forward">
+              <span class="material-symbols-sharp">arrow_forward</span>
+            </button>
+
+            <div class="browser-url-box">
+              <input type="text" id="browser-url-input" class="browser-input" placeholder="Search or web address" value="https://en.wikipedia.org/wiki/">
+            </div>
+
+            <button class="browser-nav-btn" onclick="submitBrowserGo()" title="Go / Refresh">
+              <span class="material-symbols-sharp">refresh</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= APP 4: NOTES ================= -->
+      <div id="view-notes" class="screen-view">
+        <div class="pivot-view" id="pivot-notes-view">
+          <div class="pivot-header">
+            <div class="pivot-tabs-row">
+              <div class="pivot-tab-item active" id="tab-notes-all" onclick="selectNotesTab('all')">all notes</div>
+              <div class="pivot-tab-item" id="tab-notes-new" onclick="selectNotesTab('new')">note</div>
+            </div>
+          </div>
+
+          <div class="pivot-body">
+            <div class="pivot-slider" id="slider-notes">
+              <div class="pivot-page">
+                <button class="metro-button primary" onclick="openNewNotePage()" style="width:100%; margin-bottom:14px;">+ new note</button>
+                <div id="notes-list-container"></div>
+              </div>
+
+              <div class="pivot-page">
+                <input type="hidden" id="note-edit-id">
+                <input type="text" id="note-input-title" class="metro-input" placeholder="note title">
+                <textarea id="note-input-body" class="metro-textarea" placeholder="write note here..."></textarea>
+                <div style="display:flex; gap: 10px; flex-wrap: wrap;">
+                  <button class="metro-button primary" onclick="saveNote()">save note</button>
+                  <button class="metro-button" onclick="deleteCurrentNote()">delete</button>
+                  <button class="metro-button" onclick="selectNotesTab('all')">close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= APP 5: HEALTH ================= -->
+      <div id="view-health" class="screen-view">
+        <div class="pivot-view" id="pivot-health-view">
+          <div class="pivot-header">
+            <div class="pivot-tabs-row">
+              <div class="pivot-tab-item active" id="tab-health-today" onclick="selectHealthTab('today')">today</div>
+              <div class="pivot-tab-item" id="tab-health-goals" onclick="selectHealthTab('goals')">goals</div>
+            </div>
+          </div>
+
+          <div class="pivot-body">
+            <div class="pivot-slider" id="slider-health">
+              <div class="pivot-page">
+                <div class="health-metric-card">
+                  <div class="health-metric-header">
+                    <span class="health-metric-title">Steps</span>
+                    <span id="health-steps-percent" style="font-size: 13px; color: var(--accent);">0%</span>
+                  </div>
+                  <div>
+                    <span class="health-metric-value" id="health-steps-display">0</span>
+                    <span class="health-metric-unit" id="health-goal-display">/ 10,000</span>
+                  </div>
+                  <div class="health-progress-bar">
+                    <div class="health-progress-fill" id="health-steps-bar" style="width: 0%;"></div>
+                  </div>
+                  
+                  <div class="health-action-row">
+                    <button class="metro-button" onclick="adjustHealthSteps(250)">+250 walk</button>
+                    <button class="metro-button" onclick="adjustHealthSteps(-250)">-250</button>
+                    <button class="metro-button" onclick="adjustHealthSteps(1000)">+1k run</button>
+                    <button class="metro-button" onclick="adjustHealthSteps(-1000)">-1k</button>
+                  </div>
+                </div>
+
+                <div class="health-metric-card">
+                  <div class="health-metric-header">
+                    <span class="health-metric-title">Active Calories</span>
+                  </div>
+                  <div>
+                    <span class="health-metric-value" id="health-cal-display">0</span>
+                    <span class="health-metric-unit">kcal</span>
+                  </div>
+                </div>
+
+                <div class="health-metric-card">
+                  <div class="health-metric-header">
+                    <span class="health-metric-title">Water Intake</span>
+                    <span id="health-water-display" style="font-size: 13px; color: var(--accent);">0 / 8 cups</span>
+                  </div>
+                  <div class="health-progress-bar">
+                    <div class="health-progress-fill" id="health-water-bar" style="width: 0%;"></div>
+                  </div>
+                  <div class="health-action-row">
+                    <button class="metro-button" onclick="adjustWater(1)">+1 cup</button>
+                    <button class="metro-button" onclick="adjustWater(-1)">-1 cup</button>
+                    <button class="metro-button" onclick="resetWaterIntake()">reset</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pivot-page">
+                <div class="settings-group">
+                  <div class="settings-heading">Daily Step Goal</div>
+                  
+                  <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button class="metro-button" onclick="setStepGoal(5000)">5,000 steps (Light)</button>
+                    <button class="metro-button" onclick="setStepGoal(8000)">8,000 steps (Standard)</button>
+                    <button class="metro-button" onclick="setStepGoal(10000)">10,000 steps (Active)</button>
+                    <button class="metro-button" onclick="setStepGoal(15000)">15,000 steps (Athlete)</button>
+                  </div>
+
+                  <div style="margin-top: 20px;">
+                    <div class="settings-heading">Custom Goal Target</div>
+                    <div style="display:flex; gap: 8px;">
+                      <input type="number" id="custom-goal-input" class="metro-input" placeholder="e.g. 7500" style="margin-bottom:0;">
+                      <button class="metro-button primary" onclick="applyCustomGoal()">set</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= APP 6: CAMERA (NEW) ================= -->
+      <div id="view-camera" class="screen-view">
+        <div id="camera-app-viewport">
+          <video id="camera-video-stream" autoplay playsinline muted></video>
+          <div id="camera-shutter-flash"></div>
+          <canvas id="camera-snapshot-canvas" style="display:none;"></canvas>
+        </div>
+
+        <div class="camera-hud-bottom">
+          <button class="metro-button" onclick="launchApp('photos')" style="padding: 8px 14px;">photos</button>
+          
+          <div class="shutter-btn-circle" onclick="takeSnapshot()">
+            <div class="shutter-btn-inner"></div>
+          </div>
+
+          <button class="metro-button" onclick="switchCameraFacing()" style="padding: 8px 14px;">flip</button>
+        </div>
+      </div>
+
+      <!-- ================= APP 7: PHOTOS (NEW) ================= -->
+      <div id="view-photos" class="screen-view">
+        <div class="pivot-view">
+          <div class="pivot-header">
+            <div class="pivot-tabs-row">
+              <div class="pivot-tab-item active">photos</div>
+            </div>
+          </div>
+
+          <div class="pivot-body">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span style="font-size:13px; color:var(--sub-fg);" id="photos-total-label">0 photos</span>
+              <label class="metro-button primary" style="cursor:pointer; display:inline-block;">
+                + import photo
+                <input type="file" id="photo-upload-input" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
+              </label>
+            </div>
+
+            <div class="photos-grid" id="photos-grid-container"></div>
+          </div>
+        </div>
+
+        <!-- Full-screen Photo Viewer -->
+        <div id="photo-viewer-overlay">
+          <div style="display:flex; justify-content:space-between; padding: 14px 18px;">
+            <button class="metro-button" onclick="closePhotoViewer()">← back</button>
+            <button class="metro-button" onclick="deleteCurrentViewingPhoto()">delete</button>
+          </div>
+          <img id="photo-viewer-img" src="" alt="Photo">
+        </div>
+      </div>
+
+      <!-- ================= APP 8: SETTINGS ================= -->
+      <div id="view-settings" class="screen-view">
+        <div class="pivot-view" id="pivot-settings-view">
+          <div class="pivot-header">
+            <div class="pivot-tabs-row">
+              <div class="pivot-tab-item active" id="tab-settings-sys" onclick="selectSettingsTab('sys')">theme</div>
+              <div class="pivot-tab-item" id="tab-settings-start" onclick="selectSettingsTab('start')">start</div>
+              <div class="pivot-tab-item" id="tab-settings-about" onclick="selectSettingsTab('about')">about</div>
+            </div>
+          </div>
+
+          <div class="pivot-body">
+            <div class="pivot-slider" id="slider-settings">
+              <!-- PAGE 0: THEME -->
+              <div class="pivot-page">
+                <div class="settings-group">
+                  <div class="settings-heading">Accent Colour</div>
+                  
+                  <div class="accent-preview-box">
+                    <div class="accent-preview-color-square" id="accent-preview-box-color"></div>
+                    <div class="accent-preview-name" id="accent-preview-box-name">Purple</div>
+                  </div>
+
+                  <div class="accent-palette-grid" id="palette-swatches"></div>
+                </div>
+              </div>
+
+              <!-- PAGE 1: DEDICATED START SCREEN MANAGER -->
+              <div class="pivot-page">
+                <div class="settings-group">
+                  <div class="settings-heading">Customise Start Tiles</div>
+                  <p style="font-size:13px; color:var(--sub-fg); margin-bottom:14px;">Adjust tile sizes or move order.</p>
+
+                  <div id="start-screen-manager-list"></div>
+                </div>
+              </div>
+
+              <!-- PAGE 2: ABOUT -->
+              <div class="pivot-page">
+                <div class="settings-group">
+                  <div class="settings-heading">Device Info</div>
+                  <div style="font-size: 26px; font-weight: 100; margin-bottom: 4px;">daydream Mobile</div>
+                  <div style="font-size: 13px; color: var(--sub-fg); margin-bottom: 18px;">daydream OS 1.0</div>
+
+                  <div style="padding: 12px 0;">
+                    <div style="font-size: 15px; font-weight: 300;">Installed Apps</div>
+                    <div style="font-size: 12px; color: var(--sub-fg); margin-top: 2px;">Contacts, Calculator, Browser, Camera, Photos, Notes, Health, Settings</div>
+                  </div>
+
+                  <div style="padding: 12px 0;">
+                    <div style="font-size: 15px; font-weight: 300;">Storage</div>
+                    <div style="font-size: 12px; color: var(--sub-fg); margin-top: 2px;">All preferences, camera photos & data saved locally</div>
+                  </div>
+
+                  <div style="margin-top: 24px;">
+                    <button class="metro-button" onclick="confirmResetDefaults()">restore defaults</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= HARDWARE NAVIGATION BAR ================= -->
+    <div id="virtual-nav">
+      <!-- Back Button -->
+      <button class="nav-touch-btn" onclick="onHardwareBack()" title="Back">
+        <span class="material-symbols-sharp">arrow_back</span>
+      </button>
+
+      <!-- Center Home Button: Circle -->
+      <button class="nav-touch-btn" onclick="onHardwareHome()" title="Home">
+        <span class="nav-circle-home"></span>
+      </button>
+
+      <!-- App Switcher Button (Replaces Search) -->
+      <button class="nav-touch-btn" onclick="openAppSwitcher()" title="App Switcher">
+        <span class="material-symbols-sharp">view_carousel</span>
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    /* ================= ACCENT PALETTE (Slightly darker, bluer royal purple default) ================= */
+    const ACCENTS = [
+      { name: 'Royal Purple', hex: '#5118d6', dark: '#370da0' },
+      { name: 'Cobalt Blue', hex: '#0050ef', dark: '#003399' },
+      { name: 'Lumia Cyan', hex: '#00a4ef', dark: '#006da0' },
+      { name: 'Nokia Blue', hex: '#1ba1e2', dark: '#005a9e' },
+      { name: 'Violet', hex: '#8a00ff', dark: '#5d00b3' },
+      { name: 'Magenta', hex: '#d80073', dark: '#a20056' },
+      { name: 'Crimson', hex: '#e51400', dark: '#b01000' },
+      { name: 'Orange', hex: '#fa6800', dark: '#c85000' },
+      { name: 'Lime', hex: '#a4c400', dark: '#7b9400' },
+      { name: 'Emerald', hex: '#008a00', dark: '#006400' }
+    ];
+
+    /* ================= SYSTEM STATE ================= */
+    let contacts = [];
+    let notes = [];
+    let photos = [];
+    let healthData = { steps: 0, water: 0, calories: 0, goal: 10000 };
+    let currentAccent = ACCENTS[0];
+    let activeScreen = 'home';
+    let isTransitioning = false;
+
+    // Running / Background Apps Stack for Multitasking Switcher (starts empty until apps are launched)
+    let runningApps = [];
+
+    // Custom Contact Photo Upload state
+    let currentContactPhotoData = '';
+
+    // Photos Live Tile Cycling state
+    let currentPhotoTileIdx = 0;
+
+    // Browser History Stack
+    let browserHistory = ['https://en.wikipedia.org/wiki/'];
+    let browserHistoryIndex = 0;
+
+    // Camera variables
+    let cameraStream = null;
+    let cameraFacing = 'environment';
+    let currentViewingPhotoIdx = -1;
+
+    // Track active page index for pivot apps
+    let contactsPivotIndex = 0;
+    let notesPivotIndex = 0;
+    let healthPivotIndex = 0;
+    let settingsPivotIndex = 0;
+
+    function loadSavedData() {
+      // 1. Contacts
+      try {
+        const savedContacts = localStorage.getItem('daydream_contacts');
+        contacts = savedContacts ? JSON.parse(savedContacts) : [];
+      } catch (e) { contacts = []; }
+
+      // 2. Notes
+      try {
+        const savedNotes = localStorage.getItem('daydream_notes');
+        notes = savedNotes ? JSON.parse(savedNotes) : [];
+      } catch (e) { notes = []; }
+
+      // 3. Photos
+      try {
+        const savedPhotos = localStorage.getItem('daydream_photos');
+        photos = savedPhotos ? JSON.parse(savedPhotos) : [];
+      } catch (e) { photos = []; }
+
+      // 4. Health
+      try {
+        const savedHealth = localStorage.getItem('daydream_health');
+        if (savedHealth) healthData = JSON.parse(savedHealth);
+        if (!healthData.goal) healthData.goal = 10000;
+      } catch (e) { healthData = { steps: 0, water: 0, calories: 0, goal: 10000 }; }
+
+      // 5. Accent
+      try {
+        const savedAccent = localStorage.getItem('daydream_accent_hex');
+        if (savedAccent) {
+          const match = ACCENTS.find(a => a.hex === savedAccent);
+          if (match) currentAccent = match;
+        }
+      } catch (e) {}
+
+      // 6. Calculator
+      try {
+        const savedCalc = localStorage.getItem('daydream_calc_val');
+        if (savedCalc) {
+          calcVal = savedCalc;
+          renderCalcDisplay();
+        }
+      } catch (e) {}
+
+      // 7. Browser URL: Default is https://en.wikipedia.org/wiki/
+      try {
+        const savedUrl = localStorage.getItem('daydream_browser_url');
+        const startUrl = savedUrl || 'https://en.wikipedia.org/wiki/';
+        document.getElementById('browser-url-input').value = startUrl;
+        browserHistory = [startUrl];
+        browserHistoryIndex = 0;
+        document.getElementById('browser-tile-val').textContent = 'Wikipedia';
+      } catch (e) {}
+
+      // 8. Tile layout
+      loadTileLayout();
+
+      // 9. Photos Live Tile
+      updatePhotosLiveTile();
+    }
+
+    function saveContactsToStorage() {
+      try { localStorage.setItem('daydream_contacts', JSON.stringify(contacts)); } catch (e) {}
+    }
+
+    function saveNotesToStorage() {
+      try { localStorage.setItem('daydream_notes', JSON.stringify(notes)); } catch (e) {}
+    }
+
+    function savePhotosToStorage() {
+      try { localStorage.setItem('daydream_photos', JSON.stringify(photos)); } catch (e) {}
+    }
+
+    function saveHealthToStorage() {
+      try { localStorage.setItem('daydream_health', JSON.stringify(healthData)); } catch (e) {}
+    }
+
+    function saveThemeToStorage() {
+      try { localStorage.setItem('daydream_accent_hex', currentAccent.hex); } catch (e) {}
+    }
+
+    /* ================= INITIALIZATION ================= */
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSavedData();
+      initPalette();
+      renderContactsList();
+      renderNotesList();
+      renderPhotosGrid();
+      renderHealthDisplay();
+      renderStartScreenManager();
+      updatePhotosLiveTile();
+      applyAccent(currentAccent, false);
+      startLiveTilesFlipTimer();
+      setupCalculatorKeyListeners();
+      setupPivotSwipeGestures();
+    });
+
+    /* ================= DEDICATED START SCREEN MANAGER (IN SETTINGS) ================= */
+    function renderStartScreenManager() {
+      const container = document.getElementById('start-screen-manager-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const grid = document.getElementById('main-tile-grid');
+      const tiles = Array.from(grid.querySelectorAll('.wp-tile'));
+
+      tiles.forEach((tile, idx) => {
+        const appName = tile.dataset.app;
+        const currentSize = tile.dataset.size || '1sq';
+
+        const item = document.createElement('div');
+        item.className = 'tile-manager-item';
+        item.innerHTML = `
+          <div>
+            <div class="tile-manager-name">${appName.toUpperCase()}</div>
+            <div style="font-size:11px; color:var(--sub-fg); margin-top:2px;">Size: ${currentSize}</div>
+          </div>
+          <div class="tile-manager-actions">
+            <button class="tile-manager-btn" onclick="managerResizeTile('${tile.id}')">resize</button>
+            <button class="tile-manager-btn" onclick="managerMoveTile('${tile.id}', -1)">▲</button>
+            <button class="tile-manager-btn" onclick="managerMoveTile('${tile.id}', 1)">▼</button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function managerResizeTile(tileId) {
+      const tile = document.getElementById(tileId);
+      if (!tile) return;
+      const cur = tile.dataset.size || '1sq';
+      let nxt = '2sq';
+      if (cur === '1sq') nxt = '2sq';
+      else if (cur === '2sq') nxt = '3sq';
+      else nxt = '1sq';
+
+      tile.classList.remove('tile-1sq', 'tile-2sq', 'tile-3sq');
+      tile.classList.add('tile-' + nxt);
+      tile.dataset.size = nxt;
+
+      saveTileLayout();
+      renderStartScreenManager();
+    }
+
+    function managerMoveTile(tileId, dir) {
+      const grid = document.getElementById('main-tile-grid');
+      const tile = document.getElementById(tileId);
+      if (!grid || !tile) return;
+
+      if (dir === -1 && tile.previousElementSibling) {
+        grid.insertBefore(tile, tile.previousElementSibling);
+      } else if (dir === 1 && tile.nextElementSibling) {
+        grid.insertBefore(tile.nextElementSibling, tile);
+      }
+      saveTileLayout();
+      renderStartScreenManager();
+    }
+
+    function saveTileLayout() {
+      const grid = document.getElementById('main-tile-grid');
+      const tileEls = grid.querySelectorAll('.wp-tile');
+      const layout = [];
+      tileEls.forEach(el => {
+        layout.push({ id: el.id, size: el.dataset.size || '1sq' });
+      });
+      try { 
+        localStorage.setItem('daydream_tile_layout', JSON.stringify(layout)); 
+        localStorage.setItem('daydream_photos_customized', 'true');
+      } catch (e) {}
+    }
+
+    function loadTileLayout() {
+      try {
+        const saved = localStorage.getItem('daydream_tile_layout');
+        if (!saved) return;
+        const layout = JSON.parse(saved);
+        const grid = document.getElementById('main-tile-grid');
+        
+        layout.forEach(item => {
+          const el = document.getElementById(item.id);
+          if (el) {
+            let size = item.size;
+            if (item.id === 'tile-photos' && !localStorage.getItem('daydream_photos_customized')) {
+              size = '2sq';
+            }
+            el.classList.remove('tile-1sq', 'tile-2sq', 'tile-3sq');
+            el.classList.add('tile-' + size);
+            el.dataset.size = size;
+            grid.appendChild(el);
+          }
+        });
+      } catch (e) {}
+    }
+
+    /* ================= APP SWITCHER (MULTITASKING & LIVE PREVIEWS) ================= */
+    function openAppSwitcher() {
+      const overlay = document.getElementById('app-switcher-overlay');
+      const row = document.getElementById('switcher-cards-row');
+      row.innerHTML = '';
+
+      if (runningApps.length === 0) {
+        row.innerHTML = '<div style="color:var(--sub-fg); font-size:16px; font-weight:300; margin:auto; text-align:center; padding:60px 0;">no running apps in background</div>';
+        overlay.style.display = 'flex';
+        return;
+      }
+
+      runningApps.forEach(appName => {
+        const card = createSwitcherCard(appName);
+        row.appendChild(card);
+      });
+
+      overlay.style.display = 'flex';
+    }
+
+    function closeAppSwitcher() {
+      document.getElementById('app-switcher-overlay').style.display = 'none';
+    }
+
+    function closeAppFromSwitcher(appName, card) {
+      runningApps = runningApps.filter(a => a !== appName);
+      if (card && card.parentElement) card.remove();
+
+      if (appName === 'camera') {
+        stopCameraStream();
+      }
+
+      if (activeScreen === appName) {
+        const el = getScreenEl(appName);
+        if (el) {
+          el.style.display = 'none';
+          el.className = 'screen-view';
+        }
+        const homeEl = getScreenEl('home');
+        homeEl.style.display = 'flex';
+        homeEl.className = 'screen-view active';
+        activeScreen = 'home';
+      }
+
+      const row = document.getElementById('switcher-cards-row');
+      if (runningApps.length === 0) {
+        row.innerHTML = '<div style="color:var(--sub-fg); font-size:16px; font-weight:300; margin:auto; text-align:center; padding:60px 0;">no running apps in background</div>';
+      }
+    }
+
+    function createSwitcherCard(appName) {
+      const card = document.createElement('div');
+      card.className = 'switcher-card';
+      card.dataset.app = appName;
+
+      const header = document.createElement('div');
+      header.className = 'switcher-card-header';
+      header.innerHTML = `
+        <span class="switcher-card-title">${appName.toUpperCase()}</span>
+        <span class="switcher-card-close" title="Close app">✕</span>
+      `;
+
+      const closeBtn = header.querySelector('.switcher-card-close');
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        card.style.transition = 'transform 0.22s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.2s ease-out';
+        card.style.transform = 'translateY(-420px)';
+        card.style.opacity = '0';
+        setTimeout(() => {
+          closeAppFromSwitcher(appName, card);
+        }, 200);
+      });
+
+      const body = document.createElement('div');
+      body.className = 'switcher-card-body';
+      body.innerHTML = generateAppPreview(appName);
+
+      card.appendChild(header);
+      card.appendChild(body);
+
+      // Gesture handling: swipe up to close or tap to switch/resume
+      let startY = 0;
+      let startX = 0;
+      let currentY = 0;
+      let isDragging = false;
+      let startTime = 0;
+
+      function onPointerDown(clientX, clientY) {
+        startY = clientY;
+        startX = clientX;
+        currentY = clientY;
+        startTime = Date.now();
+        isDragging = true;
+        card.style.transition = 'none';
+      }
+
+      function onPointerMove(clientX, clientY) {
+        if (!isDragging) return;
+        currentY = clientY;
+        const dy = currentY - startY;
+        const dx = clientX - startX;
+
+        // Only allow upward drag
+        if (dy < 0 && Math.abs(dy) > Math.abs(dx) * 0.75) {
+          card.style.transform = `translateY(${dy}px)`;
+          card.style.opacity = `${Math.max(0.08, 1 + dy / 260)}`;
+        }
+      }
+
+      function onPointerUp() {
+        if (!isDragging) return;
+        isDragging = false;
+        const dy = currentY - startY;
+        const elapsed = Date.now() - startTime;
+
+        if (dy < -65 || (dy < -28 && elapsed < 220)) {
+          // Swipe up threshold reached -> close card
+          card.style.transition = 'transform 0.22s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.2s ease-out';
+          card.style.transform = 'translateY(-420px)';
+          card.style.opacity = '0';
+          setTimeout(() => {
+            closeAppFromSwitcher(appName, card);
+          }, 200);
+        } else if (Math.abs(dy) < 8) {
+          // Tap detected -> resume app
+          closeAppSwitcher();
+          launchApp(appName);
+        } else {
+          // Snap back
+          card.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+          card.style.transform = 'translateY(0)';
+          card.style.opacity = '1';
+        }
+      }
+
+      // Touch events
+      card.addEventListener('touchstart', (e) => {
+        onPointerDown(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+
+      card.addEventListener('touchmove', (e) => {
+        onPointerMove(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+
+      card.addEventListener('touchend', () => {
+        onPointerUp();
+      }, { passive: true });
+
+      // Mouse events
+      card.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.switcher-card-close')) return;
+        onPointerDown(e.clientX, e.clientY);
+
+        function onMouseMove(me) {
+          onPointerMove(me.clientX, me.clientY);
+        }
+
+        function onMouseUp() {
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+          onPointerUp();
+        }
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      });
+
+      return card;
+    }
+
+    function generateAppPreview(appName) {
+      switch (appName) {
+        case 'contacts': {
+          let listHtml = '';
+          if (contacts.length === 0) {
+            listHtml = '<div style="color:#777; font-size:12px; padding:28px 0; text-align:center;">no contacts yet</div>';
+          } else {
+            listHtml = contacts.slice(0, 3).map(c => {
+              const av = c.photo ? `<img src="${c.photo}" style="width:30px; height:30px; object-fit:cover; flex-shrink:0;">` : `<div style="width:30px; height:30px; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; flex-shrink:0;">${c.name[0]||'?'}</div>`;
+              return `<div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; border-bottom:1px solid #1a1a1a; padding-bottom:6px;">
+                ${av}
+                <div style="overflow:hidden;">
+                  <div style="font-size:12px; color:#fff; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${c.name}</div>
+                  <div style="font-size:10px; color:#888;">${c.phone}</div>
+                  <div style="font-size:9px; color:#666;">${c.email}</div>
+                </div>
+              </div>`;
+            }).join('');
+          }
+          return `
+            <div style="padding:14px; height:100%; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+              <div>
+                <div style="font-size:18px; font-weight:300; margin-bottom:10px; color:var(--accent);">contacts</div>
+                <div style="background:#1a1a1a; padding:6px 10px; font-size:11px; color:#666; margin-bottom:12px;">find someone...</div>
+                ${listHtml}
+              </div>
+              <div class="switcher-swipe-hint">↑ swipe up to close</div>
+            </div>
+          `;
+        }
+        case 'calc': {
+          return `
+            <div style="padding:14px; height:100%; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+              <div>
+                <div style="font-size:18px; font-weight:300; margin-bottom:6px; color:var(--accent);">calculator</div>
+                <div style="font-size:11px; color:#666; text-align:right; height:16px;">${calcPrev || ''}</div>
+                <div style="font-size:28px; font-weight:100; color:#fff; text-align:right; margin-bottom:14px; border-bottom:1px solid #222; padding-bottom:4px;">${calcVal}</div>
+                <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:5px; opacity:0.85;">
+                  <div style="background:#222; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#aaa;">C</div>
+                  <div style="background:#222; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#aaa;">⌫</div>
+                  <div style="background:#222; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#aaa;">%</div>
+                  <div style="background:#333; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#aaa;">÷</div>
+                  <div style="background:#1a1a1a; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff;">7</div>
+                  <div style="background:#1a1a1a; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff;">8</div>
+                  <div style="background:#1a1a1a; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff;">9</div>
+                  <div style="background:#333; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#aaa;">×</div>
+                  <div style="background:#1a1a1a; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff;">4</div>
+                  <div style="background:#1a1a1a; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff;">5</div>
+                  <div style="background:#1a1a1a; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff;">6</div>
+                  <div style="background:#333; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#aaa;">−</div>
+                  <div style="background:#1a1a1a; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff;">1</div>
+                  <div style="background:#1a1a1a; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff;">2</div>
+                  <div style="background:#1a1a1a; height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff;">3</div>
+                  <div style="background:var(--accent); height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff;">=</div>
+                </div>
+              </div>
+              <div class="switcher-swipe-hint">↑ swipe up to close</div>
+            </div>
+          `;
+        }
+        case 'browser': {
+          const curUrl = document.getElementById('browser-url-input')?.value || 'https://en.wikipedia.org/wiki/';
+          return `
+            <div style="padding:14px; height:100%; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+              <div>
+                <div style="background:#181818; padding:6px 10px; font-size:10px; color:#aaa; margin-bottom:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border-bottom:1px solid #333;">
+                  ${curUrl}
+                </div>
+                <div style="background:#ffffff; color:#000000; padding:14px; border-radius:2px;">
+                  <div style="font-family:serif; font-size:15px; font-weight:bold; margin-bottom:4px;">WIKIPEDIA</div>
+                  <div style="font-size:9px; color:#555; margin-bottom:8px;">The Free Encyclopedia</div>
+                  <div style="font-size:10px; line-height:1.35; color:#333;">Wikipedia is a free online encyclopedia, created and edited by volunteers worldwide.</div>
+                </div>
+              </div>
+              <div class="switcher-swipe-hint">↑ swipe up to close</div>
+            </div>
+          `;
+        }
+        case 'camera': {
+          return `
+            <div style="height:100%; display:flex; flex-direction:column; justify-content:space-between; background:#000; position:relative; overflow:hidden; box-sizing:border-box;">
+              <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+                <div style="width:72px; height:72px; border:1px dashed rgba(255,255,255,0.4); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                  <span class="material-symbols-sharp" style="font-size:36px; color:rgba(255,255,255,0.8);">photo_camera</span>
+                </div>
+              </div>
+              <div style="padding:10px 14px; background:#111; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:10px; color:#888;">photos</span>
+                <div style="width:26px; height:26px; border-radius:50%; background:#fff;"></div>
+                <span style="font-size:10px; color:#888;">flip</span>
+              </div>
+              <div class="switcher-swipe-hint" style="position:absolute; bottom:52px; width:100%;">↑ swipe up to close</div>
+            </div>
+          `;
+        }
+        case 'photos': {
+          let thumbsHtml = '';
+          if (photos.length === 0) {
+            thumbsHtml = '<div style="color:#777; font-size:12px; padding:28px 0; text-align:center;">no photos yet</div>';
+          } else {
+            thumbsHtml = `<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px;">
+              ${photos.slice(0, 6).map(p => `<img src="${p.src}" style="width:100%; aspect-ratio:1/1; object-fit:cover;">`).join('')}
+            </div>`;
+          }
+          return `
+            <div style="padding:14px; height:100%; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+              <div>
+                <div style="font-size:18px; font-weight:300; margin-bottom:4px; color:var(--accent);">photos</div>
+                <div style="font-size:11px; color:#888; margin-bottom:12px;">${photos.length} items in roll</div>
+                ${thumbsHtml}
+              </div>
+              <div class="switcher-swipe-hint">↑ swipe up to close</div>
+            </div>
+          `;
+        }
+        case 'notes': {
+          let notesHtml = '';
+          if (notes.length === 0) {
+            notesHtml = '<div style="color:#777; font-size:12px; padding:28px 0; text-align:center;">no notes yet</div>';
+          } else {
+            notesHtml = notes.slice(0, 2).map(n => `
+              <div style="background:#181818; padding:10px; margin-bottom:8px; border-left:3px solid var(--accent);">
+                <div style="font-size:13px; color:#fff; font-weight:400;">${n.title}</div>
+                <div style="font-size:10px; color:#888; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.body}</div>
+              </div>
+            `).join('');
+          }
+          return `
+            <div style="padding:14px; height:100%; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+              <div>
+                <div style="font-size:18px; font-weight:300; margin-bottom:12px; color:var(--accent);">all notes</div>
+                ${notesHtml}
+              </div>
+              <div class="switcher-swipe-hint">↑ swipe up to close</div>
+            </div>
+          `;
+        }
+        case 'health': {
+          const pct = Math.min(100, Math.round((healthData.steps / (healthData.goal || 10000)) * 100));
+          return `
+            <div style="padding:14px; height:100%; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+              <div>
+                <div style="font-size:18px; font-weight:300; margin-bottom:8px; color:var(--accent);">health</div>
+                <div style="background:#161616; padding:12px; margin-bottom:10px;">
+                  <div style="font-size:10px; color:#888;">Daily Steps (${pct}%)</div>
+                  <div style="font-size:24px; font-weight:100; color:#fff; margin:2px 0;">${healthData.steps.toLocaleString()}</div>
+                  <div style="height:3px; background:#222; width:100%;"><div style="height:100%; background:var(--accent); width:${pct}%;"></div></div>
+                </div>
+                <div style="background:#161616; padding:10px; font-size:12px; color:#aaa;">
+                  Water Intake: ${healthData.water} / 8 cups
+                </div>
+              </div>
+              <div class="switcher-swipe-hint">↑ swipe up to close</div>
+            </div>
+          `;
+        }
+        case 'settings': {
+          return `
+            <div style="padding:14px; height:100%; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+              <div>
+                <div style="font-size:18px; font-weight:300; margin-bottom:10px; color:var(--accent);">settings</div>
+                <div style="display:flex; align-items:center; gap:10px; background:#161616; padding:10px; margin-bottom:10px;">
+                  <div style="width:24px; height:24px; background:var(--accent);"></div>
+                  <div style="font-size:13px; color:#fff;">${currentAccent.name}</div>
+                </div>
+                <div style="font-size:12px; color:#888; padding:5px 0;">Start Screen Manager</div>
+                <div style="font-size:12px; color:#888; padding:5px 0;">daydream OS 1.0</div>
+              </div>
+              <div class="switcher-swipe-hint">↑ swipe up to close</div>
+            </div>
+          `;
+        }
+        default:
+          return `<div style="padding:20px; text-align:center; color:#888;">${appName}</div>`;
+      }
+    }
+
+    /* ================= BUILT-IN CENTERED METRO DIALOG ================= */
+    function showMetroDialog({ title, body, bodyHtml, buttons }) {
+      const overlay = document.getElementById('metro-dialog-overlay');
+      document.getElementById('metro-dialog-title').textContent = title;
+      const bodyEl = document.getElementById('metro-dialog-body');
+      if (bodyHtml) {
+        bodyEl.innerHTML = bodyHtml;
+      } else {
+        bodyEl.textContent = body || '';
+      }
+      const btnContainer = document.getElementById('metro-dialog-buttons');
+      btnContainer.innerHTML = '';
+
+      buttons.forEach(btn => {
+        const buttonEl = document.createElement('button');
+        buttonEl.className = 'metro-button' + (btn.primary ? ' primary' : '');
+        buttonEl.textContent = btn.text;
+        buttonEl.onclick = () => {
+          closeMetroDialog();
+          if (btn.action) btn.action();
+        };
+        btnContainer.appendChild(buttonEl);
+      });
+
+      overlay.style.display = 'flex';
+    }
+
+    function closeMetroDialog() {
+      document.getElementById('metro-dialog-overlay').style.display = 'none';
+    }
+
+    /* ================= SIDEWAYS SWIPING FOR PIVOT APPS ================= */
+    function setupPivotSwipeGestures() {
+      setupSwipeForElement('pivot-contacts-view', (dir) => {
+        if (dir === 'left' && contactsPivotIndex === 0) selectContactsTab('recent');
+        else if (dir === 'right' && contactsPivotIndex === 1) selectContactsTab('all');
+      });
+
+      setupSwipeForElement('pivot-notes-view', (dir) => {
+        if (dir === 'left' && notesPivotIndex === 0) selectNotesTab('new');
+        else if (dir === 'right' && notesPivotIndex === 1) selectNotesTab('all');
+      });
+
+      setupSwipeForElement('pivot-health-view', (dir) => {
+        if (dir === 'left' && healthPivotIndex === 0) selectHealthTab('goals');
+        else if (dir === 'right' && healthPivotIndex === 1) selectHealthTab('today');
+      });
+
+      setupSwipeForElement('pivot-settings-view', (dir) => {
+        if (dir === 'left' && settingsPivotIndex < 2) selectSettingsTab(settingsPivotIndex === 0 ? 'start' : 'about');
+        else if (dir === 'right' && settingsPivotIndex > 0) selectSettingsTab(settingsPivotIndex === 2 ? 'start' : 'sys');
+      });
+    }
+
+    function setupSwipeForElement(elementId, onSwipe) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+
+      let startX = 0;
+      let startY = 0;
+      let isTracking = false;
+
+      el.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        isTracking = true;
+      }, { passive: true });
+
+      el.addEventListener('touchend', (e) => {
+        if (!isTracking) return;
+        const diffX = e.changedTouches[0].clientX - startX;
+        const diffY = e.changedTouches[0].clientY - startY;
+
+        if (Math.abs(diffX) > 45 && Math.abs(diffX) > Math.abs(diffY) * 1.3) {
+          onSwipe(diffX < 0 ? 'left' : 'right');
+        }
+        isTracking = false;
+      }, { passive: true });
+    }
+
+    /* ================= TURNSTILE APP LAUNCH (OPAQUE & CLEAN) ================= */
+    function launchApp(targetApp) {
+      closeAppSwitcher();
+      if (isTransitioning || activeScreen === targetApp) return;
+      isTransitioning = true;
+
+      // Track running background apps
+      if (targetApp !== 'home') {
+        if (!runningApps.includes(targetApp)) {
+          runningApps.unshift(targetApp);
+        } else {
+          runningApps = [targetApp, ...runningApps.filter(a => a !== targetApp)];
+        }
+      }
+
+      const fromView = getScreenEl(activeScreen);
+      const toView = getScreenEl(targetApp);
+
+      if (!toView) {
+        isTransitioning = false;
+        return;
+      }
+
+      toView.style.display = 'flex';
+      toView.className = 'screen-view active turnstile-in';
+      
+      // Quick smooth fade out of outgoing screen
+      if (fromView) {
+        fromView.style.transition = 'opacity 0.12s ease-out';
+        fromView.style.opacity = '0';
+        setTimeout(() => {
+          fromView.style.display = 'none';
+          fromView.className = 'screen-view';
+          fromView.style.opacity = '1';
+          fromView.style.transition = '';
+        }, 120);
+      }
+
+      setTimeout(() => {
+        toView.className = 'screen-view active';
+        activeScreen = targetApp;
+        isTransitioning = false;
+      }, 480);
+
+      // App-specific startup
+      if (targetApp === 'browser') {
+        const iframe = document.getElementById('browser-iframe');
+        if (iframe.src === 'about:blank') {
+          browserGo('https://en.wikipedia.org/wiki/');
+        }
+      } else if (targetApp === 'camera') {
+        startCameraStream();
+      } else if (activeScreen === 'camera' && targetApp !== 'camera') {
+        stopCameraStream();
+      }
+    }
+
+    function returnToHome() {
+      closeAppSwitcher();
+      if (isTransitioning || activeScreen === 'home') return;
+      isTransitioning = true;
+
+      if (activeScreen === 'camera') {
+        stopCameraStream();
+      }
+
+      const fromView = getScreenEl(activeScreen);
+      const toView = getScreenEl('home');
+
+      toView.style.display = 'flex';
+      toView.className = 'screen-view active turnstile-back-in';
+      
+      // Quick smooth fade out of outgoing screen
+      if (fromView) {
+        fromView.style.transition = 'opacity 0.12s ease-out';
+        fromView.style.opacity = '0';
+        setTimeout(() => {
+          fromView.style.display = 'none';
+          fromView.className = 'screen-view';
+          fromView.style.opacity = '1';
+          fromView.style.transition = '';
+        }, 120);
+      }
+
+      setTimeout(() => {
+        toView.className = 'screen-view active';
+        activeScreen = 'home';
+        isTransitioning = false;
+      }, 480);
+    }
+
+    function getScreenEl(appName) {
+      switch (appName) {
+        case 'home': return document.getElementById('view-home');
+        case 'contacts': return document.getElementById('view-contacts');
+        case 'calc': return document.getElementById('view-calc');
+        case 'browser': return document.getElementById('view-browser');
+        case 'notes': return document.getElementById('view-notes');
+        case 'health': return document.getElementById('view-health');
+        case 'camera': return document.getElementById('view-camera');
+        case 'photos': return document.getElementById('view-photos');
+        case 'settings': return document.getElementById('view-settings');
+        default: return null;
+      }
+    }
+
+    /* ================= HARDWARE NAV HANDLERS ================= */
+    function onHardwareHome() {
+      if (document.getElementById('metro-dialog-overlay').style.display === 'flex') {
+        closeMetroDialog();
+        return;
+      }
+      if (document.getElementById('app-switcher-overlay').style.display === 'flex') {
+        closeAppSwitcher();
+        return;
+      }
+      if (activeScreen !== 'home') returnToHome();
+    }
+
+    function onHardwareBack() {
+      if (document.getElementById('metro-dialog-overlay').style.display === 'flex') {
+        closeMetroDialog();
+        return;
+      }
+      if (document.getElementById('app-switcher-overlay').style.display === 'flex') {
+        closeAppSwitcher();
+        return;
+      }
+      if (document.getElementById('photo-viewer-overlay').style.display === 'flex') {
+        closePhotoViewer();
+        return;
+      }
+      const modal = document.getElementById('contact-modal');
+      if (modal && modal.style.display === 'flex') {
+        closeContactModal();
+        return;
+      }
+      if (activeScreen === 'notes' && notesPivotIndex === 1) {
+        selectNotesTab('all');
+        return;
+      }
+      if (activeScreen !== 'home') returnToHome();
+    }
+
+    /* ================= LIVE TILE 3D SLAB FLIPPING ================= */
+    function updatePhotosLiveTile() {
+      const front = document.getElementById('tile-photos-content-front');
+      const back = document.getElementById('tile-photos-content-back');
+      const countEl = document.getElementById('tile-photos-count');
+      if (countEl) countEl.textContent = `${photos.length} Photos`;
+
+      if (!front || !back) return;
+
+      if (photos.length === 0) {
+        front.innerHTML = `
+          <div class="tile-center-icon">
+            <span class="material-symbols-sharp" style="font-size: 38px;">photo_library</span>
+          </div>
+          <div class="tile-label">Photos</div>
+        `;
+        back.innerHTML = `
+          <div>
+            <div style="font-size: 10px; opacity: 0.8;">Gallery</div>
+            <div style="font-size: 13px; font-weight: 300; margin-top: 6px;">0 Photos</div>
+          </div>
+          <div class="tile-label">Camera Roll</div>
+        `;
+        return;
+      }
+
+      const p1 = photos[currentPhotoTileIdx % photos.length];
+      const p2 = photos[(currentPhotoTileIdx + 1) % photos.length];
+
+      front.innerHTML = `
+        <img src="${p1.src}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" alt="Photo">
+        <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 45%); pointer-events:none;"></div>
+        <div class="tile-label" style="position:relative; z-index:2;">Photos</div>
+      `;
+
+      back.innerHTML = `
+        <img src="${p2.src}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" alt="Photo">
+        <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 45%); pointer-events:none;"></div>
+        <div class="tile-label" style="position:relative; z-index:2;">Camera Roll</div>
+      `;
+    }
+
+    function startLiveTilesFlipTimer() {
+      const tileIds = ['tile-contacts', 'tile-calc', 'tile-browser', 'tile-camera', 'tile-photos', 'tile-notes', 'tile-health', 'tile-settings'];
+      setInterval(() => {
+        const randId = tileIds[Math.floor(Math.random() * tileIds.length)];
+        const el = document.getElementById(randId);
+        if (el) {
+          el.classList.toggle('flipped');
+          if (randId === 'tile-photos' && photos.length > 0) {
+            currentPhotoTileIdx = (currentPhotoTileIdx + 1) % photos.length;
+            setTimeout(updatePhotosLiveTile, 850);
+          }
+        }
+      }, 3000);
+    }
+
+    /* ================= APP 1: CONTACTS ================= */
+    function handleContactPhotoSelected(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          currentContactPhotoData = evt.target.result;
+          updateContactPhotoModalUI();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function removeContactPhoto() {
+      currentContactPhotoData = '';
+      updateContactPhotoModalUI();
+    }
+
+    function updateContactPhotoModalUI() {
+      const img = document.getElementById('contact-photo-preview-img');
+      const placeholder = document.getElementById('contact-photo-placeholder');
+      const removeBtn = document.getElementById('contact-photo-remove-btn');
+      if (currentContactPhotoData) {
+        img.src = currentContactPhotoData;
+        img.style.display = 'block';
+        placeholder.style.display = 'none';
+        removeBtn.style.display = 'inline-block';
+      } else {
+        img.src = '';
+        img.style.display = 'none';
+        placeholder.style.display = 'block';
+        removeBtn.style.display = 'none';
+      }
+    }
+
+    function renderContactsList(items = contacts) {
+      const list = document.getElementById('contacts-list');
+      const recentList = document.getElementById('contacts-recent-list');
+      list.innerHTML = '';
+      recentList.innerHTML = '';
+
+      if (items.length === 0) {
+        list.innerHTML = '<div class="empty-state">no contacts yet</div>';
+        recentList.innerHTML = '<div class="empty-state">no recent contacts</div>';
+        document.getElementById('tile-contact-name').textContent = '0 Contacts';
+        document.getElementById('tile-contact-sub').textContent = 'Tap to add contacts';
+        return;
+      }
+
+      const sorted = [...items].sort((a,b) => a.name.localeCompare(b.name));
+      sorted.forEach(c => {
+        const initials = c.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || '?';
+        list.appendChild(createContactRow(c, initials));
+      });
+
+      items.slice(0, 3).forEach(c => {
+        const initials = c.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || '?';
+        recentList.appendChild(createContactRow(c, initials));
+      });
+
+      if (contacts[0] && contacts[0].photo) {
+        document.getElementById('tile-contact-name').innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <img src="${contacts[0].photo}" style="width:24px; height:24px; object-fit:cover;">
+            <span>${contacts[0].name}</span>
+          </div>
+        `;
+      } else {
+        document.getElementById('tile-contact-name').textContent = contacts[0].name;
+      }
+      document.getElementById('tile-contact-sub').textContent = `${contacts.length} saved`;
+    }
+
+    function createContactRow(c, initials) {
+      const row = document.createElement('div');
+      row.className = 'contact-row';
+      
+      const avatarHtml = c.photo 
+        ? `<img src="${c.photo}" class="contact-avatar-img" alt="${c.name}">`
+        : `${initials}`;
+
+      row.innerHTML = `
+        <div class="contact-avatar-box">${avatarHtml}</div>
+        <div class="contact-text-box">
+          <div class="contact-main-name">${c.name}</div>
+          <div class="contact-sub-phone">${c.phone}</div>
+          <div class="contact-sub-email">${c.email}</div>
+        </div>
+      `;
+      row.onclick = () => onContactClick(c);
+      return row;
+    }
+
+    function handleSearchContacts(query) {
+      const q = query.toLowerCase().trim();
+      renderContactsList(contacts.filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q) || c.email.toLowerCase().includes(q)));
+    }
+
+    function selectContactsTab(tab) {
+      contactsPivotIndex = tab === 'recent' ? 1 : 0;
+      document.getElementById('tab-contacts-all').classList.toggle('active', tab === 'all');
+      document.getElementById('tab-contacts-recent').classList.toggle('active', tab === 'recent');
+      document.getElementById('slider-contacts').style.transform = `translateX(calc(-${contactsPivotIndex * 100}% - ${contactsPivotIndex * 120}px))`;
+    }
+
+    function openAddContactModal() {
+      document.getElementById('contact-modal-title').textContent = 'new contact';
+      document.getElementById('edit-id-holder').value = '';
+      document.getElementById('contact-name-in').value = '';
+      document.getElementById('contact-phone-in').value = '';
+      document.getElementById('contact-email-in').value = '';
+      currentContactPhotoData = '';
+      updateContactPhotoModalUI();
+      document.getElementById('contact-modal').style.display = 'flex';
+    }
+
+    function closeContactModal() {
+      document.getElementById('contact-modal').style.display = 'none';
+      currentContactPhotoData = '';
+    }
+
+    function submitContact() {
+      const id = document.getElementById('edit-id-holder').value;
+      const name = document.getElementById('contact-name-in').value.trim();
+      const phone = document.getElementById('contact-phone-in').value.trim();
+      const email = document.getElementById('contact-email-in').value.trim();
+
+      if (!name) return;
+
+      if (id) {
+        const idx = contacts.findIndex(c => c.id === id);
+        if (idx !== -1) contacts[idx] = { id, name, phone, email, photo: currentContactPhotoData };
+      } else {
+        contacts.push({
+          id: Date.now().toString(),
+          name,
+          phone: phone || '+1 555-0000',
+          email: email || `${name.toLowerCase().replace(/\s+/g, '')}@daydream.net`,
+          photo: currentContactPhotoData
+        });
+      }
+
+      saveContactsToStorage();
+      closeContactModal();
+      renderContactsList();
+    }
+
+    function onContactClick(c) {
+      const photoHeader = c.photo 
+        ? `<div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+             <img src="${c.photo}" style="width:58px; height:58px; object-fit:cover; flex-shrink:0;">
+             <div>
+               <div style="font-size:20px; font-weight:300;">${c.name}</div>
+               <div style="font-size:13px; color:#cccccc; margin-top:3px;">${c.phone}</div>
+               <div style="font-size:12px; color:var(--sub-fg); margin-top:2px;">${c.email}</div>
+             </div>
+           </div>`
+        : `<div style="margin-bottom:14px;">
+             <div style="font-size:20px; font-weight:300;">${c.name}</div>
+             <div style="font-size:13px; color:#cccccc; margin-top:3px;">${c.phone}</div>
+             <div style="font-size:12px; color:var(--sub-fg); margin-top:2px;">${c.email}</div>
+           </div>`;
+
+      showMetroDialog({
+        title: 'contact',
+        bodyHtml: photoHeader,
+        buttons: [
+          {
+            text: 'call',
+            primary: true,
+            action: () => {
+              showMetroDialog({
+                title: 'Calling',
+                body: `Dialing ${c.name} at ${c.phone}...`,
+                buttons: [{ text: 'end call', primary: true }]
+              });
+            }
+          },
+          {
+            text: 'edit',
+            action: () => {
+              document.getElementById('contact-modal-title').textContent = 'edit contact';
+              document.getElementById('edit-id-holder').value = c.id;
+              document.getElementById('contact-name-in').value = c.name;
+              document.getElementById('contact-phone-in').value = c.phone;
+              document.getElementById('contact-email-in').value = c.email;
+              currentContactPhotoData = c.photo || '';
+              updateContactPhotoModalUI();
+              document.getElementById('contact-modal').style.display = 'flex';
+            }
+          },
+          {
+            text: 'delete',
+            action: () => {
+              contacts = contacts.filter(x => x.id !== c.id);
+              saveContactsToStorage();
+              renderContactsList();
+            }
+          },
+          { text: 'close' }
+        ]
+      });
+    }
+
+    /* ================= APP 2: CALCULATOR ================= */
+    let calcVal = '0';
+    let calcPrev = '';
+    let calcOpSymbol = null;
+    let calcNextReset = false;
+
+    function renderCalcDisplay() {
+      document.getElementById('calc-curr-line').textContent = calcVal;
+      document.getElementById('calc-prev-line').textContent = calcPrev + (calcOpSymbol ? ' ' + calcOpSymbol : '');
+      document.getElementById('calc-tile-val').textContent = calcVal;
+      try { localStorage.setItem('daydream_calc_val', calcVal); } catch (e) {}
+    }
+
+    function pressCalcDigit(num) {
+      if (calcVal === '0' || calcNextReset) {
+        calcVal = (num === '.') ? '0.' : num;
+        calcNextReset = false;
+      } else {
+        if (num === '.' && calcVal.includes('.')) return;
+        calcVal += num;
+      }
+      renderCalcDisplay();
+    }
+
+    function pressCalcOp(op) {
+      switch (op) {
+        case 'C':
+          calcVal = '0';
+          calcPrev = '';
+          calcOpSymbol = null;
+          calcNextReset = false;
+          break;
+        case 'DEL':
+          calcVal = calcVal.length > 1 ? calcVal.slice(0, -1) : '0';
+          break;
+        case 'NEG':
+          calcVal = (parseFloat(calcVal) * -1).toString();
+          break;
+        case '%':
+          calcVal = (parseFloat(calcVal) / 100).toString();
+          break;
+        case '+':
+        case '-':
+        case '*':
+        case '/':
+          if (calcOpSymbol && !calcNextReset) evalCalc();
+          calcPrev = calcVal;
+          calcOpSymbol = op;
+          calcNextReset = true;
+          break;
+        case '=':
+          if (calcOpSymbol && calcPrev) {
+            evalCalc();
+            calcPrev = '';
+            calcOpSymbol = null;
+            calcNextReset = true;
+          }
+          break;
+      }
+      renderCalcDisplay();
+    }
+
+    function evalCalc() {
+      const a = parseFloat(calcPrev);
+      const b = parseFloat(calcVal);
+      let res = 0;
+      switch (calcOpSymbol) {
+        case '+': res = a + b; break;
+        case '-': res = a - b; break;
+        case '*': res = a * b; break;
+        case '/': res = b !== 0 ? a / b : 'Error'; break;
+      }
+      calcVal = res.toString();
+    }
+
+    function setupCalculatorKeyListeners() {
+      window.addEventListener('keydown', (e) => {
+        if (activeScreen !== 'calc') return;
+        if ((e.key >= '0' && e.key <= '9') || e.key === '.') pressCalcDigit(e.key);
+        else if (['+', '-', '*', '/'].includes(e.key)) pressCalcOp(e.key);
+        else if (e.key === 'Enter' || e.key === '=') pressCalcOp('=');
+        else if (e.key === 'Backspace') pressCalcOp('DEL');
+        else if (e.key === 'Escape') pressCalcOp('C');
+      });
+    }
+
+    /* ================= APP 3: BROWSER (WITH BACK & FORWARD BUTTONS) ================= */
+    function browserGo(targetUrl) {
+      let url = targetUrl.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = url.includes('.') && !url.includes(' ') ? 'https://' + url : `https://www.bing.com/search?q=${encodeURIComponent(url)}`;
+      }
+
+      document.getElementById('browser-url-input').value = url;
+      document.getElementById('browser-iframe').src = url;
+
+      // Add to history
+      if (browserHistory[browserHistoryIndex] !== url) {
+        browserHistory = browserHistory.slice(0, browserHistoryIndex + 1);
+        browserHistory.push(url);
+        browserHistoryIndex = browserHistory.length - 1;
+      }
+
+      try { localStorage.setItem('daydream_browser_url', url); } catch (e) {}
+    }
+
+    function browserNavBack() {
+      if (browserHistoryIndex > 0) {
+        browserHistoryIndex--;
+        const url = browserHistory[browserHistoryIndex];
+        document.getElementById('browser-url-input').value = url;
+        document.getElementById('browser-iframe').src = url;
+      }
+    }
+
+    function browserNavForward() {
+      if (browserHistoryIndex < browserHistory.length - 1) {
+        browserHistoryIndex++;
+        const url = browserHistory[browserHistoryIndex];
+        document.getElementById('browser-url-input').value = url;
+        document.getElementById('browser-iframe').src = url;
+      }
+    }
+
+    function submitBrowserGo() {
+      const url = document.getElementById('browser-url-input').value;
+      if (url) browserGo(url);
+    }
+
+    document.getElementById('browser-url-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitBrowserGo();
+    });
+
+    function reloadBrowserFrame() {
+      const iframe = document.getElementById('browser-iframe');
+      if (iframe.src && iframe.src !== 'about:blank') iframe.src = iframe.src;
+    }
+
+    /* ================= APP 4: NOTES (FULL PAGE OPEN) ================= */
+    function renderNotesList() {
+      const container = document.getElementById('notes-list-container');
+      container.innerHTML = '';
+
+      if (notes.length === 0) {
+        container.innerHTML = '<div class="empty-state">no notes yet</div>';
+        document.getElementById('tile-note-title').textContent = 'Notes';
+        document.getElementById('tile-note-snippet').textContent = 'Tap to create a note';
+        return;
+      }
+
+      notes.forEach(note => {
+        const item = document.createElement('div');
+        item.className = 'note-item';
+        item.innerHTML = `
+          <div class="note-title">${note.title}</div>
+          <div class="note-snippet">${note.body}</div>
+          <div class="note-date">${note.date}</div>
+        `;
+        item.onclick = () => openNoteInFullPage(note);
+        container.appendChild(item);
+      });
+
+      document.getElementById('tile-note-title').textContent = notes[0].title;
+      document.getElementById('tile-note-snippet').textContent = `"${notes[0].body.substring(0, 32)}..."`;
+    }
+
+    function openNoteInFullPage(note) {
+      document.getElementById('note-edit-id').value = note.id;
+      document.getElementById('note-input-title').value = note.title;
+      document.getElementById('note-input-body').value = note.body;
+      selectNotesTab('new');
+    }
+
+    function openNewNotePage() {
+      document.getElementById('note-edit-id').value = '';
+      document.getElementById('note-input-title').value = '';
+      document.getElementById('note-input-body').value = '';
+      selectNotesTab('new');
+    }
+
+    function selectNotesTab(tab) {
+      notesPivotIndex = tab === 'new' ? 1 : 0;
+      document.getElementById('tab-notes-all').classList.toggle('active', tab === 'all');
+      document.getElementById('tab-notes-new').classList.toggle('active', tab === 'new');
+      document.getElementById('slider-notes').style.transform = `translateX(calc(-${notesPivotIndex * 100}% - ${notesPivotIndex * 120}px))`;
+    }
+
+    function saveNote() {
+      const id = document.getElementById('note-edit-id').value;
+      const title = document.getElementById('note-input-title').value.trim();
+      const body = document.getElementById('note-input-body').value.trim();
+
+      if (!title && !body) return;
+
+      const dateStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (id) {
+        const idx = notes.findIndex(n => n.id === id);
+        if (idx !== -1) notes[idx] = { id, title: title || 'Untitled', body, date: dateStr };
+      } else {
+        notes.unshift({
+          id: Date.now().toString(),
+          title: title || 'Untitled',
+          body,
+          date: dateStr
+        });
+      }
+
+      saveNotesToStorage();
+      renderNotesList();
+      selectNotesTab('all');
+    }
+
+    function deleteCurrentNote() {
+      const id = document.getElementById('note-edit-id').value;
+      if (id) {
+        notes = notes.filter(n => n.id !== id);
+        saveNotesToStorage();
+        renderNotesList();
+      }
+      selectNotesTab('all');
+    }
+
+    /* ================= APP 5: HEALTH ================= */
+    function renderHealthDisplay() {
+      const goal = healthData.goal || 10000;
+      document.getElementById('health-steps-display').textContent = healthData.steps.toLocaleString();
+      document.getElementById('health-goal-display').textContent = `/ ${goal.toLocaleString()}`;
+      
+      const pct = Math.min(100, Math.round((healthData.steps / goal) * 100));
+      document.getElementById('health-steps-percent').textContent = pct + '%';
+      document.getElementById('health-steps-bar').style.width = pct + '%';
+      document.getElementById('health-cal-display').textContent = healthData.calories;
+
+      document.getElementById('health-water-display').textContent = `${healthData.water} / 8 cups`;
+      document.getElementById('health-water-bar').style.width = Math.min(100, (healthData.water / 8) * 100) + '%';
+
+      document.getElementById('tile-health-steps').textContent = healthData.steps.toLocaleString();
+      document.getElementById('tile-health-sub').textContent = `Daily Steps • ${pct}% Goal`;
+    }
+
+    function adjustHealthSteps(delta) {
+      healthData.steps = Math.max(0, healthData.steps + delta);
+      healthData.calories = Math.max(0, healthData.calories + Math.round(delta * 0.04));
+      saveHealthToStorage();
+      renderHealthDisplay();
+    }
+
+    function adjustWater(delta) {
+      healthData.water = Math.max(0, Math.min(16, healthData.water + delta));
+      saveHealthToStorage();
+      renderHealthDisplay();
+    }
+
+    function resetWaterIntake() {
+      healthData.water = 0;
+      saveHealthToStorage();
+      renderHealthDisplay();
+    }
+
+    function setStepGoal(target) {
+      healthData.goal = target;
+      saveHealthToStorage();
+      renderHealthDisplay();
+      selectHealthTab('today');
+    }
+
+    function applyCustomGoal() {
+      const input = document.getElementById('custom-goal-input');
+      const val = parseInt(input.value);
+      if (val && val > 0) {
+        setStepGoal(val);
+        input.value = '';
+      }
+    }
+
+    function selectHealthTab(tab) {
+      healthPivotIndex = tab === 'goals' ? 1 : 0;
+      document.getElementById('tab-health-today').classList.toggle('active', tab === 'today');
+      document.getElementById('tab-health-goals').classList.toggle('active', tab === 'goals');
+      document.getElementById('slider-health').style.transform = `translateX(calc(-${healthPivotIndex * 100}% - ${healthPivotIndex * 120}px))`;
+    }
+
+    /* ================= APP 6: CAMERA (LIVE VIEWFINDER & SHUTTER) ================= */
+    function startCameraStream() {
+      const video = document.getElementById('camera-video-stream');
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
+          video: { facingMode: cameraFacing }
+        }).then(stream => {
+          cameraStream = stream;
+          video.srcObject = stream;
+        }).catch(err => {
+          console.log('Camera access unavailable:', err);
+        });
+      }
+    }
+
+    function stopCameraStream() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+      }
+    }
+
+    function switchCameraFacing() {
+      cameraFacing = cameraFacing === 'environment' ? 'user' : 'environment';
+      stopCameraStream();
+      startCameraStream();
+    }
+
+    function takeSnapshot() {
+      // Shutter flash effect
+      const flash = document.getElementById('camera-shutter-flash');
+      flash.style.opacity = '1';
+      setTimeout(() => { flash.style.opacity = '0'; }, 120);
+
+      const video = document.getElementById('camera-video-stream');
+      const canvas = document.getElementById('camera-snapshot-canvas');
+      const ctx = canvas.getContext('2d');
+
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+
+      if (video.videoWidth) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      } else {
+        // Fallback snapshot graphic if camera stream not permitted
+        ctx.fillStyle = '#1c1c1c';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = currentAccent.hex;
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, 80, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      photos.unshift({
+        id: Date.now().toString(),
+        src: dataUrl,
+        date: new Date().toLocaleDateString()
+      });
+
+      savePhotosToStorage();
+      renderPhotosGrid();
+      updatePhotosLiveTile();
+    }
+
+    /* ================= APP 7: PHOTOS ================= */
+    function renderPhotosGrid() {
+      const grid = document.getElementById('photos-grid-container');
+      const countLabel = document.getElementById('photos-total-label');
+      grid.innerHTML = '';
+
+      countLabel.textContent = `${photos.length} photos`;
+      document.getElementById('tile-photos-count').textContent = `${photos.length} Photos`;
+
+      if (photos.length === 0) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column: span 3;">no photos yet<br><span style="font-size:12px; opacity:0.7;">take one in Camera or import below</span></div>';
+        return;
+      }
+
+      photos.forEach((p, idx) => {
+        const box = document.createElement('div');
+        box.className = 'photo-thumb-box';
+        box.innerHTML = `<img src="${p.src}" class="photo-thumb-img" alt="Photo">`;
+        box.onclick = () => openPhotoViewer(idx);
+        grid.appendChild(box);
+      });
+    }
+
+    function handlePhotoUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          photos.unshift({
+            id: Date.now().toString(),
+            src: evt.target.result,
+            date: new Date().toLocaleDateString()
+          });
+          savePhotosToStorage();
+          renderPhotosGrid();
+          updatePhotosLiveTile();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function openPhotoViewer(idx) {
+      currentViewingPhotoIdx = idx;
+      const viewer = document.getElementById('photo-viewer-overlay');
+      document.getElementById('photo-viewer-img').src = photos[idx].src;
+      viewer.style.display = 'flex';
+    }
+
+    function closePhotoViewer() {
+      document.getElementById('photo-viewer-overlay').style.display = 'none';
+      currentViewingPhotoIdx = -1;
+    }
+
+    function deleteCurrentViewingPhoto() {
+      if (currentViewingPhotoIdx >= 0) {
+        photos.splice(currentViewingPhotoIdx, 1);
+        savePhotosToStorage();
+        renderPhotosGrid();
+        updatePhotosLiveTile();
+        closePhotoViewer();
+      }
+    }
+
+    /* ================= APP 8: SETTINGS ================= */
+    function applyAccent(accent, save = true) {
+      currentAccent = accent;
+      document.documentElement.style.setProperty('--accent', accent.hex);
+      document.documentElement.style.setProperty('--accent-dark', accent.dark);
+      
+      document.getElementById('accent-preview-box-name').textContent = accent.name;
+      document.getElementById('accent-preview-box-color').style.backgroundColor = accent.hex;
+
+      document.querySelectorAll('.swatch-box').forEach(el => {
+        el.classList.toggle('selected', el.dataset.hex === accent.hex);
+      });
+
+      if (save) saveThemeToStorage();
+    }
+
+    function initPalette() {
+      const container = document.getElementById('palette-swatches');
+      container.innerHTML = '';
+      ACCENTS.forEach(accent => {
+        const sw = document.createElement('div');
+        sw.className = 'swatch-box' + (accent.hex === currentAccent.hex ? ' selected' : '');
+        sw.style.backgroundColor = accent.hex;
+        sw.dataset.hex = accent.hex;
+        sw.title = accent.name;
+        sw.innerHTML = '<span class="material-symbols-sharp swatch-check">check</span>';
+        sw.onclick = () => applyAccent(accent);
+        container.appendChild(sw);
+      });
+    }
+
+    function selectSettingsTab(tab) {
+      if (tab === 'sys') settingsPivotIndex = 0;
+      else if (tab === 'start') settingsPivotIndex = 1;
+      else if (tab === 'about') settingsPivotIndex = 2;
+
+      document.getElementById('tab-settings-sys').classList.toggle('active', tab === 'sys');
+      document.getElementById('tab-settings-start').classList.toggle('active', tab === 'start');
+      document.getElementById('tab-settings-about').classList.toggle('active', tab === 'about');
+      document.getElementById('slider-settings').style.transform = `translateX(calc(-${settingsPivotIndex * 100}% - ${settingsPivotIndex * 120}px))`;
+    }
+
+    function confirmResetDefaults() {
+      showMetroDialog({
+        title: 'Reset Device',
+        body: 'Are you sure you want to clear all daydream OS data and restart?',
+        buttons: [
+          {
+            text: 'reset',
+            primary: true,
+            action: () => {
+              applyAccent(ACCENTS[0]);
+              contacts = [];
+              notes = [];
+              photos = [];
+              healthData = { steps: 0, water: 0, calories: 0, goal: 10000 };
+              saveContactsToStorage();
+              saveNotesToStorage();
+              savePhotosToStorage();
+              saveHealthToStorage();
+              localStorage.removeItem('daydream_tile_layout');
+              location.reload();
+            }
+          },
+          { text: 'cancel' }
+        ]
+      });
+    }
+  </script>
+</body>
+</html>
