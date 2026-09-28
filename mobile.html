@@ -1250,6 +1250,8 @@
 <body>
 
   <div id="phone-container">
+    <!-- Thin solid black bar at top to prevent iPhone Safari notch blur covering UI -->
+    <div id="iphone-top-bar"></div>
 
     <!-- ================= CENTERED EDGE-TO-EDGE BUILT-IN METRO DIALOG ================= -->
     <div id="metro-dialog-overlay">
@@ -1309,12 +1311,7 @@
             <div class="tile-slab">
               <div class="tile-face">
                 <div class="tile-center-icon">
-                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 52px; height: 52px;">
-                    <circle cx="9" cy="8" r="3.5"/>
-                    <path d="M2 18.5v-1c0-2.5 4-3.8 7-3.8s7 1.3 7 3.8v1H2z"/>
-                    <circle cx="16.5" cy="8.5" r="2.8"/>
-                    <path d="M16.5 13.7c1.8.4 4.5 1.5 4.5 3.8v1h-3.5v-1c0-1.5-.7-2.8-1-3.8z"/>
-                  </svg>
+                  <span class="material-symbols-sharp">group</span>
                 </div>
                 <div class="tile-label">Contacts</div>
               </div>
@@ -1333,9 +1330,7 @@
             <div class="tile-slab">
               <div class="tile-face">
                 <div class="tile-center-icon">
-                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 50px; height: 50px;">
-                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-4v-2h4v2zm0-4h-4v-2h4v2zm-6 4H6v-2h2v2zm0-4H6v-2h2v2zm6-4H6V7h8v2zm5 8h-3v-6h3v6zm0-8h-3V7h3v2z"/>
-                  </svg>
+                  <span class="material-symbols-sharp">calculate</span>
                 </div>
                 <div class="tile-label">Calculator</div>
               </div>
@@ -1409,9 +1404,7 @@
             <div class="tile-slab">
               <div class="tile-face">
                 <div class="tile-center-icon">
-                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 50px; height: 50px;">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                  </svg>
+                  <span class="material-symbols-sharp">language</span>
                 </div>
                 <div class="tile-label">Browser</div>
               </div>
@@ -1447,9 +1440,7 @@
             <div class="tile-slab">
               <div class="tile-face">
                 <div class="tile-center-icon">
-                  <svg class="app-svg-icon" viewBox="0 0 24 24" style="width: 50px; height: 50px;">
-                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-                  </svg>
+                  <span class="material-symbols-sharp">settings</span>
                 </div>
                 <div class="tile-label">Settings</div>
               </div>
@@ -1760,15 +1751,39 @@
         <div class="pivot-view" id="pivot-settings-view">
           <div class="pivot-header">
             <div class="pivot-tabs-row">
-              <div class="pivot-tab-item active" id="tab-settings-sys" onclick="selectSettingsTab('sys')">theme</div>
-              <div class="pivot-tab-item" id="tab-settings-start" onclick="selectSettingsTab('start')">start</div>
+              <div class="pivot-tab-item active" id="tab-settings-general" onclick="selectSettingsTab('general')">general</div>
+              <div class="pivot-tab-item" id="tab-settings-theme" onclick="selectSettingsTab('theme')">theme</div>
               <div class="pivot-tab-item" id="tab-settings-about" onclick="selectSettingsTab('about')">about</div>
             </div>
           </div>
 
           <div class="pivot-body">
             <div class="pivot-slider" id="slider-settings">
-              <!-- PAGE 0: THEME -->
+              <!-- PAGE 0: GENERAL (FIRST PAGE) -->
+              <div class="pivot-page">
+                <div class="settings-group">
+                  <div class="settings-heading">software update</div>
+                  <p style="font-size:13px; color:var(--sub-fg); margin-bottom:12px; line-height:1.4;">Force refresh daydream OS to apply latest software updates and reload system resources.</p>
+                  <button class="metro-button primary" onclick="forceSoftwareUpdate()" style="width:100%;">software update</button>
+                </div>
+
+                <div class="settings-group" style="margin-top:28px;">
+                  <div class="settings-heading">live tiles</div>
+                  <p style="font-size:13px; color:var(--sub-fg); margin-bottom:14px; line-height:1.4;">Toggle dynamic tile animations and flip cycles on the start screen.</p>
+                  
+                  <div style="display:flex; justify-content:space-between; align-items:center; background:#141414; padding:12px 14px; border:1px solid #242424;">
+                    <div>
+                      <div style="font-size:16px; font-weight:300;" id="live-tiles-toggle-status">On</div>
+                      <div style="font-size:12px; color:var(--sub-fg); margin-top:2px;">Tile flip animations</div>
+                    </div>
+                    <button class="metro-toggle-btn active" id="live-tiles-toggle-btn" onclick="toggleLiveTilesSetting()" type="button" aria-label="Toggle Live Tiles">
+                      <span class="metro-toggle-thumb"></span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PAGE 1: THEME -->
               <div class="pivot-page">
                 <div class="settings-group">
                   <div class="settings-heading">Accent Colour</div>
@@ -1779,16 +1794,6 @@
                   </div>
 
                   <div class="accent-palette-grid" id="palette-swatches"></div>
-                </div>
-              </div>
-
-              <!-- PAGE 1: DEDICATED START SCREEN MANAGER -->
-              <div class="pivot-page">
-                <div class="settings-group">
-                  <div class="settings-heading">Customise Start Tiles</div>
-                  <p style="font-size:13px; color:var(--sub-fg); margin-bottom:14px;">Adjust tile sizes or move order.</p>
-
-                  <div id="start-screen-manager-list"></div>
                 </div>
               </div>
 
@@ -1864,6 +1869,7 @@
     let currentAccent = ACCENTS[0];
     let activeScreen = 'home';
     let isTransitioning = false;
+    let liveTilesEnabled = true;
 
     // Running / Background Apps Stack for Multitasking Switcher (starts empty until apps are launched)
     let runningApps = [];
@@ -1948,6 +1954,14 @@
 
       // 9. Photos Live Tile
       updatePhotosLiveTile();
+
+      // 10. Live Tiles setting
+      try {
+        const savedLive = localStorage.getItem('daydream_live_tiles_enabled');
+        if (savedLive !== null) {
+          liveTilesEnabled = (savedLive === '1');
+        }
+      } catch (e) {}
     }
 
     function saveContactsToStorage() {
@@ -1978,106 +1992,37 @@
       renderNotesList();
       renderPhotosGrid();
       renderHealthDisplay();
-      renderStartScreenManager();
       updatePhotosLiveTile();
+      updateLiveTilesSettingUI();
       applyAccent(currentAccent, false);
       startLiveTilesFlipTimer();
       setupCalculatorKeyListeners();
       setupPivotSwipeGestures();
     });
 
-    /* ================= DEDICATED START SCREEN MANAGER (IN SETTINGS) ================= */
-    function renderStartScreenManager() {
-      const container = document.getElementById('start-screen-manager-list');
-      if (!container) return;
-      container.innerHTML = '';
-
-      const grid = document.getElementById('main-tile-grid');
-      const tiles = Array.from(grid.querySelectorAll('.wp-tile'));
-
-      // 1. Live Visual Mini Start Screen Mockup (All Square 3 Per Row)
-      const previewCard = document.createElement('div');
-      previewCard.className = 'start-manager-preview-card';
-      previewCard.style.cssText = 'background:#121212; border:1px solid #262626; padding:12px; margin-bottom:16px;';
-
-      let miniTilesHtml = '';
-      tiles.forEach(tile => {
-        const app = tile.dataset.app || '';
-        miniTilesHtml += `<div class="start-manager-mini-tile span-1" style="background:var(--accent); aspect-ratio:1/1; height:auto; min-height:48px;">${app}</div>`;
-      });
-
-      previewCard.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--sub-fg); font-weight:500;">Live Start Screen (3 Per Row)</span>
-          <span style="font-size:10px; color:#666;">all square</span>
-        </div>
-        <div class="start-manager-mini-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; background:#000; padding:8px;">
-          ${miniTilesHtml}
-        </div>
-      `;
-      container.appendChild(previewCard);
-
-      // 2. Individual Reorder Cards
-      tiles.forEach((tile, idx) => {
-        const appName = tile.dataset.app;
-
-        const card = document.createElement('div');
-        card.className = 'tile-manager-card';
-        card.innerHTML = `
-          <div class="tile-manager-top-row">
-            <div class="tile-manager-info">
-              <div class="tile-manager-badge" style="background:var(--accent);">${idx + 1}</div>
-              <div>
-                <div style="font-size:14px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px;">${appName}</div>
-                <div style="font-size:11px; color:var(--sub-fg); margin-top:1px;">Tile 1x1 Square</div>
-              </div>
-            </div>
-            <div style="display:flex; gap:6px;">
-              <button class="tile-order-btn" onclick="managerMoveTile('${tile.id}', -1)" title="Move Up" ${idx === 0 ? 'disabled style="opacity:0.25; cursor:default;"' : ''}>▲</button>
-              <button class="tile-order-btn" onclick="managerMoveTile('${tile.id}', 1)" title="Move Down" ${idx === tiles.length - 1 ? 'disabled style="opacity:0.25; cursor:default;"' : ''}>▼</button>
-            </div>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-
-      // 3. Reset Layout Button
-      const resetContainer = document.createElement('div');
-      resetContainer.style.cssText = 'margin-top:16px; margin-bottom:20px;';
-      resetContainer.innerHTML = `<button class="metro-button" onclick="confirmResetLayout()" style="width:100%;">reset layout to default</button>`;
-      container.appendChild(resetContainer);
+    /* ================= GENERAL SETTINGS (SOFTWARE UPDATE & LIVE TILES) ================= */
+    function forceSoftwareUpdate() {
+      // Force refresh page bypassing cache
+      window.location.reload(true);
     }
 
-    function managerMoveTile(tileId, dir) {
-      const grid = document.getElementById('main-tile-grid');
-      const tile = document.getElementById(tileId);
-      if (!grid || !tile) return;
-
-      if (dir === -1 && tile.previousElementSibling) {
-        grid.insertBefore(tile, tile.previousElementSibling);
-      } else if (dir === 1 && tile.nextElementSibling) {
-        grid.insertBefore(tile.nextElementSibling, tile);
+    function toggleLiveTilesSetting() {
+      liveTilesEnabled = !liveTilesEnabled;
+      try {
+        localStorage.setItem('daydream_live_tiles_enabled', liveTilesEnabled ? '1' : '0');
+      } catch (e) {}
+      updateLiveTilesSettingUI();
+      if (!liveTilesEnabled) {
+        // Return all tiles to unflipped front face immediately
+        document.querySelectorAll('.wp-tile.flipped').forEach(t => t.classList.remove('flipped'));
       }
-      saveTileLayout();
-      renderStartScreenManager();
     }
 
-    function confirmResetLayout() {
-      showMetroDialog({
-        title: 'Reset Layout',
-        body: 'Reset home screen tiles back to default order?',
-        buttons: [
-          {
-            text: 'reset',
-            primary: true,
-            action: () => {
-              applyDefaultTileLayout();
-              renderStartScreenManager();
-            }
-          },
-          { text: 'cancel' }
-        ]
-      });
+    function updateLiveTilesSettingUI() {
+      const btn = document.getElementById('live-tiles-toggle-btn');
+      const statusEl = document.getElementById('live-tiles-toggle-status');
+      if (btn) btn.classList.toggle('active', liveTilesEnabled);
+      if (statusEl) statusEl.textContent = liveTilesEnabled ? 'On' : 'Off';
     }
 
     function applyDefaultTileLayout() {
@@ -2558,8 +2503,8 @@
 
       bindPivotSnap('slider-settings', (idx) => {
         settingsPivotIndex = idx;
-        document.getElementById('tab-settings-sys')?.classList.toggle('active', idx === 0);
-        document.getElementById('tab-settings-start')?.classList.toggle('active', idx === 1);
+        document.getElementById('tab-settings-general')?.classList.toggle('active', idx === 0);
+        document.getElementById('tab-settings-theme')?.classList.toggle('active', idx === 1);
         document.getElementById('tab-settings-about')?.classList.toggle('active', idx === 2);
       });
     }
@@ -2579,7 +2524,7 @@
       }, { passive: true });
     }
 
-    /* ================= SMOOTH SIDE-SLIDE APP LAUNCH WITH FADE ================= */
+    /* ================= 3D TURNSTILE FLIP FROM SIDE APP TRANSITIONS ================= */
     function launchApp(targetApp) {
       closeAppSwitcher();
       if (isTransitioning || activeScreen === targetApp) return;
@@ -2605,25 +2550,27 @@
       toView.style.display = 'flex';
       toView.className = 'screen-view active turnstile-in';
       
-      // Smooth fade and slide out of outgoing screen
+      // 3D side-flip out of outgoing screen
       if (fromView) {
-        fromView.style.transition = 'opacity 0.16s ease-out, transform 0.16s ease-out';
+        fromView.style.transition = 'opacity 0.2s ease-out, transform 0.2s cubic-bezier(0.12, 0.9, 0.2, 1)';
+        fromView.style.transformOrigin = '100% 50%';
         fromView.style.opacity = '0';
-        fromView.style.transform = 'translateX(-30px)';
+        fromView.style.transform = 'perspective(1000px) rotateY(30deg)';
         setTimeout(() => {
           fromView.style.display = 'none';
           fromView.className = 'screen-view';
           fromView.style.opacity = '1';
           fromView.style.transform = '';
+          fromView.style.transformOrigin = '';
           fromView.style.transition = '';
-        }, 160);
+        }, 200);
       }
 
       setTimeout(() => {
         toView.className = 'screen-view active';
         activeScreen = targetApp;
         isTransitioning = false;
-      }, 340);
+      }, 360);
 
       // App-specific startup
       if (targetApp === 'browser') {
@@ -2653,25 +2600,27 @@
       toView.style.display = 'flex';
       toView.className = 'screen-view active turnstile-back-in';
       
-      // Smooth fade and slide out of outgoing screen
+      // 3D side-flip out of outgoing screen
       if (fromView) {
-        fromView.style.transition = 'opacity 0.16s ease-out, transform 0.16s ease-out';
+        fromView.style.transition = 'opacity 0.2s ease-out, transform 0.2s cubic-bezier(0.12, 0.9, 0.2, 1)';
+        fromView.style.transformOrigin = '0% 50%';
         fromView.style.opacity = '0';
-        fromView.style.transform = 'translateX(30px)';
+        fromView.style.transform = 'perspective(1000px) rotateY(-30deg)';
         setTimeout(() => {
           fromView.style.display = 'none';
           fromView.className = 'screen-view';
           fromView.style.opacity = '1';
           fromView.style.transform = '';
+          fromView.style.transformOrigin = '';
           fromView.style.transition = '';
-        }, 160);
+        }, 200);
       }
 
       setTimeout(() => {
         toView.className = 'screen-view active';
         activeScreen = 'home';
         isTransitioning = false;
-      }, 340);
+      }, 360);
     }
 
     function getScreenEl(appName) {
