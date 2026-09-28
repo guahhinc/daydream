@@ -1107,7 +1107,7 @@
       top: 0;
       left: 0;
       width: 100%;
-      height: max(env(safe-area-inset-top, 0px), 24px);
+      height: max(env(safe-area-inset-top, 0px), 10px);
       background: #000000;
       z-index: 998;
       pointer-events: none;
@@ -2167,15 +2167,19 @@
       const slider = document.getElementById(sliderId);
       if (!slider || !slider.parentElement) return;
       const parent = slider.parentElement;
-      let timer = null;
+      let lastIdx = -1;
+      let rafId = null;
       parent.addEventListener('scroll', () => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
           const w = parent.clientWidth || 1;
           const idx = Math.round(parent.scrollLeft / w);
-          onIndexChange(idx);
-          scrollTabIntoView(sliderId, idx);
-        }, 5);
+          if (idx !== lastIdx) {
+            lastIdx = idx;
+            onIndexChange(idx);
+            scrollTabIntoView(sliderId, idx);
+          }
+        });
       }, { passive: true });
     }
 
@@ -2197,7 +2201,7 @@
       
       // Outgoing screen swings away hinged at right edge
       if (fromView) {
-        fromView.style.transition = 'transform 0.26s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.26s ease-out';
+        fromView.style.transition = 'transform 0.30s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.30s ease-out';
         fromView.style.transformOrigin = '100% 50%';
         fromView.style.opacity = '0';
         fromView.style.transform = 'perspective(1200px) rotateY(80deg)';
@@ -2208,14 +2212,14 @@
           fromView.style.transform = '';
           fromView.style.transformOrigin = '';
           fromView.style.transition = '';
-        }, 260);
+        }, 300);
       }
 
       setTimeout(() => {
         toView.className = 'screen-view active';
         activeScreen = targetApp;
         isTransitioning = false;
-      }, 380);
+      }, 440);
 
       // App-specific startup
       if (targetApp === 'browser') {
@@ -2248,7 +2252,7 @@
       
       // Outgoing screen swings away hinged at left edge
       if (fromView) {
-        fromView.style.transition = 'transform 0.26s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.26s ease-out';
+        fromView.style.transition = 'transform 0.30s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.30s ease-out';
         fromView.style.transformOrigin = '0% 50%';
         fromView.style.opacity = '0';
         fromView.style.transform = 'perspective(1200px) rotateY(-80deg)';
@@ -2259,14 +2263,14 @@
           fromView.style.transform = '';
           fromView.style.transformOrigin = '';
           fromView.style.transition = '';
-        }, 260);
+        }, 300);
       }
 
       setTimeout(() => {
         toView.className = 'screen-view active';
         activeScreen = 'home';
         isTransitioning = false;
-      }, 380);
+      }, 440);
     }
 
     function getScreenEl(appName) {
@@ -2414,7 +2418,7 @@
       // Excludes static tiles (settings and camera)
       const tileIds = ['tile-contacts', 'tile-calc', 'tile-browser', 'tile-photos', 'tile-notes', 'tile-health', 'tile-maps'];
       setInterval(() => {
-        if (!liveTilesEnabled) return;
+        if (!liveTilesEnabled || activeScreen !== 'home') return;
         const randId = tileIds[Math.floor(Math.random() * tileIds.length)];
         const el = document.getElementById(randId);
         if (!el) return;
@@ -2442,7 +2446,7 @@
         } else if (randId === 'tile-maps') {
           el.classList.toggle('flipped');
           if (el.classList.contains('flipped')) {
-            const cities = ['London', 'New York', 'Tokyo', 'Paris', 'Sydney', 'Rome', 'Dubai'];
+            const cities = ['Melbourne', 'Sydney', 'London', 'New York', 'Tokyo', 'Paris', 'Rome', 'Dubai'];
             const randCity = cities[Math.floor(Math.random() * cities.length)];
             const cityEl = document.getElementById('tile-maps-city');
             if (cityEl) cityEl.textContent = randCity;
@@ -3286,7 +3290,7 @@
       if (!list || list.children.length > 0) return;
       MAP_PLACES.forEach(p => {
         const row = document.createElement('div');
-        row.style.cssText = 'padding: 12px 14px; background: #141414; cursor: pointer; transition: background 0.1s;';
+        row.style.cssText = 'padding: 12px 14px; background: #141414; cursor: pointer; transition: background 0.1s; border: none !important; outline: none !important;';
         row.innerHTML = `
           <div style="font-size: 16px; font-weight: 400; color: var(--fg);">${p.name}</div>
           <div style="font-size: 12px; color: var(--sub-fg); margin-top: 2px;">${p.desc}</div>
