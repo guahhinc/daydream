@@ -311,9 +311,16 @@
     }
     .metro-zoom-pill:active { transform: scale(0.92); }
     #camera-shutter-flash {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff;
-      opacity: 0; pointer-events: none; transition: opacity 0.12s ease-out; z-index: 40;
+      position: absolute; inset: 0; width: 100%; height: 100%; background: #ffffff;
+      opacity: 0; pointer-events: none; z-index: 100; will-change: opacity;
     }
+    @keyframes cameraShutterFlashAnim {
+      0% { opacity: 0; }
+      12% { opacity: 0.98; }
+      35% { opacity: 0.98; }
+      100% { opacity: 0; }
+    }
+    .camera-flash-active { animation: cameraShutterFlashAnim 0.42s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
     .camera-hud-bottom {
       height: 90px; background: #000000; position: relative; display: flex;
       align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; box-sizing: border-box;
@@ -782,6 +789,7 @@
           <div class="pivot-header">
             <div class="pivot-tabs-row">
               <div class="pivot-tab-item active" id="tab-health-today" onclick="selectHealthTab('today')">today</div>
+              <div class="pivot-tab-item" id="tab-health-log" onclick="selectHealthTab('log')">log</div>
               <div class="pivot-tab-item" id="tab-health-mind" onclick="selectHealthTab('mind')">mind</div>
               <div class="pivot-tab-item" id="tab-health-goals" onclick="selectHealthTab('goals')">goals</div>
             </div>
@@ -853,6 +861,33 @@
                 </div>
               </div>
 
+              <!-- Page 1: Log (All Daily Info & Daily Reset History) -->
+              <div class="pivot-page">
+                <div class="settings-group">
+                  <div class="settings-heading">Today's Activity</div>
+                  <div class="health-metric-card" style="margin-bottom:14px;">
+                    <div class="health-metric-header">
+                      <span class="health-metric-title" id="health-log-today-date">Today</span>
+                      <span id="health-log-today-pct" style="font-size:13px; color:var(--accent);">0% goal</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline; margin: 4px 0 8px;">
+                      <span style="font-size:24px; font-weight:100;" id="health-log-today-steps">0 steps</span>
+                      <span style="font-size:13px; color:var(--sub-fg);" id="health-log-today-meta">0 kcal • 0/8 cups</span>
+                    </div>
+                    <div class="health-progress-bar">
+                      <div class="health-progress-fill" id="health-log-today-bar" style="width:0%;"></div>
+                    </div>
+                    <div style="font-size:12px; color:var(--sub-fg); margin-top:8px;" id="health-log-today-mind">Mind: Not logged</div>
+                  </div>
+
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div class="settings-heading" style="margin-bottom:0;">Daily Logs</div>
+                    <button class="metro-button" onclick="archiveAndResetToday()" style="padding:4px 10px; font-size:11px;" title="Archive and reset counters">reset day</button>
+                  </div>
+                  <div id="health-daily-logs-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+                </div>
+              </div>
+
               <!-- Page 1: State of Mind -->
               <div class="pivot-page">
                 <div class="settings-group">
@@ -907,8 +942,8 @@
           <div id="camera-zoom-badge" style="position:absolute; top:18px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.75); border:1px solid rgba(255,255,255,0.2); padding:5px 14px; font-size:14px; font-weight:400; color:#fff; display:none; z-index:30; pointer-events:none; letter-spacing:0.5px;">1.0x</div>
           <div id="camera-zoom-pills" style="position:absolute; bottom:16px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:30;">
             <button type="button" class="metro-zoom-pill" id="zoom-pill-05" onclick="applyCameraZoom(0.5)">0.5</button>
-            <button type="button" class="metro-zoom-pill active" id="zoom-pill-1" onclick="applyCameraZoom(1.0)">1x</button>
-            <button type="button" class="metro-zoom-pill" id="zoom-pill-2" onclick="applyCameraZoom(2.0)">2x</button>
+            <button type="button" class="metro-zoom-pill active" id="zoom-pill-1" onclick="applyCameraZoom(1.0)">1</button>
+            <button type="button" class="metro-zoom-pill" id="zoom-pill-2" onclick="applyCameraZoom(2.0)">2</button>
           </div>
           <div id="camera-shutter-flash"></div>
           <canvas id="camera-snapshot-canvas" style="display:none;"></canvas>
@@ -1156,7 +1191,9 @@
         if (savedHealth) healthData = JSON.parse(savedHealth);
         if (!healthData.goal) healthData.goal = 10000;
         if (!healthData.mindLogs) healthData.mindLogs = [];
-      } catch (e) { healthData = { steps: 0, water: 0, calories: 0, goal: 10000, mindLogs: [] }; }
+        if (!healthData.dailyLogs) healthData.dailyLogs = [];
+      } catch (e) { healthData = { steps: 0, water: 0, calories: 0, goal: 10000, mindLogs: [], dailyLogs: [] }; }
+      checkDailyHealthReset();
 
       // 5. Accent
       try {
@@ -1237,6 +1274,7 @@
       renderMapsPlaces();
       loadAppsEnabledState();
       renderSettingsAppsList();
+      setInterval(() => { checkDailyHealthReset(); renderHealthDisplay(); }, 60000);
     });
 
     /* ================= GENERAL SETTINGS (SOFTWARE UPDATE) ================= */
@@ -1271,11 +1309,8 @@
 
     function saveTileLayout() {
       const grid = document.getElementById('main-tile-grid');
-      const tileEls = grid.querySelectorAll('.wp-tile');
       const layout = [];
-      tileEls.forEach(el => {
-        layout.push({ id: el.id, size: '1sq' });
-      });
+      grid.querySelectorAll('.wp-tile').forEach(el => layout.push({ id: el.id, size: '1sq' }));
       try { 
         localStorage.setItem('daydream_tile_layout', JSON.stringify(layout)); 
         localStorage.setItem('daydream_layout_ver', 'v5');
@@ -1285,19 +1320,11 @@
     function loadTileLayout() {
       try {
         const ver = localStorage.getItem('daydream_layout_ver');
-        if (ver !== 'v5') {
-          applyDefaultTileLayout();
-          return;
-        }
-
+        if (ver !== 'v5') { applyDefaultTileLayout(); return; }
         const saved = localStorage.getItem('daydream_tile_layout');
-        if (!saved) {
-          applyDefaultTileLayout();
-          return;
-        }
+        if (!saved) { applyDefaultTileLayout(); return; }
         const layout = JSON.parse(saved);
         const grid = document.getElementById('main-tile-grid');
-        
         layout.forEach(item => {
           const el = document.getElementById(item.id);
           if (el) {
@@ -1310,8 +1337,6 @@
         applyDefaultTileLayout();
       }
     }
-
-
 
     /* ================= BUILT-IN CENTERED METRO DIALOG ================= */
     function showMetroDialog({ title, body, bodyHtml, buttons }) {
@@ -1387,8 +1412,9 @@
       bindPivotSnap('slider-health', (idx) => {
         healthPivotIndex = idx;
         document.getElementById('tab-health-today')?.classList.toggle('active', idx === 0);
-        document.getElementById('tab-health-mind')?.classList.toggle('active', idx === 1);
-        document.getElementById('tab-health-goals')?.classList.toggle('active', idx === 2);
+        document.getElementById('tab-health-log')?.classList.toggle('active', idx === 1);
+        document.getElementById('tab-health-mind')?.classList.toggle('active', idx === 2);
+        document.getElementById('tab-health-goals')?.classList.toggle('active', idx === 3);
       });
 
       bindPivotSnap('slider-maps', (idx) => {
@@ -1475,6 +1501,10 @@
         renderMapsPlaces();
       } else if (targetApp === 'settings') {
         renderSettingsAppsList();
+      } else if (targetApp === 'health') {
+        checkDailyHealthReset();
+        renderHealthDisplay();
+        renderHealthLogsList();
       }
     }
 
@@ -2227,7 +2257,148 @@
       return dateKey;
     }
 
+    function checkDailyHealthReset() {
+      const todayKey = getTodayDateKey();
+      if (!healthData.dailyLogs) healthData.dailyLogs = [];
+
+      // Auto-archive and reset if midnight passed / new day
+      if (healthData.currentDateKey && healthData.currentDateKey !== todayKey) {
+        const prevKey = healthData.currentDateKey;
+        const prevGoal = healthData.goal || 10000;
+        const dayMindLog = (healthData.mindLogs || []).find(m => m.dateKey === prevKey);
+        const logEntry = {
+          dateKey: prevKey,
+          displayDate: getFormattedDate(prevKey),
+          steps: healthData.steps || 0,
+          goal: prevGoal,
+          calories: healthData.calories || 0,
+          water: healthData.water || 0,
+          mindState: dayMindLog ? dayMindLog.state : 'Not logged',
+          pct: Math.min(100, Math.round(((healthData.steps || 0) / prevGoal) * 100))
+        };
+        const existingIdx = healthData.dailyLogs.findIndex(l => l.dateKey === prevKey);
+        if (existingIdx !== -1) healthData.dailyLogs[existingIdx] = logEntry;
+        else healthData.dailyLogs.unshift(logEntry);
+
+        // Reset counters for the new day
+        healthData.steps = 0;
+        healthData.calories = 0;
+        healthData.water = 0;
+        healthData.currentDateKey = todayKey;
+        saveHealthToStorage();
+      } else if (!healthData.currentDateKey) {
+        healthData.currentDateKey = todayKey;
+        saveHealthToStorage();
+      }
+
+      // Purge any previously seeded fake dummy logs so user only has real data
+      healthData.dailyLogs = healthData.dailyLogs.filter(l => !String(l.displayDate || '').startsWith('Yesterday •') && l.steps !== 10420 && l.steps !== 8650);
+    }
+
+    function archiveAndResetToday() {
+      showMetroDialog({
+        title: 'Reset & Archive Day',
+        body: 'Archive today\'s steps, calories, and water into your daily log, and reset today\'s counters to 0 for a fresh start?',
+        buttons: [
+          {
+            text: 'reset day',
+            primary: true,
+            action: () => {
+              const todayKey = getTodayDateKey();
+              const todayMind = (healthData.mindLogs || []).find(m => m.dateKey === todayKey);
+              const goal = healthData.goal || 10000;
+              const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              const logEntry = {
+                dateKey: todayKey + '_' + Date.now(),
+                displayDate: new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' (' + timeNow + ')',
+                steps: healthData.steps || 0,
+                goal: goal,
+                calories: healthData.calories || 0,
+                water: healthData.water || 0,
+                mindState: todayMind ? todayMind.state : 'Not logged',
+                pct: Math.min(100, Math.round(((healthData.steps || 0) / goal) * 100))
+              };
+              if (!healthData.dailyLogs) healthData.dailyLogs = [];
+              healthData.dailyLogs.unshift(logEntry);
+              healthData.steps = 0;
+              healthData.calories = 0;
+              healthData.water = 0;
+              healthData.currentDateKey = todayKey;
+              saveHealthToStorage();
+              renderHealthDisplay();
+            }
+          },
+          { text: 'cancel' }
+        ]
+      });
+    }
+
+    function deleteDailyLog(index) {
+      if (!healthData.dailyLogs) return;
+      healthData.dailyLogs.splice(index, 1);
+      saveHealthToStorage();
+      renderHealthDisplay();
+    }
+
+    function renderHealthLogsList() {
+      const container = document.getElementById('health-daily-logs-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const todayGoal = healthData.goal || 10000;
+      const todayPct = Math.min(100, Math.round(((healthData.steps || 0) / todayGoal) * 100));
+      const todayDateStr = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      const todayMind = (healthData.mindLogs || []).find(m => m.dateKey === getTodayDateKey());
+
+      const todayDateEl = document.getElementById('health-log-today-date');
+      const todayPctEl = document.getElementById('health-log-today-pct');
+      const todayStepsEl = document.getElementById('health-log-today-steps');
+      const todayMetaEl = document.getElementById('health-log-today-meta');
+      const todayBarEl = document.getElementById('health-log-today-bar');
+      const todayMindEl = document.getElementById('health-log-today-mind');
+
+      if (todayDateEl) todayDateEl.textContent = `Today • ${todayDateStr}`;
+      if (todayPctEl) todayPctEl.textContent = `${todayPct}% goal`;
+      if (todayStepsEl) todayStepsEl.textContent = `${(healthData.steps || 0).toLocaleString()} steps`;
+      if (todayMetaEl) todayMetaEl.textContent = `${healthData.calories || 0} kcal • ${healthData.water || 0}/8 cups`;
+      if (todayBarEl) todayBarEl.style.width = `${todayPct}%`;
+      if (todayMindEl) todayMindEl.textContent = `Mind: ${todayMind ? todayMind.state : 'Not logged'}`;
+
+      const logs = healthData.dailyLogs || [];
+      if (logs.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="padding:20px 0;">no past daily logs yet.<br><span style="font-size:12px; color:var(--sub-fg); margin-top:4px; display:inline-block;">daily totals automatically archive each day.</span></div>';
+        return;
+      }
+
+      logs.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.style.background = '#141414';
+        card.style.padding = '12px 14px';
+        card.style.borderLeft = `4px solid ${item.pct >= 100 ? '#00a859' : 'var(--accent)'}`;
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
+            <span style="font-size:15px; font-weight:300; color:#ffffff;">${item.displayDate || getFormattedDate(item.dateKey)}</span>
+            <span style="font-size:12px; font-weight:400; color:${item.pct >= 100 ? '#00a859' : 'var(--accent)'};">${item.pct}% Goal</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:20px; font-weight:100; color:#ffffff;">${(item.steps || 0).toLocaleString()} <span style="font-size:12px; font-weight:300; color:var(--sub-fg);">/ ${(item.goal || 10000).toLocaleString()} steps</span></span>
+            <span style="font-size:12px; color:var(--sub-fg);">${item.calories || 0} kcal</span>
+          </div>
+          <div class="health-progress-bar" style="margin-top:0; margin-bottom:8px;">
+            <div class="health-progress-fill" style="width:${Math.min(100, item.pct)}%; background:${item.pct >= 100 ? '#00a859' : 'var(--accent)'};"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--sub-fg);">
+            <span style="display:flex; align-items:center; gap:4px;"><span class="material-symbols-sharp" style="font-size:15px; color:var(--accent);">water_drop</span> ${item.water || 0}/8 cups</span>
+            <span style="display:flex; align-items:center; gap:4px;"><span class="material-symbols-sharp" style="font-size:15px; color:var(--accent);">psychology</span> ${item.mindState || 'Not logged'}</span>
+            <button class="metro-button" style="padding:2px 8px; font-size:10px;" onclick="deleteDailyLog(${index})">✕</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
     function renderHealthDisplay() {
+      checkDailyHealthReset();
       const goal = healthData.goal || 10000;
       document.getElementById('health-steps-display').textContent = healthData.steps.toLocaleString();
       document.getElementById('health-goal-display').textContent = `/ ${goal.toLocaleString()}`;
@@ -2279,6 +2450,7 @@
       }
 
       renderStateOfMindUI();
+      renderHealthLogsList();
     }
 
     function logStateOfMind(stateName) {
@@ -2466,13 +2638,16 @@
 
     function selectHealthTab(tab) {
       if (tab === 'today') healthPivotIndex = 0;
-      else if (tab === 'mind') healthPivotIndex = 1;
-      else if (tab === 'goals') healthPivotIndex = 2;
+      else if (tab === 'log') healthPivotIndex = 1;
+      else if (tab === 'mind') healthPivotIndex = 2;
+      else if (tab === 'goals') healthPivotIndex = 3;
 
       document.getElementById('tab-health-today')?.classList.toggle('active', tab === 'today');
+      document.getElementById('tab-health-log')?.classList.toggle('active', tab === 'log');
       document.getElementById('tab-health-mind')?.classList.toggle('active', tab === 'mind');
       document.getElementById('tab-health-goals')?.classList.toggle('active', tab === 'goals');
       scrollPivotTo('slider-health', healthPivotIndex);
+      if (tab === 'log') renderHealthLogsList();
     }
 
     /* ================= APP 6: CAMERA (HIGH QUALITY & PINCH TO ZOOM) ================= */
@@ -2522,13 +2697,21 @@
       }, { passive: false });
     }
 
+    function getCameraVisualScale(zoomLevel) {
+      // 0.5 is 1.0x (full uncropped sensor, covers 100% viewport with NO black borders)
+      // 1.0 is 1.35x (standard framing)
+      // 2.0 is 2.7x (telephoto 2x from 1.0)
+      return Math.max(1.0, zoomLevel * 1.35);
+    }
+
     function applyCameraZoom(level) {
       cameraZoom = Math.min(5.0, Math.max(0.5, Math.round(level * 10) / 10));
       const video = document.getElementById('camera-video-stream');
       const badge = document.getElementById('camera-zoom-badge');
       if (video) {
         const mirror = cameraFacing === 'user' ? -1 : 1;
-        video.style.transform = `scale(${mirror * cameraZoom}, ${cameraZoom})`;
+        const scale = getCameraVisualScale(cameraZoom);
+        video.style.transform = `scale(${mirror * scale}, ${scale})`;
       }
       if (cameraStream) {
         const track = cameraStream.getVideoTracks()[0];
@@ -2542,7 +2725,7 @@
         }
       }
       if (badge) {
-        badge.textContent = `${cameraZoom.toFixed(1)}x`;
+        badge.textContent = cameraZoom === 0.5 ? '0.5' : (cameraZoom === 1.0 ? '1' : (cameraZoom === 2.0 ? '2' : `${cameraZoom.toFixed(1)}`));
         badge.style.display = 'block';
         clearTimeout(cameraZoomHideTimeout);
         cameraZoomHideTimeout = setTimeout(() => {
@@ -2559,7 +2742,8 @@
       setupCameraPinchZoom();
       const video = document.getElementById('camera-video-stream');
       const mirror = cameraFacing === 'user' ? -1 : 1;
-      if (video) video.style.transform = `scale(${mirror * cameraZoom}, ${cameraZoom})`;
+      const scale = getCameraVisualScale(cameraZoom);
+      if (video) video.style.transform = `scale(${mirror * scale}, ${scale})`;
 
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({
@@ -2595,11 +2779,17 @@
       startCameraStream();
     }
 
-    function takeSnapshot() {
-      // Shutter flash effect
+    function triggerCameraFlash() {
       const flash = document.getElementById('camera-shutter-flash');
-      flash.style.opacity = '1';
-      setTimeout(() => { flash.style.opacity = '0'; }, 120);
+      if (!flash) return;
+      flash.classList.remove('camera-flash-active');
+      void flash.offsetWidth;
+      flash.classList.add('camera-flash-active');
+    }
+
+    function takeSnapshot() {
+      // White shutter flash
+      triggerCameraFlash();
 
       const video = document.getElementById('camera-video-stream');
       const canvas = document.getElementById('camera-snapshot-canvas');
@@ -2614,20 +2804,13 @@
           ctx.translate(canvas.width, 0);
           ctx.scale(-1, 1);
         }
-        if (cameraZoom > 1.0) {
-          const sw = canvas.width / cameraZoom;
-          const sh = canvas.height / cameraZoom;
+        const cropScale = getCameraVisualScale(cameraZoom);
+        if (cropScale > 1.0) {
+          const sw = canvas.width / cropScale;
+          const sh = canvas.height / cropScale;
           const sx = (canvas.width - sw) / 2;
           const sy = (canvas.height - sh) / 2;
           ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-        } else if (cameraZoom < 1.0) {
-          ctx.fillStyle = '#000000';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          const dw = canvas.width * cameraZoom;
-          const dh = canvas.height * cameraZoom;
-          const dx = (canvas.width - dw) / 2;
-          const dy = (canvas.height - dh) / 2;
-          ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, dx, dy, dw, dh);
         } else {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         }
@@ -2638,7 +2821,7 @@
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = currentAccent.hex;
         ctx.beginPath();
-        ctx.arc(canvas.width / 2, canvas.height / 2, 80 * cameraZoom, 0, Math.PI * 2);
+        ctx.arc(canvas.width / 2, canvas.height / 2, 80 * Math.max(1.0, cameraZoom), 0, Math.PI * 2);
         ctx.fill();
       }
 
